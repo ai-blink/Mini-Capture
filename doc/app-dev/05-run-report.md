@@ -228,3 +228,22 @@ Overlay coordinates now account for DPI scaling: WPF overlay placement/highlight
 - `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
 - `git diff --check`: passed with CRLF conversion warnings only.
 - Automated mouse-coordinate smoke remains partially environment-sensitive because the PowerShell driver can itself be DPI virtualized; final visual/manual confirmation should be done in the running app on the target scaled display.
+
+## Close To Tray Fix
+
+### Finish Line
+
+Closing the floating capture window no longer exits Mini Capture; the process stays alive through a system tray icon until the user explicitly chooses exit.
+
+### Changes
+
+- Switched application shutdown mode to explicit shutdown.
+- Added a tray icon with `열기` and `종료` commands.
+- Added double-click tray restore behavior.
+- Changed normal window closing to hide the floating window to tray.
+- Kept the existing in-app `종료` command as a real app exit path.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- Close-to-tray smoke: `CloseMainWindow` returned true, the main window hid, and the process remained alive.

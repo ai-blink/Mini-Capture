@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls.Primitives;
+using System.ComponentModel;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -98,7 +99,33 @@ public partial class MainWindow : Window
 
     private void OnExitClick(object sender, RoutedEventArgs e)
     {
+        if (System.Windows.Application.Current is App app)
+        {
+            app.ExitApplication();
+            return;
+        }
+
         System.Windows.Application.Current.Shutdown();
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        if (System.Windows.Application.Current is App { IsExitRequested: false })
+        {
+            e.Cancel = true;
+            HideToTray();
+            return;
+        }
+
+        base.OnClosing(e);
+    }
+
+    public void ShowFromTray()
+    {
+        Show();
+        WindowState = WindowState.Normal;
+        Activate();
+        UpdatePopupPlacement();
     }
 
     private void OnKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -232,6 +259,12 @@ public partial class MainWindow : Window
         TimerPopup.IsOpen = false;
         StatusPopup.IsOpen = false;
         ResultPopup.IsOpen = false;
+    }
+
+    private void HideToTray()
+    {
+        ClosePopups();
+        Hide();
     }
 
     private void SelectMode(CaptureMode mode, bool showStatus)
