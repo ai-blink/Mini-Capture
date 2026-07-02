@@ -1,9 +1,12 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Threading;
 using DrawingPoint = System.Drawing.Point;
 using DrawingRectangle = System.Drawing.Rectangle;
+using WpfPoint = System.Windows.Point;
+using WpfRect = System.Windows.Rect;
 
 namespace MiniCapture;
 
@@ -11,6 +14,8 @@ public partial class WindowPickerOverlay : Window
 {
     private readonly DispatcherTimer _pollTimer;
     private readonly int _currentProcessId = Environment.ProcessId;
+    private Matrix _fromDevice = Matrix.Identity;
+    private WpfRect _virtualBoundsDip;
     private DrawingRectangle _virtualBounds;
     private WindowCaptureTarget? _currentTarget;
 
@@ -30,10 +35,12 @@ public partial class WindowPickerOverlay : Window
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         _virtualBounds = ScreenCaptureService.GetVirtualScreenBounds();
-        Left = _virtualBounds.Left;
-        Top = _virtualBounds.Top;
-        Width = _virtualBounds.Width;
-        Height = _virtualBounds.Height;
+        _fromDevice = GetFromDeviceMatrix();
+        _virtualBoundsDip = DeviceRectangleToDip(_virtualBounds);
+        Left = _virtualBoundsDip.Left;
+        Top = _virtualBoundsDip.Top;
+        Width = _virtualBoundsDip.Width;
+        Height = _virtualBoundsDip.Height;
 
         Activate();
         Focus();
@@ -94,18 +101,32 @@ public partial class WindowPickerOverlay : Window
 
     private void UpdateHighlight(DrawingRectangle bounds, string title)
     {
-        var left = bounds.Left - _virtualBounds.Left;
-        var top = bounds.Top - _virtualBounds.Top;
+        var boundsDip = DeviceRectangleToDip(bounds);
+        var left = boundsDip.Left - _virtualBoundsDip.Left;
+        var top = boundsDip.Top - _virtualBoundsDip.Top;
 
         System.Windows.Controls.Canvas.SetLeft(HighlightBorder, left);
         System.Windows.Controls.Canvas.SetTop(HighlightBorder, top);
-        HighlightBorder.Width = bounds.Width;
-        HighlightBorder.Height = bounds.Height;
+        HighlightBorder.Width = boundsDip.Width;
+        HighlightBorder.Height = boundsDip.Height;
         HighlightBorder.Visibility = Visibility.Visible;
 
         TargetText.Text = string.IsNullOrWhiteSpace(title) ? "선택된 창" : title;
         System.Windows.Controls.Canvas.SetLeft(TargetText, left + 8);
         System.Windows.Controls.Canvas.SetTop(TargetText, Math.Max(8, top - 34));
         TargetText.Visibility = Visibility.Visible;
+    }
+
+    private Matrix GetFromDeviceMatrix()
+    {
+        var source = PresentationSource.FromVisual(this);
+        return source?.CompositionTarget?.TransformFromDevice ?? Matrix.Identity;
+    }
+
+    private WpfRect DeviceRectangleToDip(DrawingRectangle rectangle)
+    {
+        var topLeft = _fromDevice.Transform(new WpfPoint(rectangle.Left, rectangle.Top));
+        var bottomRight = _fromDevice.Transform(new WpfPoint(rectangle.Right, rectangle.Bottom));
+        return new WpfRect(topLeft, bottomRight);
     }
 }

@@ -2,14 +2,19 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using DrawingRectangle = System.Drawing.Rectangle;
 using WpfPoint = System.Windows.Point;
+using WpfRect = System.Windows.Rect;
 
 namespace MiniCapture;
 
 public partial class RegionCaptureOverlay : Window
 {
     private WpfPoint? _dragStart;
+    private Matrix _fromDevice = Matrix.Identity;
+    private Matrix _toDevice = Matrix.Identity;
+    private WpfRect _virtualBoundsDip;
     private DrawingRectangle _virtualBounds;
 
     public DrawingRectangle? SelectedRegion { get; private set; }
@@ -22,10 +27,14 @@ public partial class RegionCaptureOverlay : Window
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         _virtualBounds = ScreenCaptureService.GetVirtualScreenBounds();
-        Left = _virtualBounds.Left;
-        Top = _virtualBounds.Top;
-        Width = _virtualBounds.Width;
-        Height = _virtualBounds.Height;
+        var source = PresentationSource.FromVisual(this);
+        _fromDevice = source?.CompositionTarget?.TransformFromDevice ?? Matrix.Identity;
+        _toDevice = source?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
+        _virtualBoundsDip = DeviceRectangleToDip(_virtualBounds);
+        Left = _virtualBoundsDip.Left;
+        Top = _virtualBoundsDip.Top;
+        Width = _virtualBoundsDip.Width;
+        Height = _virtualBoundsDip.Height;
 
         Activate();
         Focus();
@@ -98,11 +107,24 @@ public partial class RegionCaptureOverlay : Window
 
     private DrawingRectangle ToScreenRectangle(WpfPoint start, WpfPoint end)
     {
-        var left = (int)Math.Round(_virtualBounds.Left + Math.Min(start.X, end.X));
-        var top = (int)Math.Round(_virtualBounds.Top + Math.Min(start.Y, end.Y));
-        var width = (int)Math.Round(Math.Abs(end.X - start.X));
-        var height = (int)Math.Round(Math.Abs(end.Y - start.Y));
+        var leftDip = _virtualBoundsDip.Left + Math.Min(start.X, end.X);
+        var topDip = _virtualBoundsDip.Top + Math.Min(start.Y, end.Y);
+        var rightDip = _virtualBoundsDip.Left + Math.Max(start.X, end.X);
+        var bottomDip = _virtualBoundsDip.Top + Math.Max(start.Y, end.Y);
+        var topLeft = _toDevice.Transform(new WpfPoint(leftDip, topDip));
+        var bottomRight = _toDevice.Transform(new WpfPoint(rightDip, bottomDip));
+        var left = (int)Math.Round(topLeft.X);
+        var top = (int)Math.Round(topLeft.Y);
+        var width = (int)Math.Round(bottomRight.X - topLeft.X);
+        var height = (int)Math.Round(bottomRight.Y - topLeft.Y);
         return new DrawingRectangle(left, top, width, height);
+    }
+
+    private WpfRect DeviceRectangleToDip(DrawingRectangle rectangle)
+    {
+        var topLeft = _fromDevice.Transform(new WpfPoint(rectangle.Left, rectangle.Top));
+        var bottomRight = _fromDevice.Transform(new WpfPoint(rectangle.Right, rectangle.Bottom));
+        return new WpfRect(topLeft, bottomRight);
     }
 
     private void Cancel()

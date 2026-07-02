@@ -11,6 +11,7 @@
 - 2026-07-03: P3 usability polish completed for the mock-aligned floating button, drag repositioning, centered radial mode menu, and wrapping icon file views.
 - 2026-07-03: Timer UX corrected to delay selection only, countdown feedback added, and window capture target filtering/smoke validation completed.
 - 2026-07-03: Window picker target selection fixed so screen-covering helper windows no longer win over real window candidates.
+- 2026-07-03: DPI coordinate handling added for capture overlays with Per-Monitor DPI awareness and physical-pixel/DIP conversion.
 
 ## Current Work
 
@@ -46,3 +47,4 @@
 - Timer/window fix smoke: UI Automation verified timer choices `3/5/7/10`, confirmed opening timer choices did not save a capture, observed countdown automation text `3초 후 캡처`, saved delayed window capture `C:\Users\user\Pictures\MiniCapture\2026\07\03\20260703_024215_057.png`, and verified app exit with `CloseMainWindow`.
 - Timer/window fix whitespace check: `git diff --check` passed with CRLF conversion warnings only.
 - Window picker full-screen-candidate regression: probe showed visible full-screen helper windows (`PicPick`/`GazeScroll`) ahead of real candidates; after the fix, window capture saved `C:\Users\user\Pictures\MiniCapture\2026\07\03\20260703_042248_813.png` at `1250x753` instead of virtual-screen size.
+- DPI coordinate fix: process DPI awareness probe reports `DpiAwareness=2`; `dotnet build MiniCapture.slnx` passes with 0 warnings and 0 errors; `git diff --check` passes with CRLF conversion warnings only.

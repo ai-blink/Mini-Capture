@@ -208,3 +208,23 @@ Window picker regression fixed: hovering a normal window no longer selects scree
 - `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
 - Window capture smoke saved `C:\Users\user\Pictures\MiniCapture\2026\07\03\20260703_042248_813.png` at `1250x753`, confirming the selected target was not the `3840x2160` virtual screen.
 - `git diff --check`: passed with CRLF conversion warnings only.
+
+## DPI Coordinate Fix
+
+### Finish Line
+
+Overlay coordinates now account for DPI scaling: WPF overlay placement/highlight uses DIP coordinates converted from Win32 physical pixels, while capture bounds remain physical pixels for `CopyFromScreen`.
+
+### Changes
+
+- Added a custom startup entry point that enables Per-Monitor DPI awareness before WPF initializes.
+- Converted window picker overlay virtual-screen bounds and highlight rectangles from physical pixels to WPF DIP coordinates.
+- Converted region overlay window bounds from physical pixels to DIP coordinates, then converts selected drag rectangles back to physical pixels for capture.
+- Adjusted picker candidate choice to prefer smaller real windows after full-screen helper candidates are deferred.
+
+### Verification
+
+- DPI awareness probe reports `DpiAwareness=2`.
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- Automated mouse-coordinate smoke remains partially environment-sensitive because the PowerShell driver can itself be DPI virtualized; final visual/manual confirmation should be done in the running app on the target scaled display.

@@ -24,6 +24,7 @@ public static class WindowPickerService
     {
         var virtualBounds = ScreenCaptureService.GetVirtualScreenBounds();
         var fullScreenCandidates = new List<WindowCaptureTarget>();
+        var windowCandidates = new List<WindowCaptureTarget>();
 
         foreach (var hwnd in NativeWindowApi.EnumerateTopLevelWindows())
         {
@@ -51,13 +52,14 @@ public static class WindowPickerService
             var target = new WindowCaptureTarget(hwnd, bounds, title);
             if (!CoversMostOfVirtualScreen(bounds, virtualBounds))
             {
-                return target;
+                windowCandidates.Add(target);
+                continue;
             }
 
             fullScreenCandidates.Add(target);
         }
 
-        return fullScreenCandidates.FirstOrDefault();
+        return SmallestArea(windowCandidates) ?? SmallestArea(fullScreenCandidates);
     }
 
     private static bool IsCandidate(IntPtr hwnd, int currentProcessId)
@@ -95,5 +97,12 @@ public static class WindowPickerService
 
         return bounds.Width >= virtualBounds.Width * FullScreenCoverageThreshold &&
             bounds.Height >= virtualBounds.Height * FullScreenCoverageThreshold;
+    }
+
+    private static WindowCaptureTarget? SmallestArea(IReadOnlyList<WindowCaptureTarget> candidates)
+    {
+        return candidates
+            .OrderBy(candidate => candidate.Bounds.Width * candidate.Bounds.Height)
+            .FirstOrDefault();
     }
 }
