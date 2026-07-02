@@ -2,13 +2,7 @@
 
 ## Resume Point
 
-P0-P2 implementation is complete and committed.
-
-Recent commits:
-
-- `fb67b43`: P0 WPF skeleton, floating capture button, four-mode menu.
-- `246231d`: P1 drag/full/timer capture, PNG auto-save, result panel.
-- `e956f19`: P2 window picker, DWM bounds highlight, selected-window PNG capture, Esc cancel.
+`app-dev-workflow init` created project live docs and build-ready planning docs from the approved brainstorming design.
 
 ## Active Design
 
@@ -17,8 +11,8 @@ Recent commits:
 
 ## Immediate Next Step
 
-Start P3 implementation from `doc/app-dev/04-execution-tasks.md`: mini image viewer plus Windows Explorer-style capture folder browser.
+Start implementation planning/execution from `doc/app-dev/03-technical-plan.md` and `doc/app-dev/04-execution-tasks.md`.
 
 ## Current Stack Decision
 
-Use C# WPF plus Win32 P/Invoke. Current capture implementation uses GDI `CopyFromScreen` with DWM bounds for window capture; Windows.Graphics.Capture remains a future hardening option for protected/accelerated windows.
+Use C# WPF plus Win32 P/Invoke and Windows.Graphics.Capture unless the user changes the target.
