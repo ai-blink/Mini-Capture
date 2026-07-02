@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+  <title>Mini Capture Layout Companion</title>
+  <style>
+    :root {
+      --button-size: 58px;
+      --button-opacity: 0.72;
+      --menu-radius: 86px;
+      --viewer-density: 44px;
+      --explorer-width: 360px;
+      --accent: #12a594;
+      --ink: #18212f;
+      --muted: #627083;
+      --line: #d6dde6;
+      --panel: #f8fafc;
+      --desk: #e8edf4;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: #f4f6f9;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      letter-spacing: 0;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(260px, 320px) 1fr;
+      min-height: 100vh;
+    }
+
+    .controls {
+      border-right: 1px solid var(--line);
+      background: #ffffff;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .sub {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .group {
+      display: grid;
+      gap: 12px;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .group-title {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: #243043;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .value-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--ink);
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    button.active {
+      border-color: #0d9488;
+      background: #dcf7f3;
+      color: #075e57;
+      font-weight: 700;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    .toggle input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .preview {
+      position: relative;
+      min-height: 100vh;
+      overflow: hidden;
+      background:
+        linear-gradient(#dfe5ed 1px, transparent 1px),
+        linear-gradient(90deg, #dfe5ed 1px, transparent 1px),
+        var(--desk);
+      background-size: 42px 42px;
+      padding: 28px;
+    }
+
+    .desktop-window {
+      position: absolute;
+      border: 1px solid #aeb8c7;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 18px 42px rgba(31, 41, 55, 0.15);
+      overflow: hidden;
+    }
+
+    .window-a {
+      left: 8%;
+      top: 11%;
+      width: 46%;
+      height: 34%;
+    }
+
+    .window-b {
+      right: 8%;
+      top: 18%;
+      width: 34%;
+      height: 44%;
+    }
+
+    .titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 32px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--line);
+      background: #eef2f6;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #8fa0b5;
+    }
+
+    .window-body {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .line {
+      height: 10px;
+      border-radius: 999px;
+      background: #d8e0ea;
+    }
+
+    .line.short {
+      width: 58%;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .tile {
+      aspect-ratio: 1.4;
+      border: 1px solid #d2dae5;
+      border-radius: 6px;
+      background: #f6f8fb;
+    }
+
+    .capture-button {
+      position: absolute;
+      right: 8%;
+      bottom: 18%;
+      display: grid;
+      place-items: center;
+      width: var(--button-size);
+      height: var(--button-size);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      background: rgba(18, 165, 148, var(--button-opacity));
+      color: #ffffff;
+      box-shadow: 0 12px 28px rgba(7, 94, 87, 0.28);
+      font-size: calc(var(--button-size) * 0.42);
+      font-weight: 800;
+      user-select: none;
+    }
+
+    .capture-button::after {
+      content: "";
+      position: absolute;
+      inset: 20%;
+      border: 2px solid currentColor;
+      border-radius: 6px;
+    }
+
+    .mode-button {
+      position: absolute;
+      right: calc(8% + (var(--button-size) / 2) - 22px);
+      bottom: calc(18% + (var(--button-size) / 2) - 22px);
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border: 1px solid #cbd5e1;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #263245;
+      box-shadow: 0 10px 22px rgba(31, 41, 55, 0.16);
+      font-size: 12px;
+      font-weight: 700;
+      transition: transform 140ms ease;
+    }
+
+    .mode-region {
+      transform: translate(calc(var(--menu-radius) * -1), 0);
+    }
+
+    .mode-window {
+      transform: translate(calc(var(--menu-radius) * -0.72), calc(var(--menu-radius) * -0.72));
+    }
+
+    .mode-full {
+      transform: translate(0, calc(var(--menu-radius) * -1));
+    }
+
+    .mode-delay {
+      transform: translate(calc(var(--menu-radius) * 0.72), calc(var(--menu-radius) * -0.72));
+    }
+
+    .selection {
+      position: absolute;
+      left: 17%;
+      top: 24%;
+      width: 28%;
+      height: 22%;
+      border: 2px solid var(--accent);
+      background: rgba(18, 165, 148, 0.08);
+      box-shadow: 0 0 0 9999px rgba(24, 33, 47, 0.12);
+    }
+
+    .window-highlight {
+      position: absolute;
+      right: 8%;
+      top: 18%;
+      width: 34%;
+      height: 44%;
+      border: 3px solid var(--accent);
+      border-radius: 9px;
+      pointer-events: none;
+    }
+
+    .result-panel {
+      position: absolute;
+      left: 50%;
+      bottom: 28px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: min(680px, calc(100% - 56px));
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 12px 30px rgba(31, 41, 55, 0.18);
+      font-size: 13px;
+    }
+
+    .result-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+    }
+
+    .mini-action {
+      min-height: 32px;
+      padding: 0 10px;
+      white-space: nowrap;
+    }
+
+    .viewer {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      top: 9%;
+      bottom: 9%;
+      display: none;
+      grid-template-rows: var(--viewer-density) 1fr var(--viewer-density);
+      border: 1px solid #aeb8c7;
+      border-radius: 8px;
+      background: #111827;
+      box-shadow: 0 24px 70px rgba(17, 24, 39, 0.35);
+      overflow: hidden;
+    }
+
+    .viewer.visible {
+      display: grid;
+    }
+
+    .viewer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 12px;
+      color: #e5e7eb;
+      background: #1f2937;
+      font-size: 13px;
+      z-index: 2;
+    }
+
+    .viewer-tools {
+      display: flex;
+      gap: 8px;
+    }
+
+    .viewer-tools button {
+      min-width: 34px;
+      min-height: 30px;
+      border-color: #374151;
+      background: #111827;
+      color: #e5e7eb;
+    }
+
+    .image-stage {
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: #0f172a;
+      transition: padding-left 180ms ease;
+    }
+
+    .viewer.explorer-open .image-stage {
+      padding-left: calc(var(--explorer-width) + 22px);
+    }
+
+    .explorer-panel {
+      position: absolute;
+      left: 0;
+      top: var(--viewer-density);
+      bottom: var(--viewer-density);
+      width: var(--explorer-width);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      border-right: 1px solid #cbd5e1;
+      background: #f8fafc;
+      transform: translateX(calc(var(--explorer-width) * -1));
+      transition: transform 180ms ease;
+      z-index: 1;
+    }
+
+    .viewer.explorer-open .explorer-panel {
+      transform: translateX(0);
+    }
+
+    .explorer-head {
+      display: grid;
+      gap: 7px;
+      padding: 10px;
+      border-bottom: 1px solid #d8e0ea;
+      color: #1f2937;
+      background: #ffffff;
+      font-size: 12px;
+    }
+
+    .command-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .command-button {
+      display: grid;
+      place-items: center;
+      min-width: 28px;
+      height: 28px;
+      border: 1px solid #d8e0ea;
+      border-radius: 6px;
+      color: #334155;
+      background: #f8fafc;
+      font-weight: 700;
+    }
+
+    .command-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding-left: 4px;
+      color: #475569;
+      font-weight: 700;
+    }
+
+    .address-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(86px, 0.42fr);
+      gap: 6px;
+    }
+
+    .address-box,
+    .search-box {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      height: 30px;
+      padding: 7px 9px;
+      border: 1px solid #d8e0ea;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #334155;
+    }
+
+    .search-box {
+      color: #64748b;
+    }
+
+    .folder-line {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #64748b;
+    }
+
+    .explorer-body {
+      display: grid;
+      grid-template-columns: 156px 1fr;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .nav-tree {
+      display: grid;
+      align-content: start;
+      gap: 1px;
+      padding: 8px 5px;
+      border-right: 1px solid #d8e0ea;
+      background: #f1f5f9;
+      overflow: auto;
+      font-size: 12px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      height: 28px;
+      padding: 0 7px 0 calc(6px + (var(--depth, 0) * 14px));
+      border-radius: 5px;
+      color: #334155;
+    }
+
+    .nav-item.active-nav {
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-weight: 700;
+    }
+
+    .nav-icon {
+      flex: 0 0 auto;
+      width: 16px;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .expander {
+      flex: 0 0 auto;
+      width: 12px;
+      color: #64748b;
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .nav-item.leaf .expander {
+      color: transparent;
+    }
+
+    .nav-text {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-pane {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      min-width: 0;
+      min-height: 0;
+      background: #ffffff;
+    }
+
+    .view-switcher {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .view-buttons {
+      display: flex;
+      gap: 5px;
+    }
+
+    .view-button {
+      min-height: 26px;
+      padding: 0 8px;
+      border: 1px solid #d8e0ea;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #334155;
+      font-size: 11px;
+    }
+
+    .view-button.active-view {
+      border-color: #60a5fa;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-weight: 700;
+    }
+
+    .file-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 64px 70px;
+      gap: 8px;
+      padding: 7px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .file-list {
+      display: grid;
+      align-content: start;
+      overflow: auto;
+      padding: 5px;
+      font-size: 12px;
+    }
+
+    .file-list.icon-view {
+      grid-template-columns: repeat(auto-fill, minmax(var(--icon-card-size), 1fr));
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .file-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 64px 70px;
+      gap: 8px;
+      align-items: center;
+      min-width: 0;
+      height: 32px;
+      padding: 0 5px;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      color: #1f2937;
+    }
+
+    .file-list.icon-view .file-row {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      align-content: start;
+      gap: 6px;
+      height: auto;
+      min-height: calc(var(--thumb-size) + 52px);
+      padding: 8px;
+      text-align: center;
+    }
+
+    .file-row.selected-file {
+      border-color: #93c5fd;
+      background: #dbeafe;
+    }
+
+    .file-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-list.icon-view .file-name {
+      display: grid;
+      justify-items: center;
+      gap: 6px;
+      width: 100%;
+      white-space: normal;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .file-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      margin-right: 6px;
+      border-radius: 4px;
+      color: #ffffff;
+      background: #14b8a6;
+      font-size: 10px;
+      font-weight: 800;
+      vertical-align: middle;
+    }
+
+    .file-list.icon-view .file-icon {
+      width: var(--thumb-size);
+      height: calc(var(--thumb-size) * 0.68);
+      margin-right: 0;
+      border: 1px solid #93c5fd;
+      border-radius: 6px;
+      background:
+        linear-gradient(135deg, rgba(20, 184, 166, 0.45), transparent 58%),
+        repeating-linear-gradient(0deg, #e0f2fe 0 9px, #bfdbfe 9px 18px);
+      color: #0f766e;
+      font-size: 10px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+    }
+
+    .file-list.icon-view .file-cell-muted {
+      display: none;
+    }
+
+    .file-list.icon-small {
+      --thumb-size: 42px;
+      --icon-card-size: 72px;
+      font-size: 10px;
+    }
+
+    .file-list.icon-medium {
+      --thumb-size: 66px;
+      --icon-card-size: 104px;
+      font-size: 11px;
+    }
+
+    .file-list.icon-large {
+      --thumb-size: 96px;
+      --icon-card-size: 138px;
+      font-size: 12px;
+    }
+
+    .file-cell-muted {
+      color: #64748b;
+      white-space: nowrap;
+    }
+
+    .sort-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .sort-chip {
+      padding: 4px 7px;
+      border: 1px solid #334155;
+      border-radius: 999px;
+      color: #cbd5e1;
+      background: #0f172a;
+    }
+
+    .sort-chip.active-chip {
+      border-color: rgba(20, 184, 166, 0.8);
+      color: #99f6e4;
+      background: rgba(20, 184, 166, 0.12);
+    }
+
+    .thumb-list {
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      padding: 10px;
+      overflow: auto;
+    }
+
+    .thumb-item {
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 8px;
+      align-items: center;
+      min-width: 0;
+      padding: 6px;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      color: #cbd5e1;
+      background: transparent;
+    }
+
+    .thumb-item.selected {
+      border-color: rgba(20, 184, 166, 0.8);
+      background: rgba(20, 184, 166, 0.12);
+    }
+
+    .thumb {
+      width: 54px;
+      aspect-ratio: 16 / 10;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      background:
+        linear-gradient(135deg, rgba(20, 184, 166, 0.42), transparent 55%),
+        repeating-linear-gradient(0deg, #263244 0 8px, #1e293b 8px 16px);
+    }
+
+    .thumb-meta {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+      font-size: 11px;
+    }
+
+    .thumb-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #e5e7eb;
+    }
+
+    .thumb-sub {
+      color: #94a3b8;
+    }
+
+    .mock-image {
+      width: min(74%, 760px);
+      aspect-ratio: 16 / 9;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      background:
+        linear-gradient(90deg, rgba(20, 184, 166, 0.3), transparent 38%),
+        repeating-linear-gradient(0deg, #1e293b 0 24px, #243244 24px 48px);
+    }
+
+    .status-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      color: #cbd5e1;
+      background: #1f2937;
+      font-size: 12px;
+      z-index: 2;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .preview {
+        min-height: 680px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <aside class="controls">
+      <h1>Mini Capture Companion</h1>
+      <p class="sub">계획 단계에서 플로팅 버튼과 뷰어의 감각을 조정하는 의사결정용 mockup입니다.</p>
+
+      <section class="group" aria-labelledby="button-group">
+        <h2 id="button-group" class="group-title">플로팅 버튼</h2>
+        <label>
+          <span class="value-row"><span>크기</span><strong id="sizeValue">58px</strong></span>
+          <input id="buttonSize" type="range" min="42" max="82" value="58">
+        </label>
+        <label>
+          <span class="value-row"><span>투명도</span><strong id="opacityValue">72%</strong></span>
+          <input id="buttonOpacity" type="range" min="38" max="95" value="72">
+        </label>
+        <label>
+          <span class="value-row"><span>메뉴 반경</span><strong id="radiusValue">86px</strong></span>
+          <input id="menuRadius" type="range" min="58" max="126" value="86">
+        </label>
+      </section>
+
+      <section class="group" aria-labelledby="mode-group">
+        <h2 id="mode-group" class="group-title">캡처 상태</h2>
+        <div class="segmented">
+          <button type="button" class="active" data-mode="region">드래그</button>
+          <button type="button" data-mode="window">창 지정</button>
+          <button type="button" data-mode="full">전체</button>
+          <button type="button" data-mode="delay">타이머</button>
+        </div>
+      </section>
+
+      <section class="group" aria-labelledby="viewer-group">
+        <h2 id="viewer-group" class="group-title">저장 후 확인</h2>
+        <label class="toggle">
+          <span>결과 패널 표시</span>
+          <input id="showPanel" type="checkbox" checked>
+        </label>
+        <label class="toggle">
+          <span>뷰어 열림 상태</span>
+          <input id="showViewer" type="checkbox" checked>
+        </label>
+        <label class="toggle">
+          <span>왼쪽 슬라이드 탐색기</span>
+          <input id="showExplorer" type="checkbox" checked>
+        </label>
+        <label>
+          <span class="value-row"><span>뷰어 바 높이</span><strong id="densityValue">44px</strong></span>
+          <input id="viewerDensity" type="range" min="34" max="58" value="44">
+        </label>
+        <label>
+          <span class="value-row"><span>탐색기 폭</span><strong id="explorerValue">360px</strong></span>
+          <input id="explorerWidth" type="range" min="280" max="460" value="360">
+        </label>
+      </section>
+    </aside>
+
+    <section class="preview" aria-label="Mini Capture 데스크톱 미리보기">
+      <div class="desktop-window window-a">
+        <div class="titlebar"><span class="dot"></span><span>작업 문서</span></div>
+        <div class="window-body">
+          <div class="line"></div>
+          <div class="line short"></div>
+          <div class="grid">
+            <div class="tile"></div>
+            <div class="tile"></div>
+            <div class="tile"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="desktop-window window-b">
+        <div class="titlebar"><span class="dot"></span><span>브라우저</span></div>
+        <div class="window-body">
+          <div class="line"></div>
+          <div class="line"></div>
+          <div class="line short"></div>
+        </div>
+      </div>
+
+      <div id="selection" class="selection" aria-hidden="true"></div>
+      <div id="windowHighlight" class="window-highlight hidden" aria-hidden="true"></div>
+
+      <div class="mode-button mode-region">영역</div>
+      <div class="mode-button mode-window">창</div>
+      <div class="mode-button mode-full">전체</div>
+      <div class="mode-button mode-delay">3s</div>
+      <div class="capture-button" aria-label="캡처 버튼"></div>
+
+      <div id="resultPanel" class="result-panel">
+        <strong>저장됨</strong>
+        <span class="result-name">C:\Users\user\Pictures\MiniCapture\20260702_143020_118.png</span>
+        <button type="button" class="mini-action">열기</button>
+        <button type="button" class="mini-action">폴더</button>
+        <button type="button" class="mini-action">뷰어</button>
+      </div>
+
+      <div id="viewer" class="viewer" aria-label="미니 이미지 뷰어">
+        <div class="viewer-bar">
+          <span>20260702_143020_118.png</span>
+          <div class="viewer-tools">
+            <button type="button">-</button>
+            <button type="button">100</button>
+            <button type="button">Fit</button>
+            <button type="button">+</button>
+          </div>
+        </div>
+        <aside class="explorer-panel" aria-label="Windows 탐색기 스타일 왼쪽 슬라이드 파일 탐색기">
+          <div class="explorer-head">
+            <div class="command-row">
+              <span class="command-button">‹</span>
+              <span class="command-button">›</span>
+              <span class="command-button">↑</span>
+              <span class="command-label">MiniCapture</span>
+            </div>
+            <div class="address-row">
+              <span class="address-box">내 PC &gt; 사진 &gt; MiniCapture</span>
+              <span class="search-box">검색</span>
+            </div>
+          </div>
+          <div class="explorer-body">
+            <nav class="nav-tree" aria-label="폴더 트리">
+              <div class="nav-item" style="--depth: 0"><span class="expander">▾</span><span class="nav-icon">☆</span><span class="nav-text">빠른 접근</span></div>
+              <div class="nav-item leaf" style="--depth: 1"><span class="expander">›</span><span class="nav-icon">▣</span><span class="nav-text">바탕 화면</span></div>
+              <div class="nav-item leaf" style="--depth: 1"><span class="expander">›</span><span class="nav-icon">▣</span><span class="nav-text">다운로드</span></div>
+              <div class="nav-item" style="--depth: 0"><span class="expander">▾</span><span class="nav-icon">▣</span><span class="nav-text">내 PC</span></div>
+              <div class="nav-item leaf" style="--depth: 1"><span class="expander">›</span><span class="nav-icon">▣</span><span class="nav-text">문서</span></div>
+              <div class="nav-item" style="--depth: 1"><span class="expander">▾</span><span class="nav-icon">▣</span><span class="nav-text">사진</span></div>
+              <div class="nav-item" style="--depth: 2"><span class="expander">▾</span><span class="nav-icon">▣</span><span class="nav-text">MiniCapture</span></div>
+              <div class="nav-item" style="--depth: 3"><span class="expander">▾</span><span class="nav-icon">▣</span><span class="nav-text">2026</span></div>
+              <div class="nav-item active-nav" style="--depth: 4"><span class="expander">▾</span><span class="nav-icon">▣</span><span class="nav-text">07</span></div>
+              <div class="nav-item leaf" style="--depth: 5"><span class="expander">›</span><span class="nav-icon">▣</span><span class="nav-text">02</span></div>
+              <div class="nav-item leaf" style="--depth: 5"><span class="expander">›</span><span class="nav-icon">▣</span><span class="nav-text">01</span></div>
+              <div class="nav-item leaf" style="--depth: 1"><span class="expander">›</span><span class="nav-icon">▣</span><span class="nav-text">로컬 디스크 C:</span></div>
+            </nav>
+            <section class="file-pane" aria-label="캡처 파일 목록">
+              <div class="view-switcher">
+                <span>보기</span>
+                <div class="view-buttons" aria-label="아이콘 보기 크기">
+                  <button type="button" class="view-button" data-view="details">자세히</button>
+                  <button type="button" class="view-button" data-view="small">작게</button>
+                  <button type="button" class="view-button active-view" data-view="medium">중간</button>
+                  <button type="button" class="view-button" data-view="large">크게</button>
+                </div>
+              </div>
+              <div class="file-head">
+                <span>이름</span>
+                <span>크기</span>
+                <span>수정한 날짜</span>
+              </div>
+              <div id="fileList" class="file-list icon-view icon-medium">
+                <div class="file-row selected-file">
+                  <span class="file-name"><span class="file-icon">PNG</span>20260702_143020_118.png</span>
+                  <span class="file-cell-muted">1.2 MB</span>
+                  <span class="file-cell-muted">방금 전</span>
+                </div>
+                <div class="file-row">
+                  <span class="file-name"><span class="file-icon">PNG</span>20260702_142841_006.png</span>
+                  <span class="file-cell-muted">864 KB</span>
+                  <span class="file-cell-muted">2분 전</span>
+                </div>
+                <div class="file-row">
+                  <span class="file-name"><span class="file-icon">PNG</span>20260702_141955_442.png</span>
+                  <span class="file-cell-muted">2.4 MB</span>
+                  <span class="file-cell-muted">9분 전</span>
+                </div>
+                <div class="file-row">
+                  <span class="file-name"><span class="file-icon">PNG</span>20260702_134405_019.png</span>
+                  <span class="file-cell-muted">730 KB</span>
+                  <span class="file-cell-muted">43분 전</span>
+                </div>
+                <div class="file-row">
+                  <span class="file-name"><span class="file-icon">JPG</span>reference_viewer_layout.jpg</span>
+                  <span class="file-cell-muted">418 KB</span>
+                  <span class="file-cell-muted">어제</span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </aside>
+        <div class="image-stage">
+          <div class="mock-image"></div>
+        </div>
+        <div class="status-strip">
+          <span>3 / 18</span>
+          <span>← 이전 · 다음 →</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const root = document.documentElement;
+    const buttonSize = document.getElementById("buttonSize");
+    const buttonOpacity = document.getElementById("buttonOpacity");
+    const menuRadius = document.getElementById("menuRadius");
+    const viewerDensity = document.getElementById("viewerDensity");
+    const explorerWidth = document.getElementById("explorerWidth");
+    const showPanel = document.getElementById("showPanel");
+    const showViewer = document.getElementById("showViewer");
+    const showExplorer = document.getElementById("showExplorer");
+    const sizeValue = document.getElementById("sizeValue");
+    const opacityValue = document.getElementById("opacityValue");
+    const radiusValue = document.getElementById("radiusValue");
+    const densityValue = document.getElementById("densityValue");
+    const explorerValue = document.getElementById("explorerValue");
+    const resultPanel = document.getElementById("resultPanel");
+    const viewer = document.getElementById("viewer");
+    const selection = document.getElementById("selection");
+    const windowHighlight = document.getElementById("windowHighlight");
+    const fileList = document.getElementById("fileList");
+    const modeButtons = Array.from(document.querySelectorAll("[data-mode]"));
+    const viewButtons = Array.from(document.querySelectorAll("[data-view]"));
+
+    function setSliderValues() {
+      root.style.setProperty("--button-size", buttonSize.value + "px");
+      root.style.setProperty("--button-opacity", String(Number(buttonOpacity.value) / 100));
+      root.style.setProperty("--menu-radius", menuRadius.value + "px");
+      root.style.setProperty("--viewer-density", viewerDensity.value + "px");
+      root.style.setProperty("--explorer-width", explorerWidth.value + "px");
+      sizeValue.textContent = buttonSize.value + "px";
+      opacityValue.textContent = buttonOpacity.value + "%";
+      radiusValue.textContent = menuRadius.value + "px";
+      densityValue.textContent = viewerDensity.value + "px";
+      explorerValue.textContent = explorerWidth.value + "px";
+    }
+
+    function setVisibility() {
+      resultPanel.classList.toggle("hidden", !showPanel.checked);
+      viewer.classList.toggle("visible", showViewer.checked);
+      viewer.classList.toggle("explorer-open", showExplorer.checked);
+    }
+
+    function setMode(mode) {
+      modeButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.mode === mode);
+      });
+      selection.classList.toggle("hidden", mode !== "region");
+      windowHighlight.classList.toggle("hidden", mode !== "window");
+    }
+
+    function setFileView(view) {
+      viewButtons.forEach((button) => {
+        button.classList.toggle("active-view", button.dataset.view === view);
+      });
+      fileList.classList.toggle("icon-view", view !== "details");
+      fileList.classList.toggle("icon-small", view === "small");
+      fileList.classList.toggle("icon-medium", view === "medium");
+      fileList.classList.toggle("icon-large", view === "large");
+    }
+
+    [buttonSize, buttonOpacity, menuRadius, viewerDensity, explorerWidth].forEach((control) => {
+      control.addEventListener("input", setSliderValues);
+    });
+    [showPanel, showViewer, showExplorer].forEach((control) => {
+      control.addEventListener("change", setVisibility);
+    });
+    modeButtons.forEach((button) => {
+      button.addEventListener("click", () => setMode(button.dataset.mode));
+    });
+    viewButtons.forEach((button) => {
+      button.addEventListener("click", () => setFileView(button.dataset.view));
+    });
+
+    setSliderValues();
+    setVisibility();
+    setMode("region");
+    setFileView("medium");
+  </script>
+</body>
+</html>
