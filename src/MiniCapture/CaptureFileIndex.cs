@@ -39,21 +39,33 @@ public static class CaptureFileIndex
         var root = RootDirectory;
         Directory.CreateDirectory(root);
 
-        var miniCaptureQuick = BuildDirectoryNode("MiniCapture", root);
+        var miniCaptureQuick = BuildDirectoryNode("MiniCapture", root, "캡처 루트");
         miniCaptureQuick.IsExpanded = true;
 
-        var miniCaptureUnderPictures = BuildDirectoryNode("MiniCapture", root);
+        var latest = GetLatestImage();
+        if (latest is not null && IsUnderRoot(latest.FolderPath))
+        {
+            miniCaptureQuick.Children.Insert(0, new FolderTreeNode("최근 캡처", latest.FolderPath, "\uE81C", latest.ModifiedText));
+        }
+
+        var todayFolder = Path.Combine(root, DateTime.Now.ToString("yyyy"), DateTime.Now.ToString("MM"), DateTime.Now.ToString("dd"));
+        if (Directory.Exists(todayFolder))
+        {
+            miniCaptureQuick.Children.Insert(0, new FolderTreeNode("오늘", todayFolder, "\uE787", DateTime.Now.ToString("yyyy-MM-dd")));
+        }
+
+        var miniCaptureUnderPictures = BuildDirectoryNode("MiniCapture", root, "캡처 루트");
         miniCaptureUnderPictures.IsExpanded = true;
 
-        var pictures = new FolderTreeNode("Pictures", Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
+        var pictures = new FolderTreeNode("사진", null, "\uEB9F");
         pictures.Children.Add(miniCaptureUnderPictures);
         pictures.IsExpanded = true;
 
-        var quickAccess = new FolderTreeNode("Quick access", null);
+        var quickAccess = new FolderTreeNode("빠른 실행", null, "\uE734");
         quickAccess.Children.Add(miniCaptureQuick);
         quickAccess.IsExpanded = true;
 
-        var thisPc = new FolderTreeNode("This PC", null);
+        var thisPc = new FolderTreeNode("내 PC", null, "\uEC4E");
         thisPc.Children.Add(pictures);
         thisPc.IsExpanded = true;
 
@@ -78,9 +90,9 @@ public static class CaptureFileIndex
         return folder.StartsWith(root, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static FolderTreeNode BuildDirectoryNode(string name, string path)
+    private static FolderTreeNode BuildDirectoryNode(string name, string path, string? detail = null)
     {
-        var node = new FolderTreeNode(name, path);
+        var node = new FolderTreeNode(name, path, "\uE8B7", detail);
         foreach (var directory in EnumerateDirectories(path))
         {
             node.Children.Add(BuildDirectoryNode(System.IO.Path.GetFileName(directory), directory));

@@ -247,3 +247,34 @@ Closing the floating capture window no longer exits Mini Capture; the process st
 
 - `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
 - Close-to-tray smoke: `CloseMainWindow` returned true, the main window hid, and the process remained alive.
+
+## Viewer Browser V1 Reinforcement
+
+### Finish Line
+
+The internal viewer and capture-root browser are strengthened within V1 scope: the tree feels closer to Windows Explorer, simple image annotations can be applied, edited PNGs can be saved, and viewer/result actions cover open plus clipboard workflows.
+
+### Changes
+
+- Expanded the capture-root tree with Explorer-like groups, icons, quick links for today/recent captures, and a `내 PC > 사진 > MiniCapture` path while keeping selectable paths inside `Pictures\MiniCapture`.
+- Added viewer tools for hand/pan, rectangle, ellipse, mosaic selection, color choice, and text placement.
+- Added in-memory bitmap editing that commits simple annotations directly into the displayed bitmap, without adding a layer system or general editor architecture.
+- Added viewer actions for save, open, copy file path, and copy image.
+- Added result-panel actions for copy file path and copy image, and renamed the file action to `열기`.
+- Added automation IDs for the preview image/edit surface path used by UI smoke checks.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- UI Automation smoke created `C:\Users\user\Pictures\MiniCapture\2026\07\03\20260703_070610_158.png`, opened the internal viewer, verified richer tree labels, selected a color, used pan/rectangle/ellipse/mosaic/text tools, saved the edited PNG, copied the file path, copied the image to the clipboard, invoked open, and confirmed closing the main window kept the process alive in tray.
+- `git diff --check`: passed with CRLF conversion warnings only.
+
+### Decisions
+
+- Editing remains intentionally raster-only and immediate; no layer list, object selection, delete/rename/copy/move file operations, OCR, upload/cloud sharing, scrolling capture, video/GIF, or heavy editing was added.
+- The tree can show Explorer-like grouping nodes outside the capture root, but selectable file paths remain under the capture root.
+
+### Follow-ups
+
+- P4 still owns DPI/multi-monitor sweeps, repeated capture loops, packaging choice, and release notes.
+- FOLLOW_UP: if annotation undo or save-as is desired later, treat it as a separate V2 editor slice rather than extending this V1 reinforcement.

@@ -1,16 +1,37 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using IOPath = System.IO.Path;
 using WpfBinding = System.Windows.Data.Binding;
 using WpfBrushes = System.Windows.Media.Brushes;
+using WpfClipboard = System.Windows.Clipboard;
+using WpfPoint = System.Windows.Point;
+using WpfRect = System.Windows.Rect;
 using WpfColor = System.Windows.Media.Color;
+using WpfCursors = System.Windows.Input.Cursors;
+using WpfEllipse = System.Windows.Shapes.Ellipse;
+using WpfFlowDirection = System.Windows.FlowDirection;
+using WpfPen = System.Windows.Media.Pen;
+using WpfRectangle = System.Windows.Shapes.Rectangle;
+using WpfShape = System.Windows.Shapes.Shape;
 
 namespace MiniCapture;
+
+internal enum ViewerEditTool
+{
+    Pan,
+    Rectangle,
+    Ellipse,
+    Mosaic,
+    Text
+}
 
 public partial class ViewerWindow : Window
 {
@@ -20,11 +41,22 @@ public partial class ViewerWindow : Window
 
     private readonly ObservableCollection<CaptureImageFile> _files = new();
     private ObservableCollection<FolderTreeNode> _folderNodes = new();
+    private BitmapSource? _editableImage;
+    private WpfShape? _previewShape;
     private string? _pendingPath;
     private string? _currentFolderPath;
+    private string? _lastSavedPath;
     private CaptureImageFile? _currentFile;
+    private ViewerEditTool _editTool = ViewerEditTool.Pan;
     private bool _fitMode = true;
+    private bool _isDrawing;
     private bool _isLoadingSelection;
+    private bool _isPanning;
+    private WpfPoint _drawStartPoint;
+    private WpfPoint _panStartPoint;
+    private double _panStartHorizontalOffset;
+    private double _panStartVerticalOffset;
+    private WpfColor _selectedColor = WpfColor.FromRgb(239, 68, 68);
     private double _zoom = 1.0;
     private ExplorerViewMode _viewMode = ExplorerViewMode.Details;
 
@@ -33,6 +65,7 @@ public partial class ViewerWindow : Window
         InitializeComponent();
         _pendingPath = imagePath;
         FileList.ItemsSource = _files;
+        UpdateToolButtons();
     }
 
     public void OpenImage(string? imagePath)
@@ -74,7 +107,7 @@ public partial class ViewerWindow : Window
     {
         if (!string.IsNullOrWhiteSpace(targetPath))
         {
-            var folder = Path.GetDirectoryName(targetPath);
+            var folder = IOPath.GetDirectoryName(targetPath);
             if (!string.IsNullOrWhiteSpace(folder))
             {
                 return folder;
@@ -147,7 +180,9 @@ public partial class ViewerWindow : Window
             image.Freeze();
 
             _currentFile = file;
-            PreviewImage.Source = image;
+            _lastSavedPath = file.Path;
+            _editableImage = image;
+            PreviewImage.Source = _editableImage;
             EmptyMessage.Visibility = Visibility.Collapsed;
             CurrentFileText.Text = file.FileName;
             StatusText.Text = $"{file.Path}  |  {file.SizeText}";
@@ -173,7 +208,13 @@ public partial class ViewerWindow : Window
     private void ClearImage(string message)
     {
         _currentFile = null;
+        _lastSavedPath = null;
+        _editableImage = null;
         PreviewImage.Source = null;
+        ImageSurface.Width = 0;
+        ImageSurface.Height = 0;
+        AnnotationOverlay.Width = 0;
+        AnnotationOverlay.Height = 0;
         CurrentFileText.Text = string.Empty;
         StatusText.Text = message;
         EmptyMessage.Text = message;
@@ -265,6 +306,213 @@ public partial class ViewerWindow : Window
         SetViewMode(mode);
     }
 
+    private void OnSaveClick(object sender, RoutedEventArgs e)
+    {
+        if (_editableImage is null)
+        {
+            SetViewerStatus("저장할 이미지가 없습니다.");
+            return;
+        }
+
+        var targetPath = GetSaveTargetPath();
+        if (targetPath is null)
+        {
+            SetViewerStatus("저장할 파일을 선택할 수 없습니다.");
+            return;
+        }
+
+        try
+        {
+            SavePng(_editableImage, targetPath);
+            _lastSavedPath = targetPath;
+            _pendingPath = targetPath;
+            RefreshIndex();
+            SetViewerStatus($"저장됨: {targetPath}");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            SetViewerStatus($"저장 실패: {ex.Message}");
+        }
+    }
+
+    private void OnOpenClick(object sender, RoutedEventArgs e)
+    {
+        var path = GetActiveFilePath();
+        if (path is null || !File.Exists(path))
+        {
+            SetViewerStatus("열 파일이 없습니다.");
+            return;
+        }
+
+        ShellService.OpenFile(path);
+        SetViewerStatus($"열기: {path}");
+    }
+
+    private void OnCopyPathClick(object sender, RoutedEventArgs e)
+    {
+        var path = GetActiveFilePath();
+        if (path is null)
+        {
+            SetViewerStatus("복사할 파일 경로가 없습니다.");
+            return;
+        }
+
+        try
+        {
+            WpfClipboard.SetText(path);
+            SetViewerStatus("파일 경로를 클립보드에 복사했습니다.");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+        {
+            SetViewerStatus($"클립보드 복사 실패: {ex.Message}");
+        }
+    }
+
+    private void OnCopyImageClick(object sender, RoutedEventArgs e)
+    {
+        if (_editableImage is null)
+        {
+            SetViewerStatus("복사할 이미지가 없습니다.");
+            return;
+        }
+
+        try
+        {
+            WpfClipboard.SetImage(_editableImage);
+            SetViewerStatus("이미지를 클립보드에 복사했습니다.");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+        {
+            SetViewerStatus($"이미지 복사 실패: {ex.Message}");
+        }
+    }
+
+    private void OnToolButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button { Tag: string tag } ||
+            !Enum.TryParse<ViewerEditTool>(tag, out var tool))
+        {
+            return;
+        }
+
+        _editTool = tool;
+        UpdateToolButtons();
+        SetViewerStatus(tool switch
+        {
+            ViewerEditTool.Pan => "핸드툴: 이미지를 끌어 이동합니다.",
+            ViewerEditTool.Rectangle => "네모: 이미지 위에서 드래그해 그립니다.",
+            ViewerEditTool.Ellipse => "동그라미: 이미지 위에서 드래그해 그립니다.",
+            ViewerEditTool.Mosaic => "모자이크: 가릴 영역을 드래그합니다.",
+            _ => "텍스트: 이미지 위를 클릭해 입력합니다."
+        });
+    }
+
+    private void OnColorSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ColorSelector?.SelectedItem is not ComboBoxItem { Tag: string colorText })
+        {
+            return;
+        }
+
+        if (System.Windows.Media.ColorConverter.ConvertFromString(colorText) is WpfColor color)
+        {
+            _selectedColor = color;
+        }
+    }
+
+    private void OnImageMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (_editableImage is null)
+        {
+            return;
+        }
+
+        var position = ClampToSurface(e.GetPosition(AnnotationOverlay));
+        if (_editTool == ViewerEditTool.Pan)
+        {
+            _isPanning = true;
+            _panStartPoint = e.GetPosition(ImageScrollViewer);
+            _panStartHorizontalOffset = ImageScrollViewer.HorizontalOffset;
+            _panStartVerticalOffset = ImageScrollViewer.VerticalOffset;
+            AnnotationOverlay.CaptureMouse();
+            AnnotationOverlay.Cursor = WpfCursors.SizeAll;
+            e.Handled = true;
+            return;
+        }
+
+        if (_editTool == ViewerEditTool.Text)
+        {
+            ApplyText(position);
+            e.Handled = true;
+            return;
+        }
+
+        _isDrawing = true;
+        _drawStartPoint = position;
+        _previewShape = CreatePreviewShape();
+        AnnotationOverlay.Children.Add(_previewShape);
+        UpdatePreviewShape(position);
+        AnnotationOverlay.CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void OnImageMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (_isPanning)
+        {
+            var current = e.GetPosition(ImageScrollViewer);
+            ImageScrollViewer.ScrollToHorizontalOffset(_panStartHorizontalOffset - (current.X - _panStartPoint.X));
+            ImageScrollViewer.ScrollToVerticalOffset(_panStartVerticalOffset - (current.Y - _panStartPoint.Y));
+            e.Handled = true;
+            return;
+        }
+
+        if (!_isDrawing)
+        {
+            return;
+        }
+
+        UpdatePreviewShape(ClampToSurface(e.GetPosition(AnnotationOverlay)));
+        e.Handled = true;
+    }
+
+    private void OnImageMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_isPanning)
+        {
+            _isPanning = false;
+            AnnotationOverlay.ReleaseMouseCapture();
+            AnnotationOverlay.Cursor = _editTool == ViewerEditTool.Pan ? WpfCursors.SizeAll : WpfCursors.Cross;
+            e.Handled = true;
+            return;
+        }
+
+        if (!_isDrawing)
+        {
+            return;
+        }
+
+        var endPoint = ClampToSurface(e.GetPosition(AnnotationOverlay));
+        var rect = GetPixelRect(_drawStartPoint, endPoint);
+        RemovePreviewShape();
+
+        if (rect.Width >= 2 && rect.Height >= 2)
+        {
+            if (_editTool == ViewerEditTool.Mosaic)
+            {
+                ApplyMosaic(rect);
+            }
+            else
+            {
+                ApplyShape(rect, _editTool == ViewerEditTool.Ellipse);
+            }
+        }
+
+        _isDrawing = false;
+        AnnotationOverlay.ReleaseMouseCapture();
+        e.Handled = true;
+    }
+
     private void SetViewMode(ExplorerViewMode mode)
     {
         var selected = FileList.SelectedItem;
@@ -328,6 +576,369 @@ public partial class ViewerWindow : Window
         };
     }
 
+    private string? GetSaveTargetPath()
+    {
+        var sourcePath = _currentFile?.Path ?? _lastSavedPath;
+        if (string.IsNullOrWhiteSpace(sourcePath))
+        {
+            return null;
+        }
+
+        if (string.Equals(IOPath.GetExtension(sourcePath), ".png", StringComparison.OrdinalIgnoreCase))
+        {
+            return sourcePath;
+        }
+
+        var folder = IOPath.GetDirectoryName(sourcePath);
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            folder = CaptureFileIndex.RootDirectory;
+        }
+
+        return IOPath.Combine(folder, $"{IOPath.GetFileNameWithoutExtension(sourcePath)}_edited.png");
+    }
+
+    private string? GetActiveFilePath()
+    {
+        if (!string.IsNullOrWhiteSpace(_lastSavedPath) && File.Exists(_lastSavedPath))
+        {
+            return _lastSavedPath;
+        }
+
+        return _currentFile?.Path;
+    }
+
+    private static void SavePng(BitmapSource source, string targetPath)
+    {
+        var folder = IOPath.GetDirectoryName(targetPath);
+        if (!string.IsNullOrWhiteSpace(folder))
+        {
+            Directory.CreateDirectory(folder);
+        }
+
+        var tempPath = IOPath.Combine(folder ?? CaptureFileIndex.RootDirectory, $"{IOPath.GetFileName(targetPath)}.{Guid.NewGuid():N}.tmp");
+        try
+        {
+            using (var stream = File.Open(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
+                var encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(source));
+                encoder.Save(stream);
+            }
+
+            File.Move(tempPath, targetPath, overwrite: true);
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(tempPath))
+                {
+                    File.Delete(tempPath);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private void ApplyShape(Int32Rect pixelRect, bool ellipse)
+    {
+        if (_editableImage is null)
+        {
+            return;
+        }
+
+        var source = ConvertToPbgra32(_editableImage);
+        var visual = new DrawingVisual();
+        using (var drawing = visual.RenderOpen())
+        {
+            drawing.DrawImage(source, new WpfRect(0, 0, source.PixelWidth, source.PixelHeight));
+
+            var brush = new SolidColorBrush(_selectedColor);
+            var pen = new WpfPen(brush, GetPixelStrokeThickness());
+            var rect = new WpfRect(pixelRect.X, pixelRect.Y, pixelRect.Width, pixelRect.Height);
+            if (ellipse)
+            {
+                drawing.DrawEllipse(null, pen, new WpfPoint(rect.X + (rect.Width / 2), rect.Y + (rect.Height / 2)), rect.Width / 2, rect.Height / 2);
+            }
+            else
+            {
+                drawing.DrawRectangle(null, pen, rect);
+            }
+        }
+
+        SetEditableImage(RenderBitmap(visual, source.PixelWidth, source.PixelHeight), ellipse ? "동그라미를 그렸습니다." : "네모를 그렸습니다.");
+    }
+
+    private void ApplyText(WpfPoint displayPoint)
+    {
+        if (_editableImage is null)
+        {
+            return;
+        }
+
+        var source = ConvertToPbgra32(_editableImage);
+        var pixelPoint = DisplayToPixel(displayPoint);
+        var text = string.IsNullOrWhiteSpace(AnnotationTextBox.Text)
+            ? "Text"
+            : AnnotationTextBox.Text.Trim();
+
+        var visual = new DrawingVisual();
+        using (var drawing = visual.RenderOpen())
+        {
+            drawing.DrawImage(source, new WpfRect(0, 0, source.PixelWidth, source.PixelHeight));
+            var formatted = new FormattedText(
+                text,
+                CultureInfo.CurrentCulture,
+                WpfFlowDirection.LeftToRight,
+                new Typeface("Segoe UI"),
+                Math.Clamp(22 / Math.Max(_zoom, MinZoom), 14, 96),
+                new SolidColorBrush(_selectedColor),
+                VisualTreeHelper.GetDpi(this).PixelsPerDip)
+            {
+                MaxTextWidth = Math.Max(1, source.PixelWidth - pixelPoint.X)
+            };
+            drawing.DrawText(formatted, pixelPoint);
+        }
+
+        SetEditableImage(RenderBitmap(visual, source.PixelWidth, source.PixelHeight), "텍스트를 입력했습니다.");
+    }
+
+    private void ApplyMosaic(Int32Rect pixelRect)
+    {
+        if (_editableImage is null)
+        {
+            return;
+        }
+
+        var source = ConvertToBgra32(_editableImage);
+        var width = source.PixelWidth;
+        var height = source.PixelHeight;
+        var stride = width * 4;
+        var pixels = new byte[stride * height];
+        source.CopyPixels(pixels, stride, 0);
+
+        var blockSize = Math.Clamp((int)Math.Round(14 / Math.Max(_zoom, MinZoom)), 6, 64);
+        var right = Math.Min(width, pixelRect.X + pixelRect.Width);
+        var bottom = Math.Min(height, pixelRect.Y + pixelRect.Height);
+
+        for (var y = pixelRect.Y; y < bottom; y += blockSize)
+        {
+            for (var x = pixelRect.X; x < right; x += blockSize)
+            {
+                var blockRight = Math.Min(right, x + blockSize);
+                var blockBottom = Math.Min(bottom, y + blockSize);
+                ApplyMosaicBlock(pixels, stride, x, y, blockRight, blockBottom);
+            }
+        }
+
+        var bitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, null);
+        bitmap.WritePixels(new Int32Rect(0, 0, width, height), pixels, stride, 0);
+        bitmap.Freeze();
+        SetEditableImage(bitmap, "모자이크를 적용했습니다.");
+    }
+
+    private static void ApplyMosaicBlock(byte[] pixels, int stride, int left, int top, int right, int bottom)
+    {
+        long blue = 0;
+        long green = 0;
+        long red = 0;
+        long alpha = 0;
+        var count = 0;
+
+        for (var y = top; y < bottom; y++)
+        {
+            var row = y * stride;
+            for (var x = left; x < right; x++)
+            {
+                var offset = row + (x * 4);
+                blue += pixels[offset];
+                green += pixels[offset + 1];
+                red += pixels[offset + 2];
+                alpha += pixels[offset + 3];
+                count++;
+            }
+        }
+
+        if (count == 0)
+        {
+            return;
+        }
+
+        var averageBlue = (byte)(blue / count);
+        var averageGreen = (byte)(green / count);
+        var averageRed = (byte)(red / count);
+        var averageAlpha = (byte)(alpha / count);
+
+        for (var y = top; y < bottom; y++)
+        {
+            var row = y * stride;
+            for (var x = left; x < right; x++)
+            {
+                var offset = row + (x * 4);
+                pixels[offset] = averageBlue;
+                pixels[offset + 1] = averageGreen;
+                pixels[offset + 2] = averageRed;
+                pixels[offset + 3] = averageAlpha;
+            }
+        }
+    }
+
+    private void SetEditableImage(BitmapSource bitmap, string status)
+    {
+        if (bitmap.CanFreeze && !bitmap.IsFrozen)
+        {
+            bitmap.Freeze();
+        }
+
+        _editableImage = bitmap;
+        PreviewImage.Source = _editableImage;
+        EmptyMessage.Visibility = Visibility.Collapsed;
+
+        if (_fitMode)
+        {
+            FitToStage();
+        }
+        else
+        {
+            ApplyZoom();
+        }
+
+        SetViewerStatus(status);
+    }
+
+    private static BitmapSource ConvertToPbgra32(BitmapSource source)
+    {
+        if (source.Format == PixelFormats.Pbgra32)
+        {
+            return source;
+        }
+
+        var converted = new FormatConvertedBitmap(source, PixelFormats.Pbgra32, null, 0);
+        converted.Freeze();
+        return converted;
+    }
+
+    private static BitmapSource ConvertToBgra32(BitmapSource source)
+    {
+        if (source.Format == PixelFormats.Bgra32)
+        {
+            return source;
+        }
+
+        var converted = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
+        converted.Freeze();
+        return converted;
+    }
+
+    private static BitmapSource RenderBitmap(DrawingVisual visual, int width, int height)
+    {
+        var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(visual);
+        bitmap.Freeze();
+        return bitmap;
+    }
+
+    private double GetPixelStrokeThickness()
+    {
+        return Math.Clamp(3.0 / Math.Max(_zoom, MinZoom), 2.0, 18.0);
+    }
+
+    private WpfShape CreatePreviewShape()
+    {
+        var stroke = new SolidColorBrush(_selectedColor);
+        WpfShape shape = _editTool == ViewerEditTool.Ellipse
+            ? new WpfEllipse()
+            : new WpfRectangle();
+
+        shape.Stroke = stroke;
+        shape.StrokeThickness = 2;
+        shape.Fill = WpfBrushes.Transparent;
+
+        if (_editTool == ViewerEditTool.Mosaic)
+        {
+            shape.Fill = new SolidColorBrush(WpfColor.FromArgb(42, _selectedColor.R, _selectedColor.G, _selectedColor.B));
+            shape.StrokeDashArray = new DoubleCollection { 4, 3 };
+        }
+
+        return shape;
+    }
+
+    private void UpdatePreviewShape(WpfPoint currentPoint)
+    {
+        if (_previewShape is null)
+        {
+            return;
+        }
+
+        var rect = new WpfRect(_drawStartPoint, currentPoint);
+        Canvas.SetLeft(_previewShape, rect.Left);
+        Canvas.SetTop(_previewShape, rect.Top);
+        _previewShape.Width = Math.Max(1, rect.Width);
+        _previewShape.Height = Math.Max(1, rect.Height);
+    }
+
+    private void RemovePreviewShape()
+    {
+        if (_previewShape is not null)
+        {
+            AnnotationOverlay.Children.Remove(_previewShape);
+            _previewShape = null;
+        }
+    }
+
+    private WpfPoint ClampToSurface(WpfPoint point)
+    {
+        var width = Math.Max(1, AnnotationOverlay.ActualWidth);
+        var height = Math.Max(1, AnnotationOverlay.ActualHeight);
+        return new WpfPoint(Math.Clamp(point.X, 0, width), Math.Clamp(point.Y, 0, height));
+    }
+
+    private WpfPoint DisplayToPixel(WpfPoint point)
+    {
+        if (_editableImage is null)
+        {
+            return new WpfPoint();
+        }
+
+        var displayWidth = Math.Max(1, AnnotationOverlay.ActualWidth);
+        var displayHeight = Math.Max(1, AnnotationOverlay.ActualHeight);
+        return new WpfPoint(
+            Math.Clamp(point.X / displayWidth * _editableImage.PixelWidth, 0, _editableImage.PixelWidth - 1),
+            Math.Clamp(point.Y / displayHeight * _editableImage.PixelHeight, 0, _editableImage.PixelHeight - 1));
+    }
+
+    private Int32Rect GetPixelRect(WpfPoint startPoint, WpfPoint endPoint)
+    {
+        if (_editableImage is null)
+        {
+            return new Int32Rect();
+        }
+
+        var start = DisplayToPixel(startPoint);
+        var end = DisplayToPixel(endPoint);
+        var left = Math.Min(start.X, end.X);
+        var top = Math.Min(start.Y, end.Y);
+        var right = Math.Max(start.X, end.X);
+        var bottom = Math.Max(start.Y, end.Y);
+
+        var x = (int)Math.Floor(left);
+        var y = (int)Math.Floor(top);
+        var width = Math.Max(1, (int)Math.Ceiling(right) - x);
+        var height = Math.Max(1, (int)Math.Ceiling(bottom) - y);
+
+        x = Math.Clamp(x, 0, _editableImage.PixelWidth - 1);
+        y = Math.Clamp(y, 0, _editableImage.PixelHeight - 1);
+        width = Math.Clamp(width, 1, _editableImage.PixelWidth - x);
+        height = Math.Clamp(height, 1, _editableImage.PixelHeight - y);
+        return new Int32Rect(x, y, width, height);
+    }
+
     private void SetZoom(double zoom)
     {
         _fitMode = false;
@@ -337,7 +948,7 @@ public partial class ViewerWindow : Window
 
     private void FitToStage()
     {
-        if (PreviewImage.Source is not BitmapSource bitmap)
+        if (_editableImage is not BitmapSource bitmap)
         {
             return;
         }
@@ -370,14 +981,20 @@ public partial class ViewerWindow : Window
 
     private void ApplyZoom()
     {
-        if (PreviewImage.Source is not BitmapSource bitmap)
+        if (_editableImage is not BitmapSource bitmap)
         {
             ZoomText.Text = "-";
             return;
         }
 
-        PreviewImage.Width = Math.Max(1, bitmap.PixelWidth * _zoom);
-        PreviewImage.Height = Math.Max(1, bitmap.PixelHeight * _zoom);
+        var width = Math.Max(1, bitmap.PixelWidth * _zoom);
+        var height = Math.Max(1, bitmap.PixelHeight * _zoom);
+        ImageSurface.Width = width;
+        ImageSurface.Height = height;
+        PreviewImage.Width = width;
+        PreviewImage.Height = height;
+        AnnotationOverlay.Width = width;
+        AnnotationOverlay.Height = height;
         ZoomText.Text = $"{_zoom * 100:0}%";
     }
 
@@ -455,6 +1072,22 @@ public partial class ViewerWindow : Window
         SetViewButtonState(SmallViewButton, _viewMode == ExplorerViewMode.SmallIcons);
         SetViewButtonState(MediumViewButton, _viewMode == ExplorerViewMode.MediumIcons);
         SetViewButtonState(LargeViewButton, _viewMode == ExplorerViewMode.LargeIcons);
+    }
+
+    private void UpdateToolButtons()
+    {
+        SetViewButtonState(PanToolButton, _editTool == ViewerEditTool.Pan);
+        SetViewButtonState(RectangleToolButton, _editTool == ViewerEditTool.Rectangle);
+        SetViewButtonState(EllipseToolButton, _editTool == ViewerEditTool.Ellipse);
+        SetViewButtonState(MosaicToolButton, _editTool == ViewerEditTool.Mosaic);
+        SetViewButtonState(TextToolButton, _editTool == ViewerEditTool.Text);
+        AnnotationOverlay.Cursor = _editTool == ViewerEditTool.Pan ? WpfCursors.SizeAll : WpfCursors.Cross;
+    }
+
+    private void SetViewerStatus(string message)
+    {
+        StatusText.Text = message;
+        AutomationProperties.SetName(StatusText, message);
     }
 
     private static void SetViewButtonState(System.Windows.Controls.Button button, bool selected)

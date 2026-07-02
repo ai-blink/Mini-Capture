@@ -122,13 +122,28 @@
 
         <HierarchicalDataTemplate DataType="{x:Type local:FolderTreeNode}"
                                   ItemsSource="{Binding Children}">
-            <TextBlock Text="{Binding Name}" />
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Width="18"
+                           VerticalAlignment="Center"
+                           FontFamily="Segoe MDL2 Assets"
+                           FontSize="13"
+                           Foreground="#4b637d"
+                           Text="{Binding IconGlyph}" />
+                <StackPanel>
+                    <TextBlock Foreground="#18212f"
+                               Text="{Binding Name}" />
+                    <TextBlock FontSize="10"
+                               Foreground="#7b8797"
+                               Text="{Binding Detail}"
+                               TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </StackPanel>
         </HierarchicalDataTemplate>
     </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="48" />
+            <RowDefinition Height="88" />
             <RowDefinition Height="*" />
             <RowDefinition Height="28" />
         </Grid.RowDefinitions>
@@ -137,58 +152,138 @@
                 Background="#ffffff"
                 BorderBrush="#d8e1eb"
                 BorderThickness="0,0,0,1">
-            <DockPanel Margin="12,8">
-                <TextBlock x:Name="CurrentFileText"
-                           DockPanel.Dock="Left"
-                           Width="320"
-                           VerticalAlignment="Center"
-                           FontSize="13"
-                           FontWeight="SemiBold"
-                           Foreground="#18212f"
-                           TextTrimming="CharacterEllipsis" />
-                <StackPanel DockPanel.Dock="Right"
-                            Orientation="Horizontal"
-                            HorizontalAlignment="Right">
-                    <Button x:Name="PreviousButton"
-                            AutomationProperties.AutomationId="ViewerPreviousButton"
-                            Click="OnPreviousClick"
-                            Content="이전"
-                            Style="{StaticResource ToolbarButtonStyle}" />
-                    <Button x:Name="NextButton"
-                            AutomationProperties.AutomationId="ViewerNextButton"
-                            Click="OnNextClick"
-                            Content="다음"
-                            Style="{StaticResource ToolbarButtonStyle}" />
-                    <Button AutomationProperties.AutomationId="ViewerZoomOutButton"
-                            Click="OnZoomOutClick"
-                            Content="-"
-                            FontWeight="Bold"
-                            Style="{StaticResource ToolbarButtonStyle}" />
-                    <TextBlock x:Name="ZoomText"
-                               Width="58"
+            <Grid Margin="12,7">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="34" />
+                    <RowDefinition Height="34" />
+                </Grid.RowDefinitions>
+
+                <DockPanel Grid.Row="0">
+                    <TextBlock x:Name="CurrentFileText"
+                               DockPanel.Dock="Left"
+                               Width="300"
                                VerticalAlignment="Center"
-                               TextAlignment="Center"
-                               FontSize="12"
-                               Foreground="#3c4a5f" />
-                    <Button AutomationProperties.AutomationId="ViewerZoomInButton"
-                            Click="OnZoomInClick"
-                            Content="+"
-                            FontWeight="Bold"
-                            Style="{StaticResource ToolbarButtonStyle}" />
-                    <Button AutomationProperties.AutomationId="ViewerFitButton"
-                            Click="OnFitClick"
-                            Content="Fit"
-                            Style="{StaticResource ToolbarButtonStyle}" />
-                    <Button AutomationProperties.AutomationId="ViewerActualSizeButton"
-                            Click="OnActualSizeClick"
-                            Content="100%"
-                            Style="{StaticResource ToolbarButtonStyle}" />
-                    <Button AutomationProperties.AutomationId="ViewerRefreshButton"
-                            Click="OnRefreshClick"
-                            Content="새로고침"
-                            Style="{StaticResource ToolbarButtonStyle}" />
-                </StackPanel>
-            </DockPanel>
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               Foreground="#18212f"
+                               TextTrimming="CharacterEllipsis" />
+                    <StackPanel DockPanel.Dock="Right"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right">
+                        <Button AutomationProperties.AutomationId="ViewerSaveButton"
+                                Click="OnSaveClick"
+                                Content="저장"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button AutomationProperties.AutomationId="ViewerOpenButton"
+                                Click="OnOpenClick"
+                                Content="열기"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button AutomationProperties.AutomationId="ViewerCopyPathButton"
+                                Click="OnCopyPathClick"
+                                Content="경로"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button AutomationProperties.AutomationId="ViewerCopyImageButton"
+                                Click="OnCopyImageClick"
+                                Content="이미지"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button x:Name="PreviousButton"
+                                AutomationProperties.AutomationId="ViewerPreviousButton"
+                                Click="OnPreviousClick"
+                                Content="이전"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button x:Name="NextButton"
+                                AutomationProperties.AutomationId="ViewerNextButton"
+                                Click="OnNextClick"
+                                Content="다음"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button AutomationProperties.AutomationId="ViewerZoomOutButton"
+                                Click="OnZoomOutClick"
+                                Content="-"
+                                FontWeight="Bold"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <TextBlock x:Name="ZoomText"
+                                   Width="58"
+                                   VerticalAlignment="Center"
+                                   TextAlignment="Center"
+                                   FontSize="12"
+                                   Foreground="#3c4a5f" />
+                        <Button AutomationProperties.AutomationId="ViewerZoomInButton"
+                                Click="OnZoomInClick"
+                                Content="+"
+                                FontWeight="Bold"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button AutomationProperties.AutomationId="ViewerFitButton"
+                                Click="OnFitClick"
+                                Content="Fit"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button AutomationProperties.AutomationId="ViewerActualSizeButton"
+                                Click="OnActualSizeClick"
+                                Content="100%"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button AutomationProperties.AutomationId="ViewerRefreshButton"
+                                Click="OnRefreshClick"
+                                Content="새로고침"
+                                Margin="0"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                    </StackPanel>
+                </DockPanel>
+
+                <DockPanel Grid.Row="1"
+                           Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="PanToolButton"
+                                AutomationProperties.AutomationId="ViewerPanToolButton"
+                                Click="OnToolButtonClick"
+                                Content="손"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Tag="Pan" />
+                        <Button x:Name="RectangleToolButton"
+                                AutomationProperties.AutomationId="ViewerRectangleToolButton"
+                                Click="OnToolButtonClick"
+                                Content="네모"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Tag="Rectangle" />
+                        <Button x:Name="EllipseToolButton"
+                                AutomationProperties.AutomationId="ViewerEllipseToolButton"
+                                Click="OnToolButtonClick"
+                                Content="동그라미"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Tag="Ellipse" />
+                        <Button x:Name="MosaicToolButton"
+                                AutomationProperties.AutomationId="ViewerMosaicToolButton"
+                                Click="OnToolButtonClick"
+                                Content="모자이크"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Tag="Mosaic" />
+                        <Button x:Name="TextToolButton"
+                                AutomationProperties.AutomationId="ViewerTextToolButton"
+                                Click="OnToolButtonClick"
+                                Content="텍스트"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Tag="Text" />
+                        <ComboBox x:Name="ColorSelector"
+                                  Width="94"
+                                  Height="30"
+                                  Margin="6,0,6,0"
+                                  AutomationProperties.AutomationId="ViewerColorSelector"
+                                  SelectedIndex="0"
+                                  SelectionChanged="OnColorSelectionChanged">
+                            <ComboBoxItem Content="빨강" Tag="#ef4444" />
+                            <ComboBoxItem Content="노랑" Tag="#facc15" />
+                            <ComboBoxItem Content="초록" Tag="#12a594" />
+                            <ComboBoxItem Content="파랑" Tag="#2563eb" />
+                            <ComboBoxItem Content="흰색" Tag="#ffffff" />
+                            <ComboBoxItem Content="검정" Tag="#111827" />
+                        </ComboBox>
+                        <TextBox x:Name="AnnotationTextBox"
+                                 Width="180"
+                                 Height="30"
+                                 AutomationProperties.AutomationId="ViewerTextInput"
+                                 Text="텍스트"
+                                 VerticalContentAlignment="Center" />
+                    </StackPanel>
+                </DockPanel>
+            </Grid>
         </Border>
 
         <Grid Grid.Row="1">
@@ -322,11 +417,22 @@
                               VerticalScrollBarVisibility="Auto">
                     <Grid MinWidth="{Binding ActualWidth, ElementName=ImageScrollViewer}"
                           MinHeight="{Binding ActualHeight, ElementName=ImageScrollViewer}">
-                        <Image x:Name="PreviewImage"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               RenderOptions.BitmapScalingMode="HighQuality"
-                               Stretch="Fill" />
+                        <Grid x:Name="ImageSurface"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center">
+                            <Image x:Name="PreviewImage"
+                                   AutomationProperties.AutomationId="ViewerPreviewImage"
+                                   AutomationProperties.Name="Viewer preview image"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   Stretch="Fill" />
+                            <Canvas x:Name="AnnotationOverlay"
+                                    AutomationProperties.AutomationId="ViewerAnnotationOverlay"
+                                    AutomationProperties.Name="Viewer annotation surface"
+                                    Background="Transparent"
+                                    MouseLeftButtonDown="OnImageMouseLeftButtonDown"
+                                    MouseLeftButtonUp="OnImageMouseLeftButtonUp"
+                                    MouseMove="OnImageMouseMove" />
+                        </Grid>
                     </Grid>
                 </ScrollViewer>
                 <TextBlock x:Name="EmptyMessage"

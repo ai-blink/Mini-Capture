@@ -245,10 +245,10 @@
                                FontSize="11"
                                Foreground="#627083"
                                TextTrimming="CharacterEllipsis" />
-                    <StackPanel Orientation="Horizontal">
+                    <WrapPanel>
                         <Button AutomationProperties.AutomationId="OpenFileButton"
                                 Click="OnOpenFileClick"
-                                Content="파일"
+                                Content="열기"
                                 Margin="0,0,8,0"
                                 Padding="10,6"
                                 MinWidth="58" />
@@ -264,12 +264,25 @@
                                 Margin="0,0,8,0"
                                 Padding="10,6"
                                 MinWidth="58" />
+                        <Button AutomationProperties.AutomationId="CopyPathButton"
+                                Click="OnCopyPathClick"
+                                Content="경로 복사"
+                                Margin="0,0,8,0"
+                                Padding="10,6"
+                                MinWidth="76" />
+                        <Button AutomationProperties.AutomationId="CopyImageButton"
+                                Click="OnCopyImageClick"
+                                Content="이미지 복사"
+                                Margin="0,6,8,0"
+                                Padding="10,6"
+                                MinWidth="86" />
                         <Button AutomationProperties.AutomationId="DismissResultButton"
                                 Click="OnDismissResultClick"
                                 Content="닫기"
+                                Margin="0,6,0,0"
                                 Padding="10,6"
                                 MinWidth="58" />
-                    </StackPanel>
+                    </WrapPanel>
                 </StackPanel>
             </Border>
         </Popup>

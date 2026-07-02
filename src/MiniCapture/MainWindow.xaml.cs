@@ -1,11 +1,14 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls.Primitives;
 using System.ComponentModel;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using WpfBrushes = System.Windows.Media.Brushes;
+using WpfClipboard = System.Windows.Clipboard;
 using WpfPoint = System.Windows.Point;
 
 namespace MiniCapture;
@@ -460,6 +463,49 @@ public partial class MainWindow : Window
         if (_lastCapturePath is not null)
         {
             OpenInternalViewer(_lastCapturePath);
+        }
+    }
+
+    private void OnCopyPathClick(object sender, RoutedEventArgs e)
+    {
+        if (_lastCapturePath is null)
+        {
+            return;
+        }
+
+        try
+        {
+            WpfClipboard.SetText(_lastCapturePath);
+            ShowStatus("파일 경로를 클립보드에 복사했습니다.");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+        {
+            ShowStatus($"경로 복사 실패: {ex.Message}");
+        }
+    }
+
+    private void OnCopyImageClick(object sender, RoutedEventArgs e)
+    {
+        if (_lastCapturePath is null || !File.Exists(_lastCapturePath))
+        {
+            return;
+        }
+
+        try
+        {
+            using var stream = File.Open(_lastCapturePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.CacheOption = BitmapCacheOption.OnLoad;
+            image.StreamSource = stream;
+            image.EndInit();
+            image.Freeze();
+            WpfClipboard.SetImage(image);
+            ShowStatus("이미지를 클립보드에 복사했습니다.");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or System.Runtime.InteropServices.COMException)
+        {
+            ShowStatus($"이미지 복사 실패: {ex.Message}");
         }
     }
 

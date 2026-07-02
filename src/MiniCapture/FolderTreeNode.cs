@@ -9,10 +9,12 @@ public sealed class FolderTreeNode : INotifyPropertyChanged
     private bool _isExpanded;
     private bool _isSelected;
 
-    public FolderTreeNode(string name, string? path)
+    public FolderTreeNode(string name, string? path, string iconGlyph = "\uE8B7", string? detail = null)
     {
         Name = name;
         Path = path;
+        IconGlyph = iconGlyph;
+        Detail = detail;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -20,6 +22,10 @@ public sealed class FolderTreeNode : INotifyPropertyChanged
     public string Name { get; }
 
     public string? Path { get; }
+
+    public string IconGlyph { get; }
+
+    public string? Detail { get; }
 
     public ObservableCollection<FolderTreeNode> Children { get; } = new();
 

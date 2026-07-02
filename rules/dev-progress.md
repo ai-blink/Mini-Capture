@@ -13,10 +13,11 @@
 - 2026-07-03: Window picker target selection fixed so screen-covering helper windows no longer win over real window candidates.
 - 2026-07-03: DPI coordinate handling added for capture overlays with Per-Monitor DPI awareness and physical-pixel/DIP conversion.
 - 2026-07-03: Close-to-tray behavior added so closing the floating window hides it while keeping the app alive in the system tray.
+- 2026-07-03: Viewer/browser V1 reinforcement completed with richer capture-root tree, simple annotation tools, PNG save, open, path-copy, and image-copy actions.
 
 ## Current Work
 
-- Timer/window capture fix slice is complete. Next implementation slice is P4 hardening and package checks.
+- Viewer/browser V1 reinforcement slice is complete. Next implementation slice is P4 hardening and package checks.
 
 ## Next Actions
 
@@ -50,3 +51,6 @@
 - Window picker full-screen-candidate regression: probe showed visible full-screen helper windows (`PicPick`/`GazeScroll`) ahead of real candidates; after the fix, window capture saved `C:\Users\user\Pictures\MiniCapture\2026\07\03\20260703_042248_813.png` at `1250x753` instead of virtual-screen size.
 - DPI coordinate fix: process DPI awareness probe reports `DpiAwareness=2`; `dotnet build MiniCapture.slnx` passes with 0 warnings and 0 errors; `git diff --check` passes with CRLF conversion warnings only.
 - Tray behavior smoke: `CloseMainWindow` returned true, the main window hid, and the `MiniCapture` process remained alive.
+- Viewer/browser reinforcement build: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors.
+- Viewer/browser reinforcement UIA smoke: created `C:\Users\user\Pictures\MiniCapture\2026\07\03\20260703_070610_158.png`, opened internal viewer, verified richer tree labels, selected color, used pan/rectangle/ellipse/mosaic/text tools, saved PNG edits, copied file path and image to clipboard, invoked open, and confirmed close-to-tray kept the process alive.
+- Viewer/browser reinforcement whitespace check: `git diff --check` passed with CRLF conversion warnings only.
