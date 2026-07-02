@@ -25,6 +25,11 @@ public static class WindowPickerService
                 continue;
             }
 
+            if (bounds.Width < 24 || bounds.Height < 24)
+            {
+                continue;
+            }
+
             var title = NativeWindowApi.GetTitle(hwnd);
             if (string.IsNullOrWhiteSpace(title))
             {
@@ -40,6 +45,11 @@ public static class WindowPickerService
     private static bool IsCandidate(IntPtr hwnd, int currentProcessId)
     {
         if (!NativeWindowApi.IsVisible(hwnd))
+        {
+            return false;
+        }
+
+        if (NativeWindowApi.IsMinimized(hwnd) || NativeWindowApi.IsCloaked(hwnd))
         {
             return false;
         }

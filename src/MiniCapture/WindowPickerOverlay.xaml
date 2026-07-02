@@ -14,7 +14,7 @@
         SourceInitialized="OnSourceInitialized"
         Closed="OnClosed"
         KeyDown="OnKeyDown"
-        MouseLeftButtonDown="OnMouseLeftButtonDown"
+        PreviewMouseLeftButtonDown="OnMouseLeftButtonDown"
         MouseMove="OnMouseMove">
     <Canvas x:Name="OverlayCanvas"
             Background="#22000000">

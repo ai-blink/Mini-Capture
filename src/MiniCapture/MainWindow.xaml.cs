@@ -4,6 +4,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using WpfBrushes = System.Windows.Media.Brushes;
 using WpfPoint = System.Windows.Point;
 
 namespace MiniCapture;
@@ -19,6 +20,7 @@ public partial class MainWindow : Window
     private bool _suppressNextCaptureClick;
     private ViewerWindow? _viewerWindow;
     private CaptureMode _selectedMode = CaptureMode.Drag;
+    private int _captureDelaySeconds;
 
     public MainWindow()
     {
@@ -72,6 +74,28 @@ public partial class MainWindow : Window
         await ExecuteModeAsync(mode);
     }
 
+    private void OnTimerButtonClick(object sender, RoutedEventArgs e)
+    {
+        ModePopup.IsOpen = false;
+        UpdatePopupPlacement();
+        TimerPopup.IsOpen = true;
+    }
+
+    private void OnTimerDelayClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button { Tag: string secondsText } ||
+            !int.TryParse(secondsText, out var seconds))
+        {
+            return;
+        }
+
+        _captureDelaySeconds = seconds;
+        ModeTimerButton.Content = $"{seconds}초";
+        AutomationProperties.SetName(ModeTimerButton, $"Timer delay {seconds} seconds");
+        TimerPopup.IsOpen = false;
+        ShowStatus($"{seconds}초 지연이 설정되었습니다. 영역, 창, 전체 캡처에 적용됩니다.");
+    }
+
     private void OnExitClick(object sender, RoutedEventArgs e)
     {
         System.Windows.Application.Current.Shutdown();
@@ -85,6 +109,7 @@ public partial class MainWindow : Window
         }
 
         ModePopup.IsOpen = false;
+        TimerPopup.IsOpen = false;
         StatusPopup.IsOpen = false;
         ResultPopup.IsOpen = false;
         e.Handled = true;
@@ -197,11 +222,14 @@ public partial class MainWindow : Window
         StatusPopup.HorizontalOffset = horizontalOffset;
         ResultPopup.Placement = placement;
         ResultPopup.HorizontalOffset = horizontalOffset;
+        TimerPopup.Placement = placement;
+        TimerPopup.HorizontalOffset = horizontalOffset;
     }
 
     private void ClosePopups()
     {
         ModePopup.IsOpen = false;
+        TimerPopup.IsOpen = false;
         StatusPopup.IsOpen = false;
         ResultPopup.IsOpen = false;
     }
@@ -212,6 +240,7 @@ public partial class MainWindow : Window
         CaptureButton.ToolTip = $"{CaptureModeInfo.DisplayName(mode)} 선택됨. 드래그하면 위치를 옮길 수 있습니다. 우클릭하면 종료할 수 있습니다.";
         AutomationProperties.SetName(CaptureButton, $"{CaptureModeInfo.DisplayName(mode)} 모드 선택됨");
         StatusText.Text = CaptureModeInfo.PlaceholderStatus(mode);
+        StatusText.Foreground = WpfBrushes.White;
         AutomationProperties.SetName(StatusText, StatusText.Text);
 
         if (!showStatus)
@@ -239,9 +268,8 @@ public partial class MainWindow : Window
             var savedPath = mode switch
             {
                 CaptureMode.Window => await CaptureWindowAsync(),
-                CaptureMode.FullScreen => await CaptureFullScreenAsync(TimeSpan.FromMilliseconds(180)),
-                CaptureMode.Timer => await CaptureFullScreenAsync(TimeSpan.FromSeconds(3)),
-                _ => CaptureDragRegion()
+                CaptureMode.FullScreen => await CaptureFullScreenAsync(),
+                _ => await CaptureDragRegionAsync()
             };
 
             if (string.IsNullOrWhiteSpace(savedPath))
@@ -264,23 +292,37 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task<string?> CaptureFullScreenAsync(TimeSpan delay)
+    private async Task<string?> CaptureFullScreenAsync()
     {
-        ShowStatus(delay.TotalSeconds >= 1
-            ? $"{delay.TotalSeconds:0}초 후 전체 화면을 캡처합니다."
-            : "전체 화면을 캡처합니다.");
-
         ModePopup.IsOpen = false;
-        await Task.Delay(delay);
+        TimerPopup.IsOpen = false;
+        if (!await RunCountdownIfNeededAsync())
+        {
+            return null;
+        }
+
+        ShowStatus("전체 화면을 캡처합니다.");
         Hide();
         await Task.Delay(180);
         return ScreenCaptureService.CaptureFullScreen();
     }
 
-    private string? CaptureDragRegion()
+    private async Task<string?> CaptureDragRegionAsync()
     {
         ShowStatus("캡처할 영역을 드래그하세요. Esc로 취소할 수 있습니다.");
         ModePopup.IsOpen = false;
+        TimerPopup.IsOpen = false;
+
+        if (_captureDelaySeconds > 0)
+        {
+            if (!await RunCountdownIfNeededAsync())
+            {
+                return null;
+            }
+
+            ShowStatus("캡처할 영역을 드래그하세요. Esc로 취소할 수 있습니다.");
+        }
+
         Hide();
 
         var overlay = new RegionCaptureOverlay
@@ -301,6 +343,13 @@ public partial class MainWindow : Window
     {
         ShowStatus("캡처할 창 위에 마우스를 올리고 클릭하세요. Esc로 취소할 수 있습니다.");
         ModePopup.IsOpen = false;
+        TimerPopup.IsOpen = false;
+        if (!await RunCountdownIfNeededAsync())
+        {
+            return null;
+        }
+
+        ShowStatus("캡처할 창 위에 마우스를 올리고 클릭하세요. Esc로 취소할 수 있습니다.");
         Hide();
 
         var overlay = new WindowPickerOverlay();
@@ -312,6 +361,29 @@ public partial class MainWindow : Window
 
         await Task.Delay(180);
         return ScreenCaptureService.CaptureWindow(target);
+    }
+
+    private async Task<bool> RunCountdownIfNeededAsync()
+    {
+        if (_captureDelaySeconds <= 0)
+        {
+            return true;
+        }
+
+        _statusTimer.Stop();
+        StatusPopup.IsOpen = true;
+        StatusText.Foreground = WpfBrushes.Red;
+
+        for (var remaining = _captureDelaySeconds; remaining > 0; remaining--)
+        {
+            StatusText.Text = $"{remaining}";
+            AutomationProperties.SetName(StatusText, $"{remaining}초 후 캡처");
+            System.Media.SystemSounds.Beep.Play();
+            await Task.Delay(TimeSpan.FromSeconds(1));
+        }
+
+        StatusText.Foreground = WpfBrushes.White;
+        return true;
     }
 
     private void ShowCaptureResult(string path)
@@ -327,6 +399,7 @@ public partial class MainWindow : Window
     private void ShowStatus(string message)
     {
         StatusText.Text = message;
+        StatusText.Foreground = WpfBrushes.White;
         AutomationProperties.SetName(StatusText, message);
         StatusPopup.IsOpen = true;
         _statusTimer.Stop();

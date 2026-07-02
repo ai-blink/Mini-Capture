@@ -7,6 +7,7 @@ namespace MiniCapture;
 internal static class NativeWindowApi
 {
     private const int DwmwaExtendedFrameBounds = 9;
+    private const int DwmwaCloaked = 14;
     private const uint WdaExcludeFromCapture = 0x00000011;
 
     public static IReadOnlyList<IntPtr> EnumerateTopLevelWindows()
@@ -29,6 +30,22 @@ internal static class NativeWindowApi
     {
         GetWindowThreadProcessId(hwnd, out var processId);
         return unchecked((int)processId);
+    }
+
+    public static bool IsMinimized(IntPtr hwnd)
+    {
+        return hwnd != IntPtr.Zero && IsIconic(hwnd);
+    }
+
+    public static bool IsCloaked(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        return DwmGetWindowAttributeInt(hwnd, DwmwaCloaked, out var cloaked, Marshal.SizeOf<int>()) == 0 &&
+            cloaked != 0;
     }
 
     public static string GetTitle(IntPtr hwnd)
@@ -59,7 +76,7 @@ internal static class NativeWindowApi
             return false;
         }
 
-        if (DwmGetWindowAttribute(hwnd, DwmwaExtendedFrameBounds, out var dwmRect, Marshal.SizeOf<NativeRect>()) == 0 &&
+        if (DwmGetWindowAttributeRect(hwnd, DwmwaExtendedFrameBounds, out var dwmRect, Marshal.SizeOf<NativeRect>()) == 0 &&
             TryToRectangle(dwmRect, out bounds))
         {
             return true;
@@ -112,6 +129,9 @@ internal static class NativeWindowApi
     private static extern bool IsWindowVisible(IntPtr hwnd);
 
     [DllImport("user32.dll")]
+    private static extern bool IsIconic(IntPtr hwnd);
+
+    [DllImport("user32.dll")]
     private static extern bool GetWindowRect(IntPtr hwnd, out NativeRect rect);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
@@ -129,8 +149,11 @@ internal static class NativeWindowApi
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool SetWindowDisplayAffinity(IntPtr hwnd, uint affinity);
 
-    [DllImport("dwmapi.dll")]
-    private static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out NativeRect rect, int attributeSize);
+    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")]
+    private static extern int DwmGetWindowAttributeRect(IntPtr hwnd, int attribute, out NativeRect rect, int attributeSize);
+
+    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")]
+    private static extern int DwmGetWindowAttributeInt(IntPtr hwnd, int attribute, out int value, int attributeSize);
 
     [StructLayout(LayoutKind.Sequential)]
     private readonly struct NativeRect

@@ -9,10 +9,11 @@
 - 2026-07-02: P2 window picker, hover highlight overlay, selected-window PNG capture, and Esc cancel implemented.
 - 2026-07-02: P3 internal viewer and first Explorer-style browser slice implemented.
 - 2026-07-03: P3 usability polish completed for the mock-aligned floating button, drag repositioning, centered radial mode menu, and wrapping icon file views.
+- 2026-07-03: Timer UX corrected to delay selection only, countdown feedback added, and window capture target filtering/smoke validation completed.
 
 ## Current Work
 
-- P3 implementation and usability polish are complete. Next implementation slice is P4 hardening and package checks.
+- Timer/window capture fix slice is complete. Next implementation slice is P4 hardening and package checks.
 
 ## Next Actions
 
@@ -40,3 +41,6 @@
 - P3 smoke: UI Automation ran full capture, opened the internal viewer from `보기`, exercised Fit/100%/zoom in/out, previous/next, file list selection, and details/small/medium/large view mode switches.
 - P3 polish build: `dotnet build MiniCapture.slnx`
 - P3 polish smoke: UI Automation measured the four radial mode buttons at roughly 91-94px from the main button center; file icon view wraps vertically with horizontal scrolling disabled.
+- Timer/window fix build: `dotnet build MiniCapture.slnx`
+- Timer/window fix smoke: UI Automation verified timer choices `3/5/7/10`, confirmed opening timer choices did not save a capture, observed countdown automation text `3초 후 캡처`, saved delayed window capture `C:\Users\user\Pictures\MiniCapture\2026\07\03\20260703_024215_057.png`, and verified app exit with `CloseMainWindow`.
+- Timer/window fix whitespace check: `git diff --check` passed with CRLF conversion warnings only.

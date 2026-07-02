@@ -144,13 +144,57 @@
                         Canvas.Left="0"
                         Canvas.Top="98"
                         AutomationProperties.AutomationId="ModeTimerButton"
-                        AutomationProperties.Name="Timer mode"
-                        Click="OnModeButtonClick"
-                        Content="3s"
+                        AutomationProperties.Name="Timer delay"
+                        Click="OnTimerButtonClick"
+                        Content="타이머"
                         Style="{StaticResource ModeButtonStyle}"
-                        Tag="Timer"
-                        ToolTip="3초 타이머 캡처" />
+                        ToolTip="캡처 전 지연 시간 선택" />
             </Canvas>
+        </Popup>
+
+        <Popup x:Name="TimerPopup"
+               AllowsTransparency="True"
+               Placement="Right"
+               PlacementTarget="{Binding ElementName=CaptureButton}"
+               PopupAnimation="Fade"
+               StaysOpen="True"
+               HorizontalOffset="10">
+            <Border Padding="10"
+                    Background="#fbffffff"
+                    BorderBrush="#d6dde6"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Effect="{StaticResource FloatingShadow}">
+                <StackPanel Orientation="Horizontal">
+                    <Button AutomationProperties.AutomationId="Timer3Button"
+                            AutomationProperties.Name="Delay 3 seconds"
+                            Click="OnTimerDelayClick"
+                            Content="3초"
+                            Margin="0,0,6,0"
+                            Padding="10,6"
+                            Tag="3" />
+                    <Button AutomationProperties.AutomationId="Timer5Button"
+                            AutomationProperties.Name="Delay 5 seconds"
+                            Click="OnTimerDelayClick"
+                            Content="5초"
+                            Margin="0,0,6,0"
+                            Padding="10,6"
+                            Tag="5" />
+                    <Button AutomationProperties.AutomationId="Timer7Button"
+                            AutomationProperties.Name="Delay 7 seconds"
+                            Click="OnTimerDelayClick"
+                            Content="7초"
+                            Margin="0,0,6,0"
+                            Padding="10,6"
+                            Tag="7" />
+                    <Button AutomationProperties.AutomationId="Timer10Button"
+                            AutomationProperties.Name="Delay 10 seconds"
+                            Click="OnTimerDelayClick"
+                            Content="10초"
+                            Padding="10,6"
+                            Tag="10" />
+                </StackPanel>
+            </Border>
         </Popup>
 
         <Popup x:Name="StatusPopup"

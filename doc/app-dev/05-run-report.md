@@ -159,3 +159,33 @@ P3 polish complete: the floating capture button now follows the approved mockup 
 ## Handoff
 
 P3 implementation and usability polish are complete. Next step: implement P4 hardening and package checks without expanding V1 scope.
+
+## Timer And Window Capture Fix
+
+### Finish Line
+
+Timer UX and window capture fix complete: the timer button now opens delay choices only, the selected delay applies to drag/window/full-screen captures, countdown feedback is visible before capture, and selected-window capture saves a PNG again.
+
+### Changes
+
+- Removed timer as an executable capture mode.
+- Added timer delay choices for 3, 5, 7, and 10 seconds.
+- Applied the selected delay before drag, window, and full-screen capture flows.
+- Added red countdown text and per-second system beep feedback during countdown.
+- Hardened window picking by filtering minimized, cloaked, and tiny candidate windows.
+- Switched the window picker click handler to preview mouse input so the overlay accepts the selection before child hit-testing can interfere.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- Timer UI smoke: UI Automation verified `Timer3Button`, `Timer5Button`, `Timer7Button`, and `Timer10Button`; opening timer choices did not save a capture.
+- Delayed window capture smoke: selected 3 seconds, saw countdown automation text `3초 후 캡처`, clicked a `cmd` target window, and saved `C:\Users\user\Pictures\MiniCapture\2026\07\03\20260703_024215_057.png` at 5,945,783 bytes.
+- Window capture smoke without delay saved `C:\Users\user\Pictures\MiniCapture\2026\07\03\20260703_024134_636.png` at 5,898,490 bytes.
+- App shutdown smoke: `CloseMainWindow` exited the app normally.
+- `git diff --check`: passed with CRLF conversion warnings only.
+
+### Decisions
+
+- Timer remains a capture setting, not a fourth executable capture path.
+- The first fix keeps the existing DWM-bounds plus GDI capture engine and tightens target selection instead of introducing Windows.Graphics.Capture in this slice.
+- P4 packaging, broader DPI/multi-monitor sweeps, OCR, upload/cloud sharing, scrolling capture, video/GIF, heavy editing, and file-manager operations remain out of scope.

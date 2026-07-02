@@ -9,4 +9,5 @@
 | done | P2 window picker and overlay exclusion | `dotnet build`, UIA window capture smoke, Esc cancel smoke |
 | done | P3 viewer and Explorer-style browser | `dotnet build MiniCapture.slnx`, UIA viewer/browser smoke |
 | done | P3 usability polish | mock-aligned floating button, drag repositioning, radial mode menu, wrapping icon views, `dotnet build MiniCapture.slnx` |
+| done | Timer UX and window capture fix | delay choices 3/5/7/10, countdown text/sound path, delayed window capture smoke, `dotnet build MiniCapture.slnx`, `git diff --check` |
 | planned | P4 packaging and release checks | pending implementation |
