@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MiniCapture/MiniCapture.csproj" />
+  </Folder>
+</Solution>

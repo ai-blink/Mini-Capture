@@ -1,0 +1,29 @@
+# <Project Name> Project Instructions
+
+## Canonical Entrypoint
+
+This file is the single canonical project instruction entrypoint.
+
+## Product Target
+
+<Describe the current product target.>
+
+## Current Approved Design
+
+- Product/UX design: `<path>`
+- Visual mockup: `<path>`
+
+## Completion Discipline
+
+For non-trivial work:
+
+- Define `Finish Line`, `Acceptance Checks`, `Scope Limit`, `Review Budget`, and `Stop Rule`.
+- Fix only `BLOCKER` issues for the current finish line.
+- Record `FOLLOW_UP` and `IGNORE_FOR_V1` without widening scope.
+- Stop after acceptance checks pass.
+
+## Project Docs
+
+- Intent: `doc/INTENT.md`
+- App workflow docs: `doc/app-dev/`
+- Live development docs: `rules/dev-*.md`

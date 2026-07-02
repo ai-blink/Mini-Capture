@@ -1,0 +1,163 @@
+<Window x:Class="MiniCapture.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Mini Capture"
+        Width="76"
+        Height="76"
+        MinWidth="76"
+        MinHeight="76"
+        MaxWidth="76"
+        MaxHeight="76"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="True"
+        Topmost="True"
+        UseLayoutRounding="True"
+        WindowStartupLocation="Manual"
+        WindowStyle="None"
+        Loaded="OnLoaded"
+        KeyDown="OnKeyDown">
+    <Window.Resources>
+        <DropShadowEffect x:Key="FloatingShadow"
+                          BlurRadius="24"
+                          Direction="270"
+                          Opacity="0.28"
+                          ShadowDepth="8"
+                          Color="#071f1e" />
+
+        <Style x:Key="ModeButtonStyle" TargetType="Button">
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Margin" Value="0,4" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Background" Value="#ffffff" />
+            <Setter Property="BorderBrush" Value="#d6dde6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="#18212f" />
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Button x:Name="CaptureButton"
+                Width="58"
+                Height="58"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                AutomationProperties.AutomationId="CaptureButton"
+                AutomationProperties.Name="Capture menu"
+                Background="#b812a594"
+                BorderBrush="#e6ffffff"
+                BorderThickness="1"
+                Click="OnCaptureButtonClick"
+                Cursor="Hand"
+                Effect="{StaticResource FloatingShadow}"
+                FontFamily="Segoe UI"
+                Foreground="White"
+                ToolTip="캡처 메뉴 열기. 우클릭하면 종료할 수 있습니다.">
+            <Button.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="29" />
+                </Style>
+            </Button.Resources>
+            <Button.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="종료"
+                              AutomationProperties.AutomationId="ExitMenuItem"
+                              Click="OnExitClick" />
+                </ContextMenu>
+            </Button.ContextMenu>
+            <Grid>
+                <Border Width="27"
+                        Height="21"
+                        BorderBrush="White"
+                        BorderThickness="2"
+                        CornerRadius="4" />
+                <TextBlock x:Name="ModeShortText"
+                           Margin="0,34,0,0"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Top"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           Text="CAP" />
+            </Grid>
+        </Button>
+
+        <Popup x:Name="ModePopup"
+               AllowsTransparency="True"
+               Placement="Top"
+               PlacementTarget="{Binding ElementName=CaptureButton}"
+               PopupAnimation="Fade"
+               StaysOpen="True"
+               VerticalOffset="-8">
+            <Border Width="168"
+                    Padding="10"
+                    Background="#fbffffff"
+                    BorderBrush="#d6dde6"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Effect="{StaticResource FloatingShadow}">
+                <StackPanel>
+                    <TextBlock Margin="2,0,2,6"
+                               FontFamily="Segoe UI"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="#627083"
+                               Text="캡처 모드" />
+                    <Button x:Name="ModeDragButton"
+                            AutomationProperties.AutomationId="ModeDragButton"
+                            AutomationProperties.Name="Drag mode"
+                            Click="OnModeButtonClick"
+                            Content="드래그"
+                            Style="{StaticResource ModeButtonStyle}"
+                            Tag="Drag" />
+                    <Button x:Name="ModeWindowButton"
+                            AutomationProperties.AutomationId="ModeWindowButton"
+                            AutomationProperties.Name="Window mode"
+                            Click="OnModeButtonClick"
+                            Content="창 지정"
+                            Style="{StaticResource ModeButtonStyle}"
+                            Tag="Window" />
+                    <Button x:Name="ModeFullScreenButton"
+                            AutomationProperties.AutomationId="ModeFullScreenButton"
+                            AutomationProperties.Name="Full screen mode"
+                            Click="OnModeButtonClick"
+                            Content="전체"
+                            Style="{StaticResource ModeButtonStyle}"
+                            Tag="FullScreen" />
+                    <Button x:Name="ModeTimerButton"
+                            AutomationProperties.AutomationId="ModeTimerButton"
+                            AutomationProperties.Name="Timer mode"
+                            Click="OnModeButtonClick"
+                            Content="타이머"
+                            Style="{StaticResource ModeButtonStyle}"
+                            Tag="Timer" />
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <Popup x:Name="StatusPopup"
+               AllowsTransparency="True"
+               IsHitTestVisible="False"
+               Placement="Left"
+               PlacementTarget="{Binding ElementName=CaptureButton}"
+               StaysOpen="True"
+               HorizontalOffset="-10">
+            <Border Width="238"
+                    Padding="12,9"
+                    Background="#fb18212f"
+                    CornerRadius="8"
+                    Effect="{StaticResource FloatingShadow}">
+                <TextBlock x:Name="StatusText"
+                           AutomationProperties.AutomationId="ModeStatusText"
+                           FontFamily="Segoe UI"
+                           FontSize="12"
+                           Foreground="White"
+                           TextWrapping="Wrap" />
+            </Border>
+        </Popup>
+    </Grid>
+</Window>
