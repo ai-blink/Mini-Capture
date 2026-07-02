@@ -8,4 +8,5 @@
 | done | P1 drag/full/timer capture, PNG save, result panel | `dotnet build`, UIA full/timer smoke, region engine smoke |
 | done | P2 window picker and overlay exclusion | `dotnet build`, UIA window capture smoke, Esc cancel smoke |
 | done | P3 viewer and Explorer-style browser | `dotnet build MiniCapture.slnx`, UIA viewer/browser smoke |
+| done | P3 usability polish | mock-aligned floating button, drag repositioning, radial mode menu, wrapping icon views, `dotnet build MiniCapture.slnx` |
 | planned | P4 packaging and release checks | pending implementation |

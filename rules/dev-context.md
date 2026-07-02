@@ -2,14 +2,19 @@
 
 ## Resume Point
 
-P0-P3 implementation is complete.
+P0-P3 and P3 usability polish are complete. The next slice is P4 hardening and package checks.
 
 Recent commits:
 
 - `fb67b43`: P0 WPF skeleton, floating capture button, four-mode menu.
 - `246231d`: P1 drag/full/timer capture, PNG auto-save, result panel.
 - `e956f19`: P2 window picker, DWM bounds highlight, selected-window PNG capture, Esc cancel.
-- P3 current slice: internal viewer, zoom controls, previous/next navigation, capture folder image index, Explorer-style folder tree, details view, and small/medium/large icon views.
+- `311e693`: P3 internal viewer and first Explorer-style browser slice.
+
+Latest polish:
+
+- Floating button starts at the left edge, matches the HTML mock shape more closely, supports click/drag without duplicate menus, and opens a compact radial four-button menu above the main button.
+- Viewer icon file views wrap downward with horizontal scrolling disabled.
 
 ## Active Design
 
@@ -18,8 +23,8 @@ Recent commits:
 
 ## Immediate Next Step
 
-Start P4 implementation from `doc/app-dev/04-execution-tasks.md`: DPI/multi-monitor checks, repeated capture loops, packaging choice, and release notes.
+Start P4 from `doc/app-dev/04-execution-tasks.md`: DPI/multi-monitor checks, repeated capture loops, packaging choice, and release notes.
 
 ## Current Stack Decision
 
-Use C# WPF plus Win32 P/Invoke. Current capture implementation uses GDI `CopyFromScreen` with DWM bounds for window capture; the P3 viewer/browser is WPF-only and indexes PNG/JPG/JPEG files under `Pictures\MiniCapture`. Windows.Graphics.Capture remains a future hardening option for protected/accelerated windows.
+C# WPF plus Win32 P/Invoke remains the stack. Capture uses GDI `CopyFromScreen` with DWM bounds for window capture; the viewer/browser is WPF-only and indexes PNG/JPG/JPEG files under `Pictures\MiniCapture`.

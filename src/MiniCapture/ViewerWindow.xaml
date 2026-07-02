@@ -42,7 +42,9 @@
         </Style>
 
         <ItemsPanelTemplate x:Key="IconItemsPanel">
-            <WrapPanel IsItemsHost="True" Orientation="Horizontal" />
+            <WrapPanel IsItemsHost="True"
+                       MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListView}}"
+                       Orientation="Horizontal" />
         </ItemsPanelTemplate>
 
         <ItemsPanelTemplate x:Key="DetailsItemsPanel">
@@ -294,6 +296,8 @@
                               AutomationProperties.AutomationId="CaptureFileList"
                               BorderThickness="0"
                               ScrollViewer.CanContentScroll="True"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
                               ItemsSource="{Binding}"
                               SelectionChanged="OnFileSelectionChanged"
                               VirtualizingPanel.IsVirtualizing="True"

@@ -97,10 +97,6 @@ P2 complete: window mode now opens a topmost picker overlay, highlights the targ
 - P3: internal image viewer and Windows Explorer-style mini browser.
 - P4: repeated manual tests across DPI/multi-monitor setups and protected/accelerated windows.
 
-## Handoff
-
-P3 is complete. Next step: implement P4 hardening and package checks without adding OCR, upload, scrolling capture, video/GIF, heavy editing, or a general-purpose file manager.
-
 ## P3 Continuation
 
 ### Finish Line
@@ -132,3 +128,34 @@ P3 complete: the `보기` result-panel action now opens an internal WPF viewer w
 - P4: DPI/multi-monitor and repeated capture validation.
 - P4: packaging choice and release notes.
 - FOLLOW_UP: thumbnail cancellation/cache hardening and explicit large-folder perf sweep.
+
+## P3 Usability Polish Continuation
+
+### Finish Line
+
+P3 polish complete: the floating capture button now follows the approved mockup more closely, supports drag repositioning without breaking click-to-menu behavior, and the four mode buttons sit in a compact centered radial cluster above the main button.
+
+### Changes
+
+- Moved the default floating button placement to the left side of the work area.
+- Restyled the floating button to use the mockup-sized teal circular button with a simple white inner frame.
+- Replaced the stacked text menu with four circular mode buttons arranged around the main button center.
+- Split click and drag gestures so dragging moves the floating button while a click opens exactly one mode menu.
+- Repositioned status/result popups to open away from the nearest screen edge.
+- Disabled horizontal scrolling in icon file views so image tiles wrap downward.
+
+### Verification
+
+- `git diff --check`: passed with CRLF conversion warnings only.
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- UI Automation radial-menu check: four mode buttons measured about 91-94px from the main button center.
+- Manual visual check: the mode buttons are compact and evenly spaced; closer spacing would overlap the 44px circular buttons.
+
+### Decisions
+
+- The mode menu keeps the compact radial cluster as the final P3 polish shape.
+- File browser polish remains scoped to capture image browsing; no delete, rename, copy, move, OCR, upload, scrolling capture, video/GIF, heavy editing, or packaging work was added.
+
+## Handoff
+
+P3 implementation and usability polish are complete. Next step: implement P4 hardening and package checks without expanding V1 scope.

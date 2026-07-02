@@ -8,10 +8,11 @@
 - 2026-07-02: P1 basic drag/full/timer capture, dated PNG auto-save, and result panel actions implemented.
 - 2026-07-02: P2 window picker, hover highlight overlay, selected-window PNG capture, and Esc cancel implemented.
 - 2026-07-02: P3 internal viewer and first Explorer-style browser slice implemented.
+- 2026-07-03: P3 usability polish completed for the mock-aligned floating button, drag repositioning, centered radial mode menu, and wrapping icon file views.
 
 ## Current Work
 
-- P3 is complete. Next implementation slice is P4 hardening and package checks.
+- P3 implementation and usability polish are complete. Next implementation slice is P4 hardening and package checks.
 
 ## Next Actions
 
@@ -37,3 +38,5 @@
 - P2 smoke: UI Automation selected `창 지정`, synthetic click on a target `cmd` window saved a non-empty PNG, and `Esc` cancel returned to the floating button.
 - P3 build: `dotnet build MiniCapture.slnx`
 - P3 smoke: UI Automation ran full capture, opened the internal viewer from `보기`, exercised Fit/100%/zoom in/out, previous/next, file list selection, and details/small/medium/large view mode switches.
+- P3 polish build: `dotnet build MiniCapture.slnx`
+- P3 polish smoke: UI Automation measured the four radial mode buttons at roughly 91-94px from the main button center; file icon view wraps vertically with horizontal scrolling disabled.

@@ -1,16 +1,22 @@
 using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using WpfPoint = System.Windows.Point;
 
 namespace MiniCapture;
 
 public partial class MainWindow : Window
 {
     private readonly DispatcherTimer _statusTimer;
+    private WpfPoint? _buttonDragStartScreen;
+    private WpfPoint _buttonDragStartWindowPosition;
     private bool _captureInProgress;
+    private bool _isDraggingButton;
     private string? _lastCapturePath;
+    private bool _suppressNextCaptureClick;
     private ViewerWindow? _viewerWindow;
     private CaptureMode _selectedMode = CaptureMode.Drag;
 
@@ -32,6 +38,7 @@ public partial class MainWindow : Window
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         PlaceNearWorkAreaCorner();
+        UpdatePopupPlacement();
         SelectMode(_selectedMode, showStatus: false);
     }
 
@@ -42,7 +49,14 @@ public partial class MainWindow : Window
 
     private void OnCaptureButtonClick(object sender, RoutedEventArgs e)
     {
-        ModePopup.IsOpen = !ModePopup.IsOpen;
+        if (_suppressNextCaptureClick)
+        {
+            _suppressNextCaptureClick = false;
+            e.Handled = true;
+            return;
+        }
+
+        ToggleModePopup();
     }
 
     private async void OnModeButtonClick(object sender, RoutedEventArgs e)
@@ -79,15 +93,123 @@ public partial class MainWindow : Window
     private void PlaceNearWorkAreaCorner()
     {
         var workArea = SystemParameters.WorkArea;
-        Left = Math.Max(workArea.Left + 12, workArea.Right - Width - 24);
+        Left = workArea.Left + 24;
         Top = Math.Max(workArea.Top + 12, workArea.Bottom - Height - 24);
+    }
+
+    private void OnCaptureButtonPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        Activate();
+        _buttonDragStartScreen = GetCursorScreenPosition();
+        _buttonDragStartWindowPosition = new WpfPoint(Left, Top);
+        _isDraggingButton = false;
+        CaptureButton.CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void OnCaptureButtonPreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (_buttonDragStartScreen is not { } start || e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        var current = GetCursorScreenPosition();
+        var deltaX = current.X - start.X;
+        var deltaY = current.Y - start.Y;
+
+        if (!_isDraggingButton &&
+            Math.Abs(deltaX) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(deltaY) < SystemParameters.MinimumVerticalDragDistance)
+        {
+            return;
+        }
+
+        _isDraggingButton = true;
+        ClosePopups();
+        MoveWithinWorkArea(
+            _buttonDragStartWindowPosition.X + deltaX,
+            _buttonDragStartWindowPosition.Y + deltaY);
+        UpdatePopupPlacement();
+
+        e.Handled = true;
+    }
+
+    private void OnCaptureButtonPreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_buttonDragStartScreen is null)
+        {
+            return;
+        }
+
+        _buttonDragStartScreen = null;
+        CaptureButton.ReleaseMouseCapture();
+
+        if (_isDraggingButton)
+        {
+            _isDraggingButton = false;
+            UpdatePopupPlacement();
+            e.Handled = true;
+            return;
+        }
+
+        _suppressNextCaptureClick = true;
+        ToggleModePopup();
+        e.Handled = true;
+
+        Dispatcher.BeginInvoke(() =>
+        {
+            _suppressNextCaptureClick = false;
+        }, DispatcherPriority.ContextIdle);
+    }
+
+    private void MoveWithinWorkArea(double left, double top)
+    {
+        var workArea = SystemParameters.WorkArea;
+        Left = Math.Clamp(left, workArea.Left, workArea.Right - Width);
+        Top = Math.Clamp(top, workArea.Top, workArea.Bottom - Height);
+    }
+
+    private void ToggleModePopup()
+    {
+        UpdatePopupPlacement();
+        ModePopup.IsOpen = !ModePopup.IsOpen;
+    }
+
+    private WpfPoint GetCursorScreenPosition()
+    {
+        var position = System.Windows.Forms.Cursor.Position;
+        var point = new WpfPoint(position.X, position.Y);
+        var source = PresentationSource.FromVisual(this);
+        return source?.CompositionTarget is null
+            ? point
+            : source.CompositionTarget.TransformFromDevice.Transform(point);
+    }
+
+    private void UpdatePopupPlacement()
+    {
+        var workArea = SystemParameters.WorkArea;
+        var openToRight = Left + (Width / 2) < workArea.Left + (workArea.Width / 2);
+        var placement = openToRight ? PlacementMode.Right : PlacementMode.Left;
+        var horizontalOffset = openToRight ? 10 : -10;
+
+        StatusPopup.Placement = placement;
+        StatusPopup.HorizontalOffset = horizontalOffset;
+        ResultPopup.Placement = placement;
+        ResultPopup.HorizontalOffset = horizontalOffset;
+    }
+
+    private void ClosePopups()
+    {
+        ModePopup.IsOpen = false;
+        StatusPopup.IsOpen = false;
+        ResultPopup.IsOpen = false;
     }
 
     private void SelectMode(CaptureMode mode, bool showStatus)
     {
         _selectedMode = mode;
-        ModeShortText.Text = CaptureModeInfo.ShortLabel(mode);
-        CaptureButton.ToolTip = $"{CaptureModeInfo.DisplayName(mode)} 선택됨. 우클릭하면 종료할 수 있습니다.";
+        CaptureButton.ToolTip = $"{CaptureModeInfo.DisplayName(mode)} 선택됨. 드래그하면 위치를 옮길 수 있습니다. 우클릭하면 종료할 수 있습니다.";
         AutomationProperties.SetName(CaptureButton, $"{CaptureModeInfo.DisplayName(mode)} 모드 선택됨");
         StatusText.Text = CaptureModeInfo.PlaceholderStatus(mode);
         AutomationProperties.SetName(StatusText, StatusText.Text);
