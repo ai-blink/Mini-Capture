@@ -1,7 +1,7 @@
-<Window x:Class="MiniCapture.RegionCaptureOverlay"
+<Window x:Class="MiniCapture.WindowPickerOverlay"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Mini Capture Region Overlay"
+        Title="Mini Capture Window Picker"
         AllowsTransparency="True"
         Background="Transparent"
         Cursor="Cross"
@@ -12,17 +12,18 @@
         WindowStyle="None"
         Loaded="OnLoaded"
         SourceInitialized="OnSourceInitialized"
+        Closed="OnClosed"
         KeyDown="OnKeyDown"
         MouseLeftButtonDown="OnMouseLeftButtonDown"
-        MouseLeftButtonUp="OnMouseLeftButtonUp"
         MouseMove="OnMouseMove">
     <Canvas x:Name="OverlayCanvas"
-            Background="#33000000">
-        <Border x:Name="SelectionBorder"
+            Background="#22000000">
+        <Border x:Name="HighlightBorder"
                 Visibility="Collapsed"
                 BorderBrush="#12a594"
-                BorderThickness="2"
-                Background="#2212a594" />
+                BorderThickness="3"
+                CornerRadius="7"
+                Background="#1112a594" />
         <TextBlock x:Name="HintText"
                    Canvas.Left="18"
                    Canvas.Top="18"
@@ -31,6 +32,15 @@
                    FontSize="13"
                    Foreground="White"
                    Background="#cc18212f"
-                   Text="드래그해서 캡처 영역 선택 / Esc 취소" />
+                   Text="캡처할 창 위에 마우스를 올리고 클릭 / Esc 취소" />
+        <TextBlock x:Name="TargetText"
+                   Visibility="Collapsed"
+                   Padding="9,6"
+                   FontFamily="Segoe UI"
+                   FontSize="12"
+                   Foreground="White"
+                   Background="#cc0f766e"
+                   TextTrimming="CharacterEllipsis"
+                   MaxWidth="420" />
     </Canvas>
 </Window>

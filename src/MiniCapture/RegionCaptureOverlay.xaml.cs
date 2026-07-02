@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using DrawingRectangle = System.Drawing.Rectangle;
 using WpfPoint = System.Windows.Point;
 
@@ -28,6 +29,11 @@ public partial class RegionCaptureOverlay : Window
 
         Activate();
         Focus();
+    }
+
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        NativeWindowApi.TryExcludeFromCapture(new WindowInteropHelper(this).Handle);
     }
 
     private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

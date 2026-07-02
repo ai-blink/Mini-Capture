@@ -12,6 +12,11 @@ public static class ScreenCaptureService
         return CaptureRegion(GetVirtualScreenBounds());
     }
 
+    public static string CaptureWindow(WindowCaptureTarget target)
+    {
+        return CaptureRegion(target.Bounds);
+    }
+
     public static string CaptureRegion(Rectangle region)
     {
         if (region.Width <= 0 || region.Height <= 0)

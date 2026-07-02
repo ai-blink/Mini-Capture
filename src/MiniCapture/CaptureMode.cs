@@ -47,7 +47,7 @@ public static class CaptureModeInfo
     {
         return mode switch
         {
-            CaptureMode.Window => "창 지정 캡처는 P2에서 연결됩니다.",
+            CaptureMode.Window => "창 지정 모드 선택됨. 대상 창을 클릭하면 PNG로 저장합니다.",
             CaptureMode.Timer => "타이머 모드 선택됨. 3초 후 전체 화면을 캡처합니다.",
             CaptureMode.FullScreen => "전체 모드 선택됨. 전체 화면을 PNG로 저장합니다.",
             _ => "드래그 모드 선택됨. 저장할 영역을 드래그하세요."

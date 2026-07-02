@@ -66,6 +66,37 @@ P1 complete: drag region, full screen, and timer capture paths now save PNG file
 - P3: internal viewer and Windows Explorer-style mini browser.
 - DPI/multi-monitor precision needs a focused P4 check after P2.
 
+## P2 Continuation
+
+### Finish Line
+
+P2 complete: window mode now opens a topmost picker overlay, highlights the target window under the cursor, saves the clicked window as a PNG, and supports `Esc` cancel back to the floating button.
+
+### Changes
+
+- Added Win32 interop for top-level window enumeration, DWM extended frame bounds, titles/classes, and capture exclusion hints.
+- Added `WindowPickerService` to find the topmost visible non-app window under the cursor.
+- Added `WindowPickerOverlay` with target highlight and label.
+- Connected `창 지정` mode to picker selection and selected-window PNG saving.
+- Applied `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)` best-effort hints to the floating button and capture overlays.
+
+### Verification
+
+- `dotnet build`: passed with 0 warnings and 0 errors.
+- UI Automation window capture smoke: opened `창 지정`, clicked a target `cmd` window, saved a non-empty PNG, and exited cleanly.
+- Escape cancel smoke: opened window picker, sent `Esc`, confirmed the app stayed alive and the floating capture button returned.
+
+### Decisions
+
+- P2 uses DWM visible bounds plus GDI `CopyFromScreen` for selected-window PNG capture.
+- Windows.Graphics.Capture remains a future hardening path if DWM/GDI capture fails for specific accelerated or protected windows.
+- DPI and multi-monitor coordinate precision remain P4 validation concerns.
+
+### Follow-ups
+
+- P3: internal image viewer and Windows Explorer-style mini browser.
+- P4: repeated manual tests across DPI/multi-monitor setups and protected/accelerated windows.
+
 ## Handoff
 
-Next step: implement P2 window picker and overlay exclusion without adding OCR, upload, scrolling capture, video/GIF, heavy editing, or the P3 viewer/browser.
+Next step: implement P3 viewer/browser without adding OCR, upload, scrolling capture, video/GIF, heavy editing, or a general-purpose file manager.

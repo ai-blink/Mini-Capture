@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Automation;
-using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 
 namespace MiniCapture;
@@ -32,6 +32,11 @@ public partial class MainWindow : Window
     {
         PlaceNearWorkAreaCorner();
         SelectMode(_selectedMode, showStatus: false);
+    }
+
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        NativeWindowApi.TryExcludeFromCapture(new WindowInteropHelper(this).Handle);
     }
 
     private void OnCaptureButtonClick(object sender, RoutedEventArgs e)
@@ -103,12 +108,6 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (mode == CaptureMode.Window)
-        {
-            ShowStatus("창 지정 캡처는 P2에서 구현됩니다.");
-            return;
-        }
-
         _captureInProgress = true;
         ResultPopup.IsOpen = false;
 
@@ -116,6 +115,7 @@ public partial class MainWindow : Window
         {
             var savedPath = mode switch
             {
+                CaptureMode.Window => await CaptureWindowAsync(),
                 CaptureMode.FullScreen => await CaptureFullScreenAsync(TimeSpan.FromMilliseconds(180)),
                 CaptureMode.Timer => await CaptureFullScreenAsync(TimeSpan.FromSeconds(3)),
                 _ => CaptureDragRegion()
@@ -172,6 +172,23 @@ public partial class MainWindow : Window
         }
 
         return ScreenCaptureService.CaptureRegion(region);
+    }
+
+    private async Task<string?> CaptureWindowAsync()
+    {
+        ShowStatus("캡처할 창 위에 마우스를 올리고 클릭하세요. Esc로 취소할 수 있습니다.");
+        ModePopup.IsOpen = false;
+        Hide();
+
+        var overlay = new WindowPickerOverlay();
+        var accepted = overlay.ShowDialog() == true;
+        if (!accepted || overlay.SelectedTarget is not { } target)
+        {
+            return null;
+        }
+
+        await Task.Delay(180);
+        return ScreenCaptureService.CaptureWindow(target);
     }
 
     private void ShowCaptureResult(string path)

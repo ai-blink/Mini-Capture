@@ -17,6 +17,7 @@
         WindowStartupLocation="Manual"
         WindowStyle="None"
         Loaded="OnLoaded"
+        SourceInitialized="OnSourceInitialized"
         KeyDown="OnKeyDown">
     <Window.Resources>
         <DropShadowEffect x:Key="FloatingShadow"
