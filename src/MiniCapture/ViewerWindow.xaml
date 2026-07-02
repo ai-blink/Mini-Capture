@@ -1,0 +1,347 @@
+<Window x:Class="MiniCapture.ViewerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:MiniCapture"
+        Title="Mini Capture Viewer"
+        Width="1180"
+        Height="760"
+        MinWidth="980"
+        MinHeight="580"
+        Background="#f4f7fb"
+        FontFamily="Segoe UI"
+        ShowInTaskbar="True"
+        UseLayoutRounding="True"
+        WindowStartupLocation="CenterScreen"
+        Loaded="OnLoaded"
+        KeyDown="OnKeyDown">
+    <Window.Resources>
+        <local:ThumbnailImageConverter x:Key="ThumbnailConverter" />
+
+        <Style x:Key="ToolbarButtonStyle" TargetType="Button">
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="MinWidth" Value="38" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="Background" Value="#ffffff" />
+            <Setter Property="BorderBrush" Value="#cfd8e3" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#18212f" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style x:Key="ViewButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
+            <Setter Property="MinWidth" Value="58" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+
+        <Style x:Key="IconListItemStyle" TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Margin" Value="3" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <ItemsPanelTemplate x:Key="IconItemsPanel">
+            <WrapPanel IsItemsHost="True" Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+
+        <ItemsPanelTemplate x:Key="DetailsItemsPanel">
+            <VirtualizingStackPanel IsItemsHost="True" />
+        </ItemsPanelTemplate>
+
+        <DataTemplate x:Key="SmallIconTemplate">
+            <Border Width="104"
+                    Padding="6"
+                    Background="Transparent">
+                <StackPanel>
+                    <Border Height="58"
+                            Background="#eef3f8"
+                            BorderBrush="#d8e1eb"
+                            BorderThickness="1">
+                        <Image Source="{Binding Converter={StaticResource ThumbnailConverter}, ConverterParameter=64}"
+                               Stretch="Uniform" />
+                    </Border>
+                    <TextBlock Margin="0,5,0,0"
+                               FontSize="11"
+                               Foreground="#18212f"
+                               Text="{Binding FileName}"
+                               TextAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               TextWrapping="NoWrap" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="MediumIconTemplate">
+            <Border Width="138"
+                    Padding="7"
+                    Background="Transparent">
+                <StackPanel>
+                    <Border Height="92"
+                            Background="#eef3f8"
+                            BorderBrush="#d8e1eb"
+                            BorderThickness="1">
+                        <Image Source="{Binding Converter={StaticResource ThumbnailConverter}, ConverterParameter=112}"
+                               Stretch="Uniform" />
+                    </Border>
+                    <TextBlock Margin="0,6,0,0"
+                               FontSize="12"
+                               Foreground="#18212f"
+                               Text="{Binding FileName}"
+                               TextAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               TextWrapping="NoWrap" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="LargeIconTemplate">
+            <Border Width="184"
+                    Padding="8"
+                    Background="Transparent">
+                <StackPanel>
+                    <Border Height="132"
+                            Background="#eef3f8"
+                            BorderBrush="#d8e1eb"
+                            BorderThickness="1">
+                        <Image Source="{Binding Converter={StaticResource ThumbnailConverter}, ConverterParameter=168}"
+                               Stretch="Uniform" />
+                    </Border>
+                    <TextBlock Margin="0,7,0,0"
+                               FontSize="12"
+                               Foreground="#18212f"
+                               Text="{Binding FileName}"
+                               TextAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               TextWrapping="NoWrap" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <HierarchicalDataTemplate DataType="{x:Type local:FolderTreeNode}"
+                                  ItemsSource="{Binding Children}">
+            <TextBlock Text="{Binding Name}" />
+        </HierarchicalDataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="28" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Background="#ffffff"
+                BorderBrush="#d8e1eb"
+                BorderThickness="0,0,0,1">
+            <DockPanel Margin="12,8">
+                <TextBlock x:Name="CurrentFileText"
+                           DockPanel.Dock="Left"
+                           Width="320"
+                           VerticalAlignment="Center"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="#18212f"
+                           TextTrimming="CharacterEllipsis" />
+                <StackPanel DockPanel.Dock="Right"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right">
+                    <Button x:Name="PreviousButton"
+                            AutomationProperties.AutomationId="ViewerPreviousButton"
+                            Click="OnPreviousClick"
+                            Content="이전"
+                            Style="{StaticResource ToolbarButtonStyle}" />
+                    <Button x:Name="NextButton"
+                            AutomationProperties.AutomationId="ViewerNextButton"
+                            Click="OnNextClick"
+                            Content="다음"
+                            Style="{StaticResource ToolbarButtonStyle}" />
+                    <Button AutomationProperties.AutomationId="ViewerZoomOutButton"
+                            Click="OnZoomOutClick"
+                            Content="-"
+                            FontWeight="Bold"
+                            Style="{StaticResource ToolbarButtonStyle}" />
+                    <TextBlock x:Name="ZoomText"
+                               Width="58"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center"
+                               FontSize="12"
+                               Foreground="#3c4a5f" />
+                    <Button AutomationProperties.AutomationId="ViewerZoomInButton"
+                            Click="OnZoomInClick"
+                            Content="+"
+                            FontWeight="Bold"
+                            Style="{StaticResource ToolbarButtonStyle}" />
+                    <Button AutomationProperties.AutomationId="ViewerFitButton"
+                            Click="OnFitClick"
+                            Content="Fit"
+                            Style="{StaticResource ToolbarButtonStyle}" />
+                    <Button AutomationProperties.AutomationId="ViewerActualSizeButton"
+                            Click="OnActualSizeClick"
+                            Content="100%"
+                            Style="{StaticResource ToolbarButtonStyle}" />
+                    <Button AutomationProperties.AutomationId="ViewerRefreshButton"
+                            Click="OnRefreshClick"
+                            Content="새로고침"
+                            Style="{StaticResource ToolbarButtonStyle}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="230" />
+                <ColumnDefinition Width="390" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0"
+                    Background="#fbfdff"
+                    BorderBrush="#d8e1eb"
+                    BorderThickness="0,0,1,0">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                               Margin="12,12,12,8"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="#627083"
+                               Text="폴더" />
+                    <TreeView x:Name="FolderTree"
+                              AutomationProperties.AutomationId="CaptureFolderTree"
+                              BorderThickness="0"
+                              Background="Transparent"
+                              FontSize="13"
+                              ItemsSource="{Binding}"
+                              Padding="6,0,6,10"
+                              SelectedItemChanged="OnFolderTreeSelectedItemChanged">
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="{x:Type TreeViewItem}">
+                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                                <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                                <Setter Property="Padding" Value="3" />
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+                    </TreeView>
+                </DockPanel>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Background="#ffffff"
+                    BorderBrush="#d8e1eb"
+                    BorderThickness="0,0,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="44" />
+                        <RowDefinition Height="44" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            Margin="10,10,10,4"
+                            Padding="9,5"
+                            Background="#f4f7fb"
+                            BorderBrush="#d8e1eb"
+                            BorderThickness="1">
+                        <TextBlock x:Name="AddressText"
+                                   AutomationProperties.AutomationId="ViewerAddressText"
+                                   FontSize="12"
+                                   Foreground="#3c4a5f"
+                                   TextTrimming="CharacterEllipsis" />
+                    </Border>
+
+                    <DockPanel Grid.Row="1"
+                               Margin="10,4,10,8">
+                        <TextBlock x:Name="FileCountText"
+                                   DockPanel.Dock="Left"
+                                   VerticalAlignment="Center"
+                                   FontSize="12"
+                                   Foreground="#627083" />
+                        <StackPanel DockPanel.Dock="Right"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right">
+                            <Button x:Name="DetailsViewButton"
+                                    AutomationProperties.AutomationId="DetailsViewButton"
+                                    Click="OnViewModeClick"
+                                    Content="자세히"
+                                    Style="{StaticResource ViewButtonStyle}"
+                                    Tag="Details" />
+                            <Button x:Name="SmallViewButton"
+                                    AutomationProperties.AutomationId="SmallIconViewButton"
+                                    Click="OnViewModeClick"
+                                    Content="작게"
+                                    Style="{StaticResource ViewButtonStyle}"
+                                    Tag="SmallIcons" />
+                            <Button x:Name="MediumViewButton"
+                                    AutomationProperties.AutomationId="MediumIconViewButton"
+                                    Click="OnViewModeClick"
+                                    Content="중간"
+                                    Style="{StaticResource ViewButtonStyle}"
+                                    Tag="MediumIcons" />
+                            <Button x:Name="LargeViewButton"
+                                    AutomationProperties.AutomationId="LargeIconViewButton"
+                                    Click="OnViewModeClick"
+                                    Content="크게"
+                                    Margin="0"
+                                    Style="{StaticResource ViewButtonStyle}"
+                                    Tag="LargeIcons" />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <ListView x:Name="FileList"
+                              Grid.Row="2"
+                              AutomationProperties.AutomationId="CaptureFileList"
+                              BorderThickness="0"
+                              ScrollViewer.CanContentScroll="True"
+                              ItemsSource="{Binding}"
+                              SelectionChanged="OnFileSelectionChanged"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling" />
+                </Grid>
+            </Border>
+
+            <GridSplitter Grid.Column="2"
+                          Width="5"
+                          HorizontalAlignment="Stretch"
+                          Background="#d8e1eb"
+                          ResizeBehavior="PreviousAndNext" />
+
+            <Grid Grid.Column="3"
+                  Background="#111827">
+                <ScrollViewer x:Name="ImageScrollViewer"
+                              Background="#111827"
+                              CanContentScroll="False"
+                              HorizontalScrollBarVisibility="Auto"
+                              PreviewMouseWheel="OnImagePreviewMouseWheel"
+                              SizeChanged="OnImageStageSizeChanged"
+                              VerticalScrollBarVisibility="Auto">
+                    <Grid MinWidth="{Binding ActualWidth, ElementName=ImageScrollViewer}"
+                          MinHeight="{Binding ActualHeight, ElementName=ImageScrollViewer}">
+                        <Image x:Name="PreviewImage"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               RenderOptions.BitmapScalingMode="HighQuality"
+                               Stretch="Fill" />
+                    </Grid>
+                </ScrollViewer>
+                <TextBlock x:Name="EmptyMessage"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="14"
+                           Foreground="#cbd5e1"
+                           Text="표시할 이미지가 없습니다." />
+            </Grid>
+        </Grid>
+
+        <StatusBar Grid.Row="2"
+                   Background="#ffffff"
+                   BorderBrush="#d8e1eb"
+                   BorderThickness="0,1,0,0">
+            <TextBlock x:Name="StatusText"
+                       AutomationProperties.AutomationId="ViewerStatusText"
+                       FontSize="12"
+                       Foreground="#627083" />
+        </StatusBar>
+    </Grid>
+</Window>

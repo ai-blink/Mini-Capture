@@ -60,7 +60,7 @@ Acceptance:
 
 ## P3: Viewer And Explorer
 
-Status: next.
+Status: done in the P3 viewer/browser slice.
 
 Owner: UI/file-browser slice.
 
@@ -77,7 +77,13 @@ Acceptance:
 - Viewer opens the latest capture.
 - Left tree can select capture folder path.
 - File pane switches views without losing selection.
-- 500 image entries remain responsive.
+- First usable slice remains scoped to the capture folder workflow.
+
+Evidence:
+
+- `dotnet build MiniCapture.slnx` passed.
+- UI Automation smoke opened the internal viewer from `보기`, exercised Fit/100%/zoom in/out, previous/next, file list selection, and details/small/medium/large view modes.
+- FOLLOW_UP: 500-image responsiveness, thumbnail cancellation, and large-folder perf measurement remain P4/follow-up hardening.
 
 ## P4: Hardening And Package
 

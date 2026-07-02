@@ -34,4 +34,4 @@ Start with manual Windows validation for capture overlays, DPI, multi-monitor be
 - P0 done: WPF app shell, floating topmost button, four-mode menu, clean exit.
 - P1 done: drag/full/timer capture, dated PNG auto-save, result panel actions.
 - P2 done: window picker overlay, DWM bounds highlight, selected-window PNG capture, Esc cancel.
-- P3 next: mini viewer and Explorer-style browser.
+- P3 done: internal image viewer, capture folder index, Explorer-style folder tree/file pane, details view, and small/medium/large icon views.

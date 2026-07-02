@@ -11,6 +11,7 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _statusTimer;
     private bool _captureInProgress;
     private string? _lastCapturePath;
+    private ViewerWindow? _viewerWindow;
     private CaptureMode _selectedMode = CaptureMode.Drag;
 
     public MainWindow()
@@ -230,12 +231,25 @@ public partial class MainWindow : Window
     {
         if (_lastCapturePath is not null)
         {
-            ShellService.OpenFile(_lastCapturePath);
+            OpenInternalViewer(_lastCapturePath);
         }
     }
 
     private void OnDismissResultClick(object sender, RoutedEventArgs e)
     {
         ResultPopup.IsOpen = false;
+    }
+
+    private void OpenInternalViewer(string path)
+    {
+        if (_viewerWindow is null || !_viewerWindow.IsVisible)
+        {
+            _viewerWindow = new ViewerWindow(path);
+            _viewerWindow.Closed += (_, _) => _viewerWindow = null;
+            _viewerWindow.Show();
+            return;
+        }
+
+        _viewerWindow.OpenImage(path);
     }
 }

@@ -7,16 +7,17 @@
 - 2026-07-02: P0 WPF skeleton, floating capture button, four-mode menu, placeholder mode selection, and shutdown flow implemented.
 - 2026-07-02: P1 basic drag/full/timer capture, dated PNG auto-save, and result panel actions implemented.
 - 2026-07-02: P2 window picker, hover highlight overlay, selected-window PNG capture, and Esc cancel implemented.
+- 2026-07-02: P3 internal viewer and first Explorer-style browser slice implemented.
 
 ## Current Work
 
-- P2 is complete. Next implementation slice is P3 viewer and Explorer-style browser.
+- P3 is complete. Next implementation slice is P4 hardening and package checks.
 
 ## Next Actions
 
-- Implement mini viewer with zoom, fit, 100%, and previous/next.
-- Add capture folder index and Windows Explorer-style left tree/file pane.
-- Keep thumbnails lazy and avoid general-purpose file manager expansion.
+- Run DPI/multi-monitor and repeated capture validation.
+- Choose the first packaging path and record release notes.
+- Keep Windows.Graphics.Capture and thumbnail cancellation/perf work as hardening follow-ups unless a P4 blocker appears.
 
 ## Blockers
 
@@ -34,3 +35,5 @@
 - P1 region engine: `ScreenCaptureService.CaptureRegion(...)` saved a non-empty PNG.
 - P2 build: `dotnet build`
 - P2 smoke: UI Automation selected `창 지정`, synthetic click on a target `cmd` window saved a non-empty PNG, and `Esc` cancel returned to the floating button.
+- P3 build: `dotnet build MiniCapture.slnx`
+- P3 smoke: UI Automation ran full capture, opened the internal viewer from `보기`, exercised Fit/100%/zoom in/out, previous/next, file list selection, and details/small/medium/large view mode switches.

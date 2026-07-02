@@ -6,7 +6,7 @@ Create a small, reliable Windows capture app that opens fast and removes the fri
 
 ## Current Target
 
-The current build has proven the capture button, four capture modes, PNG save path, result panel, and window picker. The next target is the simple viewer plus Explorer-style browser direction.
+The current build has proven the capture button, four capture modes, PNG save path, result panel, window picker, internal viewer, and first Explorer-style browser slice. The next target is P4 hardening and packaging checks.
 
 ## UX Principles
 

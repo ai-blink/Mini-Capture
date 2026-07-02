@@ -74,7 +74,7 @@
 - P0 complete: WPF skeleton, floating capture button, four-mode menu, clean exit.
 - P1 complete: drag/full/timer capture, dated PNG auto-save, result panel actions.
 - P2 complete: window picker overlay, DWM bounds highlight, selected-window PNG capture, Esc cancel.
-- P3 next: mini viewer and Windows Explorer-style browser.
+- P3 complete: mini viewer and Windows Explorer-style browser first usable slice.
 
 현재 캡처 경로는 GDI `CopyFromScreen` 기반이다. Windows.Graphics.Capture는 protected/accelerated window 실패 사례가 확인될 때 hardening/fallback으로 붙인다.
 

@@ -99,4 +99,36 @@ P2 complete: window mode now opens a topmost picker overlay, highlights the targ
 
 ## Handoff
 
-Next step: implement P3 viewer/browser without adding OCR, upload, scrolling capture, video/GIF, heavy editing, or a general-purpose file manager.
+P3 is complete. Next step: implement P4 hardening and package checks without adding OCR, upload, scrolling capture, video/GIF, heavy editing, or a general-purpose file manager.
+
+## P3 Continuation
+
+### Finish Line
+
+P3 complete: the `보기` result-panel action now opens an internal WPF viewer with image zoom controls, previous/next navigation, and a first Explorer-style capture folder browser.
+
+### Changes
+
+- Added `ViewerWindow` with Fit, 100%, zoom in/out, previous/next, and Ctrl+wheel zoom.
+- Added capture folder indexing for PNG/JPG/JPEG files under `Pictures\MiniCapture`.
+- Added Explorer-style folder tree, address display, details file list, and small/medium/large icon view switches.
+- Added lightweight thumbnail loading for icon views.
+- Rewired the result panel `보기` button from the default external image app to the internal viewer.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- UI Automation smoke: ran full capture, opened the internal viewer from `보기`, exercised Fit/100%/zoom in/out, previous/next navigation, file list selection, and details/small/medium/large view mode switches.
+- App shutdown smoke: the same UIA run closed the main app process normally after viewer/browser checks.
+
+### Decisions
+
+- P3 keeps browsing scoped to the capture root instead of becoming a general-purpose file manager.
+- Details view is the default for responsiveness; icon views load thumbnails on demand.
+- Delete, rename, copy, move, OCR, upload, scrolling capture, video/GIF, heavy editing, and packaging remain out of this slice.
+
+### Follow-ups
+
+- P4: DPI/multi-monitor and repeated capture validation.
+- P4: packaging choice and release notes.
+- FOLLOW_UP: thumbnail cancellation/cache hardening and explicit large-folder perf sweep.
