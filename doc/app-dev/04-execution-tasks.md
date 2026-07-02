@@ -2,6 +2,8 @@
 
 ## P0: Skeleton And Floating Entry
 
+Status: done in `fb67b43`.
+
 Owner: main implementation agent.
 
 Files expected:
@@ -18,6 +20,8 @@ Acceptance:
 - App exits cleanly.
 
 ## P1: Basic Capture And Save
+
+Status: done in `246231d`.
 
 Owner: main implementation agent.
 
@@ -37,6 +41,8 @@ Acceptance:
 
 ## P2: Window Picker
 
+Status: done in `e956f19`.
+
 Owner: capture-focused slice.
 
 Scope:
@@ -53,6 +59,8 @@ Acceptance:
 - Escape cancels and returns to idle state.
 
 ## P3: Viewer And Explorer
+
+Status: next.
 
 Owner: UI/file-browser slice.
 

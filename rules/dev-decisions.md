@@ -15,6 +15,8 @@
 
 - D-006: First implementation target is C# WPF plus Win32 P/Invoke and Windows.Graphics.Capture.
 - D-007: Capture, save, file index, thumbnail, viewer, and explorer responsibilities remain separate.
+- D-010: P1/P2 capture uses GDI `CopyFromScreen` with DWM visible bounds for window capture; Windows.Graphics.Capture is deferred to hardening/fallback work.
+- D-011: `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)` is applied best-effort to floating and overlay windows where Windows supports it.
 
 ## Scope
 
@@ -23,3 +25,4 @@
 ## Validation
 
 - D-009: Manual Windows validation is required for overlay/capture behavior; unit tests should cover deterministic path/index/tree behavior.
+- D-012: P0-P2 completion evidence is `dotnet build` plus UI Automation smoke checks for full, timer, window capture, result actions, and Esc cancel.
