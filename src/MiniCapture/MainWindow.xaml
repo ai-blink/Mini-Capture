@@ -159,5 +159,61 @@
                            TextWrapping="Wrap" />
             </Border>
         </Popup>
+
+        <Popup x:Name="ResultPopup"
+               AllowsTransparency="True"
+               Placement="Left"
+               PlacementTarget="{Binding ElementName=CaptureButton}"
+               StaysOpen="True"
+               HorizontalOffset="-10"
+               VerticalOffset="58">
+            <Border Width="330"
+                    Padding="12"
+                    Background="#fbffffff"
+                    BorderBrush="#d6dde6"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Effect="{StaticResource FloatingShadow}">
+                <StackPanel>
+                    <TextBlock FontFamily="Segoe UI"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="#18212f"
+                               Text="저장됨" />
+                    <TextBlock x:Name="ResultPathText"
+                               Margin="0,5,0,10"
+                               AutomationProperties.AutomationId="ResultPathText"
+                               FontFamily="Segoe UI"
+                               FontSize="11"
+                               Foreground="#627083"
+                               TextTrimming="CharacterEllipsis" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button AutomationProperties.AutomationId="OpenFileButton"
+                                Click="OnOpenFileClick"
+                                Content="파일"
+                                Margin="0,0,8,0"
+                                Padding="10,6"
+                                MinWidth="58" />
+                        <Button AutomationProperties.AutomationId="OpenFolderButton"
+                                Click="OnOpenFolderClick"
+                                Content="폴더"
+                                Margin="0,0,8,0"
+                                Padding="10,6"
+                                MinWidth="58" />
+                        <Button AutomationProperties.AutomationId="OpenViewerButton"
+                                Click="OnOpenViewerClick"
+                                Content="보기"
+                                Margin="0,0,8,0"
+                                Padding="10,6"
+                                MinWidth="58" />
+                        <Button AutomationProperties.AutomationId="DismissResultButton"
+                                Click="OnDismissResultClick"
+                                Content="닫기"
+                                Padding="10,6"
+                                MinWidth="58" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Popup>
     </Grid>
 </Window>
