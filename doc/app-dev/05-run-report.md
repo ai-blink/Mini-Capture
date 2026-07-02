@@ -189,3 +189,22 @@ Timer UX and window capture fix complete: the timer button now opens delay choic
 - Timer remains a capture setting, not a fourth executable capture path.
 - The first fix keeps the existing DWM-bounds plus GDI capture engine and tightens target selection instead of introducing Windows.Graphics.Capture in this slice.
 - P4 packaging, broader DPI/multi-monitor sweeps, OCR, upload/cloud sharing, scrolling capture, video/GIF, heavy editing, and file-manager operations remain out of scope.
+
+## Window Picker Full-Screen Candidate Fix
+
+### Finish Line
+
+Window picker regression fixed: hovering a normal window no longer selects screen-covering helper windows as the capture target.
+
+### Changes
+
+- Deferred virtual-screen-sized candidates while scanning window candidates under the cursor.
+- Ignored known full-screen helper targets observed in the reproduction path.
+- Preserved fallback behavior for truly full-screen/maximized captures when no smaller real candidate is available.
+
+### Verification
+
+- Reproduction probe showed visible full-screen helper windows such as `PicPick`/`GazeScroll` ahead of normal window candidates.
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- Window capture smoke saved `C:\Users\user\Pictures\MiniCapture\2026\07\03\20260703_042248_813.png` at `1250x753`, confirming the selected target was not the `3840x2160` virtual screen.
+- `git diff --check`: passed with CRLF conversion warnings only.

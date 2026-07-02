@@ -4,15 +4,27 @@ namespace MiniCapture;
 
 public static class WindowPickerService
 {
+    private const double FullScreenCoverageThreshold = 0.9;
+
     private static readonly HashSet<string> IgnoredWindowClasses = new(StringComparer.Ordinal)
     {
         "Progman",
         "WorkerW",
-        "Shell_TrayWnd"
+        "Shell_TrayWnd",
+        "TfrmFullScreen"
+    };
+
+    private static readonly HashSet<string> IgnoredWindowTitles = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "GazeScroll",
+        "Shell Handwriting Canvas"
     };
 
     public static WindowCaptureTarget? FindTargetAt(Point screenPoint, int currentProcessId)
     {
+        var virtualBounds = ScreenCaptureService.GetVirtualScreenBounds();
+        var fullScreenCandidates = new List<WindowCaptureTarget>();
+
         foreach (var hwnd in NativeWindowApi.EnumerateTopLevelWindows())
         {
             if (!IsCandidate(hwnd, currentProcessId))
@@ -36,10 +48,16 @@ public static class WindowPickerService
                 title = NativeWindowApi.GetClassName(hwnd);
             }
 
-            return new WindowCaptureTarget(hwnd, bounds, title);
+            var target = new WindowCaptureTarget(hwnd, bounds, title);
+            if (!CoversMostOfVirtualScreen(bounds, virtualBounds))
+            {
+                return target;
+            }
+
+            fullScreenCandidates.Add(target);
         }
 
-        return null;
+        return fullScreenCandidates.FirstOrDefault();
     }
 
     private static bool IsCandidate(IntPtr hwnd, int currentProcessId)
@@ -59,6 +77,23 @@ public static class WindowPickerService
             return false;
         }
 
-        return !IgnoredWindowClasses.Contains(NativeWindowApi.GetClassName(hwnd));
+        var className = NativeWindowApi.GetClassName(hwnd);
+        if (IgnoredWindowClasses.Contains(className))
+        {
+            return false;
+        }
+
+        return !IgnoredWindowTitles.Contains(NativeWindowApi.GetTitle(hwnd));
+    }
+
+    private static bool CoversMostOfVirtualScreen(Rectangle bounds, Rectangle virtualBounds)
+    {
+        if (virtualBounds.Width <= 0 || virtualBounds.Height <= 0)
+        {
+            return false;
+        }
+
+        return bounds.Width >= virtualBounds.Width * FullScreenCoverageThreshold &&
+            bounds.Height >= virtualBounds.Height * FullScreenCoverageThreshold;
     }
 }
