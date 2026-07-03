@@ -362,3 +362,36 @@ The viewer toolbar is reorganized so editing tools are easier to scan and use, t
 ### Decisions
 
 - This slice changes toolbar presentation only. It does not add multi-tabs, delete/rename/copy/move file manager operations, AI/OCR, cloud sharing, scrolling capture, video/GIF, or a layer-based editor.
+
+## Dark Screenshot Markup Shell Viewer Redesign
+
+### Finish Line
+
+ViewerWindow now follows the Dark Screenshot Markup Shell direction: a dark screenshot-first app shell with clear File/View/Markup/Properties groups, markup tools as the visual center, capture-root library browsing, a canvas-first workspace, and a stronger status/zoom bar.
+
+### Changes
+
+- Rebuilt `ViewerWindow.xaml` around a dark title strip, two-row command ribbon, left Capture Library panes, dotted dark canvas workspace, and bottom metadata/status bar.
+- Grouped file actions as visible Save, Open, Folder, Copy Image, and Copy Path commands.
+- Grouped view actions as previous/next, fit, 100%, zoom, and refresh controls.
+- Promoted markup tools into a stronger row with pan, select, pen, arrow, rectangle, ellipse, text, mosaic, undo/redo, and rotate controls.
+- Kept existing raster editing logic and added only minimal code-behind for the select tool, folder-open command, dark selected-state colors, and status metadata badges.
+- Preserved capture-root-scoped browsing; no delete, rename, copy, move, upload, OCR, layer, project, scrolling capture, or video/GIF behavior was added.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- UI Automation smoke opened Mini Capture, made a full-screen capture, opened the internal viewer, resized it to 980x580 DIP, found save/open/copy-image/copy-path actions and pan/select/pen/arrow/rectangle/ellipse/text/mosaic/stroke controls, saved the active PNG, copied the file path, copied image data, and confirmed close-to-tray still kept the process alive.
+- Visual check: `PrintWindow` screenshot saved at `%TEMP%\mini_capture_dark_shell_printwindow_980x580.png`; toolbar groups, markup controls, properties, status metadata, and zoom badge did not overlap at the target size.
+
+### Decisions
+
+- The Stitch `mini_capture_hybrid_modern_variant` was translated into WPF structure rather than copied from HTML/CSS.
+- `mini_capture_pro_dark_variant` and `mini_capture_dark_ribbon_variant` informed command grouping only; broad editor/file-manager features were excluded.
+- The new select tool is intentionally a neutral viewing/edit-safe mode, not a layer/object selection system.
+
+### Follow-ups
+
+- P4 still owns DPI/multi-monitor sweeps, repeated capture loops, packaging choice, and release notes.
+- FOLLOW_UP: if the Capture Library tree should visually remove the existing `내 PC > 사진` grouping, treat it as a separate navigation-copy polish slice because selectable paths are already constrained to the capture root.

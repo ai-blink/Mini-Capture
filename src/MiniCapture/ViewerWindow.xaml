@@ -7,7 +7,7 @@
         Height="760"
         MinWidth="980"
         MinHeight="580"
-        Background="#f4f7fb"
+        Background="#121414"
         FontFamily="Segoe UI"
         ShowInTaskbar="True"
         UseLayoutRounding="True"
@@ -18,69 +18,181 @@
     <Window.Resources>
         <local:ThumbnailImageConverter x:Key="ThumbnailConverter" />
 
+        <SolidColorBrush x:Key="ViewerWindowBackgroundBrush" Color="#121414" />
+        <SolidColorBrush x:Key="ViewerToolbarBackgroundBrush" Color="#1A1C1C" />
+        <SolidColorBrush x:Key="ViewerToolbarGroupBrush" Color="#1E2020" />
+        <SolidColorBrush x:Key="ViewerToolbarGroupAltBrush" Color="#20272D" />
+        <SolidColorBrush x:Key="ViewerPanelBackgroundBrush" Color="#151818" />
+        <SolidColorBrush x:Key="ViewerPanelRaisedBrush" Color="#1E2020" />
+        <SolidColorBrush x:Key="ViewerBorderBrush" Color="#30363D" />
+        <SolidColorBrush x:Key="ViewerMutedBorderBrush" Color="#404752" />
+        <SolidColorBrush x:Key="ViewerAccentBrush" Color="#0078D4" />
+        <SolidColorBrush x:Key="ViewerAccentMutedBrush" Color="#17324A" />
+        <SolidColorBrush x:Key="ViewerTextBrush" Color="#E2E2E2" />
+        <SolidColorBrush x:Key="ViewerMutedTextBrush" Color="#C0C7D4" />
+        <SolidColorBrush x:Key="ViewerDimTextBrush" Color="#8A919E" />
+
+        <DrawingBrush x:Key="ViewerCanvasDotBrush"
+                      TileMode="Tile"
+                      Viewport="0,0,24,24"
+                      ViewportUnits="Absolute">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="#1E1E1E">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,24,24" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#34383B">
+                        <GeometryDrawing.Geometry>
+                            <EllipseGeometry Center="12,12"
+                                             RadiusX="1"
+                                             RadiusY="1" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
         <Style x:Key="ToolbarButtonStyle" TargetType="Button">
             <Setter Property="MinHeight" Value="30" />
-            <Setter Property="MinWidth" Value="38" />
-            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="Margin" Value="0,0,5,0" />
             <Setter Property="Padding" Value="10,4" />
-            <Setter Property="Background" Value="#ffffff" />
-            <Setter Property="BorderBrush" Value="#cfd8e3" />
+            <Setter Property="Background" Value="#24282A" />
+            <Setter Property="BorderBrush" Value="{StaticResource ViewerMutedBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="#18212f" />
+            <Setter Property="Foreground" Value="{StaticResource ViewerTextBrush}" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="ToolTipService.InitialShowDelay" Value="250" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#2B3237" />
+                    <Setter Property="BorderBrush" Value="#5A6674" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.45" />
+                    <Setter Property="Cursor" Value="Arrow" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="RibbonTextButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="MinWidth" Value="72" />
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="PrimaryRibbonButtonStyle" TargetType="Button" BasedOn="{StaticResource RibbonTextButtonStyle}">
+            <Setter Property="Background" Value="{StaticResource ViewerAccentBrush}" />
+            <Setter Property="BorderBrush" Value="#5EAFFF" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
         </Style>
 
         <Style x:Key="ToolbarIconButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
-            <Setter Property="Width" Value="34" />
-            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="Width" Value="32" />
+            <Setter Property="MinWidth" Value="32" />
             <Setter Property="Height" Value="32" />
             <Setter Property="MinHeight" Value="32" />
             <Setter Property="Margin" Value="0,0,4,0" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
-            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontSize" Value="14" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="ToolTipService.InitialShowDelay" Value="250" />
         </Style>
 
         <Style x:Key="ToolGlyphButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarIconButtonStyle}">
-            <Setter Property="Width" Value="42" />
-            <Setter Property="MinWidth" Value="42" />
+            <Setter Property="Width" Value="36" />
+            <Setter Property="MinWidth" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MinHeight" Value="36" />
             <Setter Property="FontFamily" Value="Segoe UI Symbol" />
             <Setter Property="FontSize" Value="17" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
-        <Style x:Key="ToolbarDividerStyle" TargetType="Border">
-            <Setter Property="Width" Value="1" />
-            <Setter Property="Height" Value="26" />
-            <Setter Property="Margin" Value="4,3,8,3" />
-            <Setter Property="Background" Value="#d8e1eb" />
+        <Style x:Key="RibbonGroupStyle" TargetType="Border">
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Background" Value="{StaticResource ViewerToolbarGroupBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource ViewerBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+
+        <Style x:Key="RibbonGroupLabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource ViewerDimTextBrush}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
 
         <Style x:Key="ColorSwatchButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="24" />
-            <Setter Property="Height" Value="24" />
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
             <Setter Property="Margin" Value="0,0,5,0" />
             <Setter Property="Padding" Value="2" />
-            <Setter Property="Background" Value="#ffffff" />
-            <Setter Property="BorderBrush" Value="#cfd8e3" />
+            <Setter Property="Background" Value="#24282A" />
+            <Setter Property="BorderBrush" Value="{StaticResource ViewerMutedBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="ToolTipService.InitialShowDelay" Value="250" />
         </Style>
 
         <Style x:Key="ViewButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
-            <Setter Property="MinWidth" Value="58" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="MinWidth" Value="52" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="FontSize" Value="11" />
         </Style>
 
-        <Style x:Key="IconListItemStyle" TargetType="ListViewItem">
+        <Style x:Key="StatusBadgeStyle" TargetType="Border">
+            <Setter Property="Margin" Value="8,0,0,0" />
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="Background" Value="#20272D" />
+            <Setter Property="BorderBrush" Value="{StaticResource ViewerMutedBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="2" />
+        </Style>
+
+        <Style x:Key="ExplorerListItemStyle" TargetType="ListViewItem">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Foreground" Value="{StaticResource ViewerTextBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="4,2" />
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ViewerAccentMutedBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource ViewerAccentBrush}" />
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#242B31" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="IconListItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource ExplorerListItemStyle}">
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
             <Setter Property="Margin" Value="3" />
             <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <Style TargetType="{x:Type GridViewColumnHeader}">
+            <Setter Property="Background" Value="#1E2020" />
+            <Setter Property="Foreground" Value="{StaticResource ViewerMutedTextBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource ViewerBorderBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,1,1" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
         <ItemsPanelTemplate x:Key="IconItemsPanel">
@@ -99,15 +211,16 @@
                     Background="Transparent">
                 <StackPanel>
                     <Border Height="58"
-                            Background="#eef3f8"
-                            BorderBrush="#d8e1eb"
-                            BorderThickness="1">
+                            Background="#24282A"
+                            BorderBrush="{StaticResource ViewerMutedBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="3">
                         <Image Source="{Binding Converter={StaticResource ThumbnailConverter}, ConverterParameter=64}"
                                Stretch="Uniform" />
                     </Border>
                     <TextBlock Margin="0,5,0,0"
                                FontSize="11"
-                               Foreground="#18212f"
+                               Foreground="{StaticResource ViewerTextBrush}"
                                Text="{Binding FileName}"
                                TextAlignment="Center"
                                TextTrimming="CharacterEllipsis"
@@ -122,15 +235,16 @@
                     Background="Transparent">
                 <StackPanel>
                     <Border Height="92"
-                            Background="#eef3f8"
-                            BorderBrush="#d8e1eb"
-                            BorderThickness="1">
+                            Background="#24282A"
+                            BorderBrush="{StaticResource ViewerMutedBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="3">
                         <Image Source="{Binding Converter={StaticResource ThumbnailConverter}, ConverterParameter=112}"
                                Stretch="Uniform" />
                     </Border>
                     <TextBlock Margin="0,6,0,0"
                                FontSize="12"
-                               Foreground="#18212f"
+                               Foreground="{StaticResource ViewerTextBrush}"
                                Text="{Binding FileName}"
                                TextAlignment="Center"
                                TextTrimming="CharacterEllipsis"
@@ -145,15 +259,16 @@
                     Background="Transparent">
                 <StackPanel>
                     <Border Height="132"
-                            Background="#eef3f8"
-                            BorderBrush="#d8e1eb"
-                            BorderThickness="1">
+                            Background="#24282A"
+                            BorderBrush="{StaticResource ViewerMutedBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="3">
                         <Image Source="{Binding Converter={StaticResource ThumbnailConverter}, ConverterParameter=168}"
                                Stretch="Uniform" />
                     </Border>
                     <TextBlock Margin="0,7,0,0"
                                FontSize="12"
-                               Foreground="#18212f"
+                               Foreground="{StaticResource ViewerTextBrush}"
                                Text="{Binding FileName}"
                                TextAlignment="Center"
                                TextTrimming="CharacterEllipsis"
@@ -169,13 +284,13 @@
                            VerticalAlignment="Center"
                            FontFamily="Segoe MDL2 Assets"
                            FontSize="13"
-                           Foreground="#4b637d"
+                           Foreground="{StaticResource ViewerMutedTextBrush}"
                            Text="{Binding IconGlyph}" />
                 <StackPanel>
-                    <TextBlock Foreground="#18212f"
+                    <TextBlock Foreground="{StaticResource ViewerTextBrush}"
                                Text="{Binding Name}" />
                     <TextBlock FontSize="10"
-                               Foreground="#7b8797"
+                               Foreground="{StaticResource ViewerDimTextBrush}"
                                Text="{Binding Detail}"
                                TextTrimming="CharacterEllipsis" />
                 </StackPanel>
@@ -183,346 +298,428 @@
         </HierarchicalDataTemplate>
     </Window.Resources>
 
-    <Grid>
+    <Grid Background="{StaticResource ViewerWindowBackgroundBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="96" />
+            <RowDefinition Height="34" />
+            <RowDefinition Height="94" />
             <RowDefinition Height="*" />
             <RowDefinition Height="28" />
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                Background="#ffffff"
-                BorderBrush="#d8e1eb"
+                Background="#121414"
+                BorderBrush="{StaticResource ViewerBorderBrush}"
                 BorderThickness="0,0,0,1">
-            <Grid Margin="12,8">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="36" />
-                    <RowDefinition Height="36" />
-                </Grid.RowDefinitions>
+            <Grid Margin="12,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock x:Name="CurrentFileText"
-                               Grid.Column="0"
+                <TextBlock Grid.Column="0"
+                           Width="22"
+                           VerticalAlignment="Center"
+                           FontFamily="Segoe MDL2 Assets"
+                           FontSize="14"
+                           Foreground="{StaticResource ViewerAccentBrush}"
+                           Text="&#xEB9F;" />
+                <TextBlock x:Name="CurrentFileText"
+                           Grid.Column="1"
+                           VerticalAlignment="Center"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource ViewerTextBrush}"
+                           TextTrimming="CharacterEllipsis" />
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal">
+                    <TextBlock Margin="16,0,0,0"
                                VerticalAlignment="Center"
-                               FontSize="13"
+                               FontSize="12"
+                               Foreground="{StaticResource ViewerDimTextBrush}"
+                               Text="File" />
+                    <TextBlock Margin="16,0,0,0"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Foreground="{StaticResource ViewerMutedTextBrush}"
+                               Text="View" />
+                    <TextBlock Margin="16,0,0,0"
+                               VerticalAlignment="Center"
+                               FontSize="12"
                                FontWeight="SemiBold"
-                               Foreground="#18212f"
-                               TextTrimming="CharacterEllipsis" />
-                    <StackPanel Grid.Column="1"
-                                Orientation="Horizontal"
-                                HorizontalAlignment="Right">
-                        <Button AutomationProperties.AutomationId="ViewerSaveButton"
-                                AutomationProperties.Name="저장"
-                                Click="OnSaveClick"
-                                Content="&#xE74E;"
-                                ToolTip="저장"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Button AutomationProperties.AutomationId="ViewerOpenButton"
-                                AutomationProperties.Name="열기"
-                                Click="OnOpenClick"
-                                Content="&#xE8E5;"
-                                ToolTip="열기"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Button AutomationProperties.AutomationId="ViewerCopyPathButton"
-                                AutomationProperties.Name="파일 경로 복사"
-                                Click="OnCopyPathClick"
-                                Content="&#xE8C8;"
-                                ToolTip="파일 경로 복사"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Button AutomationProperties.AutomationId="ViewerCopyImageButton"
-                                AutomationProperties.Name="이미지 복사"
-                                Click="OnCopyImageClick"
-                                Content="&#xEB9F;"
-                                ToolTip="이미지 복사"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Border Style="{StaticResource ToolbarDividerStyle}" />
-                        <Button x:Name="UndoButton"
-                                AutomationProperties.AutomationId="ViewerUndoButton"
-                                AutomationProperties.Name="되돌리기"
-                                Click="OnUndoClick"
-                                Content="&#xE7A7;"
-                                ToolTip="되돌리기"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Button x:Name="RedoButton"
-                                AutomationProperties.AutomationId="ViewerRedoButton"
-                                AutomationProperties.Name="다시 적용"
-                                Click="OnRedoClick"
-                                Content="&#xE7A6;"
-                                ToolTip="다시 적용"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Button AutomationProperties.AutomationId="ViewerRotateLeftButton"
-                                AutomationProperties.Name="왼쪽 회전"
-                                Click="OnRotateLeftClick"
-                                Content="⟲"
-                                FontFamily="Segoe UI Symbol"
-                                ToolTip="왼쪽 회전"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Button AutomationProperties.AutomationId="ViewerRotateRightButton"
-                                AutomationProperties.Name="오른쪽 회전"
-                                Click="OnRotateRightClick"
-                                Content="⟳"
-                                FontFamily="Segoe UI Symbol"
-                                ToolTip="오른쪽 회전"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Border Style="{StaticResource ToolbarDividerStyle}" />
-                        <Button x:Name="PreviousButton"
-                                AutomationProperties.AutomationId="ViewerPreviousButton"
-                                AutomationProperties.Name="이전 이미지"
-                                Click="OnPreviousClick"
-                                Content="&#xE76B;"
-                                ToolTip="이전 이미지"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Button x:Name="NextButton"
-                                AutomationProperties.AutomationId="ViewerNextButton"
-                                AutomationProperties.Name="다음 이미지"
-                                Click="OnNextClick"
-                                Content="&#xE76C;"
-                                ToolTip="다음 이미지"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Border Style="{StaticResource ToolbarDividerStyle}" />
-                        <Button AutomationProperties.AutomationId="ViewerZoomOutButton"
-                                AutomationProperties.Name="축소"
-                                Click="OnZoomOutClick"
-                                Content="−"
-                                FontFamily="Segoe UI"
-                                FontWeight="Bold"
-                                ToolTip="축소"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <TextBlock x:Name="ZoomText"
-                                   Width="50"
-                                   VerticalAlignment="Center"
-                                   TextAlignment="Center"
-                                   FontSize="12"
-                                   Foreground="#3c4a5f" />
-                        <Button AutomationProperties.AutomationId="ViewerZoomInButton"
-                                AutomationProperties.Name="확대"
-                                Click="OnZoomInClick"
-                                Content="+"
-                                FontFamily="Segoe UI"
-                                FontWeight="Bold"
-                                ToolTip="확대"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Button AutomationProperties.AutomationId="ViewerFitButton"
-                                AutomationProperties.Name="창에 맞춤"
-                                Click="OnFitClick"
-                                Content="&#xE9A6;"
-                                ToolTip="창에 맞춤"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Button AutomationProperties.AutomationId="ViewerActualSizeButton"
-                                AutomationProperties.Name="원본 크기"
-                                Click="OnActualSizeClick"
-                                Content="1:1"
-                                FontFamily="Segoe UI"
-                                FontSize="12"
-                                ToolTip="원본 크기"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                        <Button AutomationProperties.AutomationId="ViewerRefreshButton"
-                                AutomationProperties.Name="새로고침"
-                                Click="OnRefreshClick"
-                                Content="&#xE72C;"
-                                Margin="0"
-                                ToolTip="새로고침"
-                                Style="{StaticResource ToolbarIconButtonStyle}" />
-                    </StackPanel>
-                </Grid>
-
-                <DockPanel Grid.Row="1"
-                           Margin="0,6,0,0">
-                    <StackPanel Orientation="Horizontal">
-                        <Button x:Name="PanToolButton"
-                                AutomationProperties.AutomationId="ViewerPanToolButton"
-                                AutomationProperties.Name="핸드툴"
-                                Click="OnToolButtonClick"
-                                Content="↔"
-                                ToolTip="핸드툴"
-                                Style="{StaticResource ToolGlyphButtonStyle}"
-                                Tag="Pan" />
-                        <Button x:Name="RectangleToolButton"
-                                AutomationProperties.AutomationId="ViewerRectangleToolButton"
-                                AutomationProperties.Name="네모 그리기"
-                                Click="OnToolButtonClick"
-                                Content="□"
-                                ToolTip="네모 그리기"
-                                Style="{StaticResource ToolGlyphButtonStyle}"
-                                Tag="Rectangle" />
-                        <Button x:Name="EllipseToolButton"
-                                AutomationProperties.AutomationId="ViewerEllipseToolButton"
-                                AutomationProperties.Name="동그라미 그리기"
-                                Click="OnToolButtonClick"
-                                Content="○"
-                                ToolTip="동그라미 그리기"
-                                Style="{StaticResource ToolGlyphButtonStyle}"
-                                Tag="Ellipse" />
-                        <Button x:Name="MosaicToolButton"
-                                AutomationProperties.AutomationId="ViewerMosaicToolButton"
-                                AutomationProperties.Name="모자이크"
-                                Click="OnToolButtonClick"
-                                Content="▦"
-                                ToolTip="모자이크"
-                                Style="{StaticResource ToolGlyphButtonStyle}"
-                                Tag="Mosaic" />
-                        <Button x:Name="TextToolButton"
-                                AutomationProperties.AutomationId="ViewerTextToolButton"
-                                AutomationProperties.Name="텍스트"
-                                Click="OnToolButtonClick"
-                                Content="A"
-                                ToolTip="텍스트"
-                                Style="{StaticResource ToolGlyphButtonStyle}"
-                                Tag="Text" />
-                        <Button x:Name="PenToolButton"
-                                AutomationProperties.AutomationId="ViewerPenToolButton"
-                                AutomationProperties.Name="펜"
-                                Click="OnToolButtonClick"
-                                Content="✎"
-                                ToolTip="펜"
-                                Style="{StaticResource ToolGlyphButtonStyle}"
-                                Tag="Pen" />
-                        <Button x:Name="ArrowToolButton"
-                                AutomationProperties.AutomationId="ViewerArrowToolButton"
-                                AutomationProperties.Name="화살표"
-                                Click="OnToolButtonClick"
-                                Content="↗"
-                                ToolTip="화살표"
-                                Style="{StaticResource ToolGlyphButtonStyle}"
-                                Tag="Arrow" />
-                        <Border Style="{StaticResource ToolbarDividerStyle}" />
-                        <ContentControl Height="32"
-                                        VerticalAlignment="Center"
-                                        Focusable="False">
-                            <StackPanel x:Name="ColorSwatches"
-                                        Orientation="Horizontal">
-                                <Button AutomationProperties.AutomationId="ViewerColorSelector"
-                                        AutomationProperties.Name="빨강"
-                                        Click="OnColorSwatchClick"
-                                        Style="{StaticResource ColorSwatchButtonStyle}"
-                                        Tag="#ef4444"
-                                        ToolTip="빨강">
-                                    <Border Background="#ef4444"
-                                            CornerRadius="8" />
-                                </Button>
-                                <Button AutomationProperties.AutomationId="ViewerColorYellowButton"
-                                        AutomationProperties.Name="노랑"
-                                        Click="OnColorSwatchClick"
-                                        Style="{StaticResource ColorSwatchButtonStyle}"
-                                        Tag="#facc15"
-                                        ToolTip="노랑">
-                                    <Border Background="#facc15"
-                                            CornerRadius="8" />
-                                </Button>
-                                <Button AutomationProperties.AutomationId="ViewerColorGreenButton"
-                                        AutomationProperties.Name="초록"
-                                        Click="OnColorSwatchClick"
-                                        Style="{StaticResource ColorSwatchButtonStyle}"
-                                        Tag="#12a594"
-                                        ToolTip="초록">
-                                    <Border Background="#12a594"
-                                            CornerRadius="8" />
-                                </Button>
-                                <Button AutomationProperties.AutomationId="ViewerColorBlueButton"
-                                        AutomationProperties.Name="파랑"
-                                        Click="OnColorSwatchClick"
-                                        Style="{StaticResource ColorSwatchButtonStyle}"
-                                        Tag="#2563eb"
-                                        ToolTip="파랑">
-                                    <Border Background="#2563eb"
-                                            CornerRadius="8" />
-                                </Button>
-                                <Button AutomationProperties.AutomationId="ViewerColorWhiteButton"
-                                        AutomationProperties.Name="흰색"
-                                        Click="OnColorSwatchClick"
-                                        Style="{StaticResource ColorSwatchButtonStyle}"
-                                        Tag="#ffffff"
-                                        ToolTip="흰색">
-                                    <Border Background="#ffffff"
-                                            BorderBrush="#cfd8e3"
-                                            BorderThickness="1"
-                                            CornerRadius="8" />
-                                </Button>
-                                <Button AutomationProperties.AutomationId="ViewerColorBlackButton"
-                                        AutomationProperties.Name="검정"
-                                        Click="OnColorSwatchClick"
-                                        Style="{StaticResource ColorSwatchButtonStyle}"
-                                        Tag="#111827"
-                                        ToolTip="검정">
-                                    <Border Background="#111827"
-                                            CornerRadius="8" />
-                                </Button>
-                            </StackPanel>
-                        </ContentControl>
-                        <Border Style="{StaticResource ToolbarDividerStyle}" />
-                        <TextBlock Margin="0,0,6,0"
-                                   VerticalAlignment="Center"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="13"
-                                   Foreground="#627083"
-                                   Text="&#xE762;" />
-                        <Slider x:Name="StrokeSlider"
-                                Width="110"
-                                Margin="0,0,6,0"
-                                VerticalAlignment="Center"
-                                AutomationProperties.AutomationId="ViewerStrokeSlider"
-                                Minimum="1"
-                                Maximum="18"
-                                TickFrequency="1"
-                                IsSnapToTickEnabled="True"
-                                Value="4"
-                                ValueChanged="OnStrokeSliderChanged" />
-                        <TextBlock x:Name="StrokeText"
-                                   Width="34"
-                                   VerticalAlignment="Center"
-                                   FontSize="12"
-                                   Foreground="#3c4a5f"
-                                   Text="4px" />
-                        <Border Style="{StaticResource ToolbarDividerStyle}" />
-                        <TextBox x:Name="AnnotationTextBox"
-                                 Width="164"
-                                 Height="32"
-                                 Margin="0"
-                                 AutomationProperties.AutomationId="ViewerTextInput"
-                                 Text="텍스트"
-                                 VerticalContentAlignment="Center" />
-                    </StackPanel>
-                </DockPanel>
+                               Foreground="{StaticResource ViewerAccentBrush}"
+                               Text="Markup" />
+                    <TextBlock Margin="16,0,0,0"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Foreground="{StaticResource ViewerMutedTextBrush}"
+                               Text="Properties" />
+                </StackPanel>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1">
+        <Border Grid.Row="1"
+                Background="{StaticResource ViewerToolbarBackgroundBrush}"
+                BorderBrush="{StaticResource ViewerBorderBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid Margin="8,5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="36" />
+                    <RowDefinition Height="45" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0"
+                            Orientation="Horizontal">
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource RibbonGroupLabelStyle}"
+                                       Text="파일" />
+                            <Button AutomationProperties.AutomationId="ViewerSaveButton"
+                                    AutomationProperties.Name="저장"
+                                    Click="OnSaveClick"
+                                    Content="저장"
+                                    ToolTip="저장"
+                                    Style="{StaticResource PrimaryRibbonButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ViewerOpenButton"
+                                    AutomationProperties.Name="열기"
+                                    Click="OnOpenClick"
+                                    Content="열기"
+                                    ToolTip="열기"
+                                    Style="{StaticResource RibbonTextButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ViewerOpenFolderButton"
+                                    AutomationProperties.Name="폴더 열기"
+                                    Click="OnOpenFolderClick"
+                                    Content="폴더"
+                                    ToolTip="폴더 열기"
+                                    Style="{StaticResource RibbonTextButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ViewerCopyImageButton"
+                                    AutomationProperties.Name="이미지 복사"
+                                    Click="OnCopyImageClick"
+                                    Content="이미지"
+                                    ToolTip="이미지 복사"
+                                    Style="{StaticResource RibbonTextButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ViewerCopyPathButton"
+                                    AutomationProperties.Name="파일 경로 복사"
+                                    Click="OnCopyPathClick"
+                                    Content="경로"
+                                    ToolTip="파일 경로 복사"
+                                    Style="{StaticResource RibbonTextButtonStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource RibbonGroupLabelStyle}"
+                                       Text="보기" />
+                            <Button x:Name="PreviousButton"
+                                    AutomationProperties.AutomationId="ViewerPreviousButton"
+                                    AutomationProperties.Name="이전 이미지"
+                                    Click="OnPreviousClick"
+                                    Content="&#xE76B;"
+                                    ToolTip="이전 이미지"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                            <Button x:Name="NextButton"
+                                    AutomationProperties.AutomationId="ViewerNextButton"
+                                    AutomationProperties.Name="다음 이미지"
+                                    Click="OnNextClick"
+                                    Content="&#xE76C;"
+                                    ToolTip="다음 이미지"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ViewerFitButton"
+                                    AutomationProperties.Name="창에 맞춤"
+                                    Click="OnFitClick"
+                                    Content="&#xE9A6;"
+                                    ToolTip="창에 맞춤"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ViewerActualSizeButton"
+                                    AutomationProperties.Name="원본 크기"
+                                    Click="OnActualSizeClick"
+                                    Content="1:1"
+                                    FontFamily="Segoe UI"
+                                    FontSize="11"
+                                    ToolTip="원본 크기"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ViewerZoomOutButton"
+                                    AutomationProperties.Name="축소"
+                                    Click="OnZoomOutClick"
+                                    Content="−"
+                                    FontFamily="Segoe UI"
+                                    FontWeight="Bold"
+                                    ToolTip="축소"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                            <TextBlock x:Name="ZoomText"
+                                       Width="48"
+                                       VerticalAlignment="Center"
+                                       TextAlignment="Center"
+                                       FontSize="12"
+                                       Foreground="{StaticResource ViewerMutedTextBrush}" />
+                            <Button AutomationProperties.AutomationId="ViewerZoomInButton"
+                                    AutomationProperties.Name="확대"
+                                    Click="OnZoomInClick"
+                                    Content="+"
+                                    FontFamily="Segoe UI"
+                                    FontWeight="Bold"
+                                    ToolTip="확대"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ViewerRefreshButton"
+                                    AutomationProperties.Name="새로고침"
+                                    Click="OnRefreshClick"
+                                    Content="&#xE72C;"
+                                    ToolTip="새로고침"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1"
+                            Margin="0,5,0,0"
+                            Orientation="Horizontal">
+                    <Border Background="{StaticResource ViewerToolbarGroupAltBrush}"
+                            Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource RibbonGroupLabelStyle}"
+                                       Text="마크업" />
+                            <Button x:Name="PanToolButton"
+                                    AutomationProperties.AutomationId="ViewerPanToolButton"
+                                    AutomationProperties.Name="핸드툴"
+                                    Click="OnToolButtonClick"
+                                    Content="↔"
+                                    ToolTip="핸드툴"
+                                    Style="{StaticResource ToolGlyphButtonStyle}"
+                                    Tag="Pan" />
+                            <Button x:Name="SelectToolButton"
+                                    AutomationProperties.AutomationId="ViewerSelectToolButton"
+                                    AutomationProperties.Name="선택"
+                                    Click="OnToolButtonClick"
+                                    Content="▣"
+                                    ToolTip="선택"
+                                    Style="{StaticResource ToolGlyphButtonStyle}"
+                                    Tag="Select" />
+                            <Button x:Name="PenToolButton"
+                                    AutomationProperties.AutomationId="ViewerPenToolButton"
+                                    AutomationProperties.Name="펜"
+                                    Click="OnToolButtonClick"
+                                    Content="✎"
+                                    ToolTip="펜"
+                                    Style="{StaticResource ToolGlyphButtonStyle}"
+                                    Tag="Pen" />
+                            <Button x:Name="ArrowToolButton"
+                                    AutomationProperties.AutomationId="ViewerArrowToolButton"
+                                    AutomationProperties.Name="화살표"
+                                    Click="OnToolButtonClick"
+                                    Content="↗"
+                                    ToolTip="화살표"
+                                    Style="{StaticResource ToolGlyphButtonStyle}"
+                                    Tag="Arrow" />
+                            <Button x:Name="RectangleToolButton"
+                                    AutomationProperties.AutomationId="ViewerRectangleToolButton"
+                                    AutomationProperties.Name="네모 그리기"
+                                    Click="OnToolButtonClick"
+                                    Content="□"
+                                    ToolTip="네모 그리기"
+                                    Style="{StaticResource ToolGlyphButtonStyle}"
+                                    Tag="Rectangle" />
+                            <Button x:Name="EllipseToolButton"
+                                    AutomationProperties.AutomationId="ViewerEllipseToolButton"
+                                    AutomationProperties.Name="동그라미 그리기"
+                                    Click="OnToolButtonClick"
+                                    Content="○"
+                                    ToolTip="동그라미 그리기"
+                                    Style="{StaticResource ToolGlyphButtonStyle}"
+                                    Tag="Ellipse" />
+                            <Button x:Name="TextToolButton"
+                                    AutomationProperties.AutomationId="ViewerTextToolButton"
+                                    AutomationProperties.Name="텍스트"
+                                    Click="OnToolButtonClick"
+                                    Content="A"
+                                    ToolTip="텍스트"
+                                    Style="{StaticResource ToolGlyphButtonStyle}"
+                                    Tag="Text" />
+                            <Button x:Name="MosaicToolButton"
+                                    AutomationProperties.AutomationId="ViewerMosaicToolButton"
+                                    AutomationProperties.Name="모자이크"
+                                    Click="OnToolButtonClick"
+                                    Content="▦"
+                                    ToolTip="모자이크"
+                                    Style="{StaticResource ToolGlyphButtonStyle}"
+                                    Tag="Mosaic" />
+                            <Button x:Name="UndoButton"
+                                    AutomationProperties.AutomationId="ViewerUndoButton"
+                                    AutomationProperties.Name="되돌리기"
+                                    Click="OnUndoClick"
+                                    Content="&#xE7A7;"
+                                    ToolTip="되돌리기"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                            <Button x:Name="RedoButton"
+                                    AutomationProperties.AutomationId="ViewerRedoButton"
+                                    AutomationProperties.Name="다시 적용"
+                                    Click="OnRedoClick"
+                                    Content="&#xE7A6;"
+                                    ToolTip="다시 적용"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ViewerRotateLeftButton"
+                                    AutomationProperties.Name="왼쪽 회전"
+                                    Click="OnRotateLeftClick"
+                                    Content="⟲"
+                                    FontFamily="Segoe UI Symbol"
+                                    ToolTip="왼쪽 회전"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ViewerRotateRightButton"
+                                    AutomationProperties.Name="오른쪽 회전"
+                                    Click="OnRotateRightClick"
+                                    Content="⟳"
+                                    FontFamily="Segoe UI Symbol"
+                                    ToolTip="오른쪽 회전"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource RibbonGroupLabelStyle}"
+                                       Text="속성" />
+                            <ContentControl Height="32"
+                                            VerticalAlignment="Center"
+                                            Focusable="False">
+                                <StackPanel x:Name="ColorSwatches"
+                                            Orientation="Horizontal">
+                                    <Button AutomationProperties.AutomationId="ViewerColorSelector"
+                                            AutomationProperties.Name="빨강"
+                                            Click="OnColorSwatchClick"
+                                            Style="{StaticResource ColorSwatchButtonStyle}"
+                                            Tag="#ef4444"
+                                            ToolTip="빨강">
+                                        <Border Background="#ef4444"
+                                                CornerRadius="7" />
+                                    </Button>
+                                    <Button AutomationProperties.AutomationId="ViewerColorYellowButton"
+                                            AutomationProperties.Name="노랑"
+                                            Click="OnColorSwatchClick"
+                                            Style="{StaticResource ColorSwatchButtonStyle}"
+                                            Tag="#facc15"
+                                            ToolTip="노랑">
+                                        <Border Background="#facc15"
+                                                CornerRadius="7" />
+                                    </Button>
+                                    <Button AutomationProperties.AutomationId="ViewerColorGreenButton"
+                                            AutomationProperties.Name="초록"
+                                            Click="OnColorSwatchClick"
+                                            Style="{StaticResource ColorSwatchButtonStyle}"
+                                            Tag="#12a594"
+                                            ToolTip="초록">
+                                        <Border Background="#12a594"
+                                                CornerRadius="7" />
+                                    </Button>
+                                    <Button AutomationProperties.AutomationId="ViewerColorBlueButton"
+                                            AutomationProperties.Name="파랑"
+                                            Click="OnColorSwatchClick"
+                                            Style="{StaticResource ColorSwatchButtonStyle}"
+                                            Tag="#2563eb"
+                                            ToolTip="파랑">
+                                        <Border Background="#2563eb"
+                                                CornerRadius="7" />
+                                    </Button>
+                                    <Button AutomationProperties.AutomationId="ViewerColorWhiteButton"
+                                            AutomationProperties.Name="흰색"
+                                            Click="OnColorSwatchClick"
+                                            Style="{StaticResource ColorSwatchButtonStyle}"
+                                            Tag="#ffffff"
+                                            ToolTip="흰색">
+                                        <Border Background="#ffffff"
+                                                BorderBrush="#C0C7D4"
+                                                BorderThickness="1"
+                                                CornerRadius="7" />
+                                    </Button>
+                                    <Button AutomationProperties.AutomationId="ViewerColorBlackButton"
+                                            AutomationProperties.Name="검정"
+                                            Click="OnColorSwatchClick"
+                                            Style="{StaticResource ColorSwatchButtonStyle}"
+                                            Tag="#111827"
+                                            ToolTip="검정">
+                                        <Border Background="#111827"
+                                                CornerRadius="7" />
+                                    </Button>
+                                </StackPanel>
+                            </ContentControl>
+                            <TextBlock Margin="6,0,5,0"
+                                       VerticalAlignment="Center"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="13"
+                                       Foreground="{StaticResource ViewerDimTextBrush}"
+                                       Text="&#xE762;" />
+                            <Slider x:Name="StrokeSlider"
+                                    Width="86"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.AutomationId="ViewerStrokeSlider"
+                                    Minimum="1"
+                                    Maximum="18"
+                                    TickFrequency="1"
+                                    IsSnapToTickEnabled="True"
+                                    Value="4"
+                                    ValueChanged="OnStrokeSliderChanged" />
+                            <TextBlock x:Name="StrokeText"
+                                       Width="32"
+                                       VerticalAlignment="Center"
+                                       FontSize="12"
+                                       Foreground="{StaticResource ViewerMutedTextBrush}"
+                                       Text="4px" />
+                            <TextBox x:Name="AnnotationTextBox"
+                                     Width="112"
+                                     Height="30"
+                                     Margin="6,0,0,0"
+                                     Padding="8,0"
+                                     AutomationProperties.AutomationId="ViewerTextInput"
+                                     Background="#121414"
+                                     BorderBrush="{StaticResource ViewerMutedBorderBrush}"
+                                     Foreground="{StaticResource ViewerTextBrush}"
+                                     Text="텍스트"
+                                     VerticalContentAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="230" />
-                <ColumnDefinition Width="390" />
+                <ColumnDefinition Width="220" MinWidth="200" />
+                <ColumnDefinition Width="310" MinWidth="270" />
                 <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" MinWidth="420" />
             </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0"
-                    Background="#fbfdff"
-                    BorderBrush="#d8e1eb"
+                    Background="{StaticResource ViewerPanelBackgroundBrush}"
+                    BorderBrush="{StaticResource ViewerBorderBrush}"
                     BorderThickness="0,0,1,0">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top"
-                               Margin="12,12,12,8"
-                               FontSize="12"
-                               FontWeight="SemiBold"
-                               Foreground="#627083"
-                               Text="폴더" />
+                    <StackPanel DockPanel.Dock="Top"
+                                Margin="14,14,12,10">
+                        <TextBlock FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource ViewerTextBrush}"
+                                   Text="Capture Library" />
+                        <TextBlock Margin="0,1,0,0"
+                                   FontSize="11"
+                                   Foreground="{StaticResource ViewerDimTextBrush}"
+                                   Text="캡처 루트" />
+                    </StackPanel>
                     <TreeView x:Name="FolderTree"
                               AutomationProperties.AutomationId="CaptureFolderTree"
                               BorderThickness="0"
                               Background="Transparent"
+                              Foreground="{StaticResource ViewerTextBrush}"
                               FontSize="13"
                               ItemsSource="{Binding}"
-                              Padding="6,0,6,10"
+                              Padding="7,0,7,10"
                               SelectedItemChanged="OnFolderTreeSelectedItemChanged">
                         <TreeView.ItemContainerStyle>
                             <Style TargetType="{x:Type TreeViewItem}">
                                 <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
                                 <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
-                                <Setter Property="Padding" Value="3" />
+                                <Setter Property="Foreground" Value="{StaticResource ViewerTextBrush}" />
+                                <Setter Property="Padding" Value="4" />
                             </Style>
                         </TreeView.ItemContainerStyle>
                     </TreeView>
@@ -530,36 +727,37 @@
             </Border>
 
             <Border Grid.Column="1"
-                    Background="#ffffff"
-                    BorderBrush="#d8e1eb"
+                    Background="{StaticResource ViewerPanelRaisedBrush}"
+                    BorderBrush="{StaticResource ViewerBorderBrush}"
                     BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="44" />
-                        <RowDefinition Height="44" />
+                        <RowDefinition Height="42" />
+                        <RowDefinition Height="38" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
                     <Border Grid.Row="0"
                             Margin="10,10,10,4"
                             Padding="9,5"
-                            Background="#f4f7fb"
-                            BorderBrush="#d8e1eb"
-                            BorderThickness="1">
+                            Background="#121414"
+                            BorderBrush="{StaticResource ViewerMutedBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4">
                         <TextBlock x:Name="AddressText"
                                    AutomationProperties.AutomationId="ViewerAddressText"
                                    FontSize="12"
-                                   Foreground="#3c4a5f"
+                                   Foreground="{StaticResource ViewerMutedTextBrush}"
                                    TextTrimming="CharacterEllipsis" />
                     </Border>
 
                     <DockPanel Grid.Row="1"
-                               Margin="10,4,10,8">
+                               Margin="10,2,10,6">
                         <TextBlock x:Name="FileCountText"
                                    DockPanel.Dock="Left"
                                    VerticalAlignment="Center"
                                    FontSize="12"
-                                   Foreground="#627083" />
+                                   Foreground="{StaticResource ViewerDimTextBrush}" />
                         <StackPanel DockPanel.Dock="Right"
                                     Orientation="Horizontal"
                                     HorizontalAlignment="Right">
@@ -595,6 +793,8 @@
                               Grid.Row="2"
                               AutomationProperties.AutomationId="CaptureFileList"
                               BorderThickness="0"
+                              Background="{StaticResource ViewerPanelRaisedBrush}"
+                              Foreground="{StaticResource ViewerTextBrush}"
                               ScrollViewer.CanContentScroll="True"
                               ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                               ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -608,13 +808,13 @@
             <GridSplitter Grid.Column="2"
                           Width="5"
                           HorizontalAlignment="Stretch"
-                          Background="#d8e1eb"
+                          Background="{StaticResource ViewerBorderBrush}"
                           ResizeBehavior="PreviousAndNext" />
 
             <Grid Grid.Column="3"
-                  Background="#111827">
+                  Background="{StaticResource ViewerCanvasDotBrush}">
                 <ScrollViewer x:Name="ImageScrollViewer"
-                              Background="#111827"
+                              Background="Transparent"
                               CanContentScroll="False"
                               HorizontalScrollBarVisibility="Auto"
                               PreviewMouseWheel="OnImagePreviewMouseWheel"
@@ -622,41 +822,69 @@
                               VerticalScrollBarVisibility="Auto">
                     <Grid MinWidth="{Binding ActualWidth, ElementName=ImageScrollViewer}"
                           MinHeight="{Binding ActualHeight, ElementName=ImageScrollViewer}">
-                        <Grid x:Name="ImageSurface"
-                              HorizontalAlignment="Center"
-                              VerticalAlignment="Center">
-                            <Image x:Name="PreviewImage"
-                                   AutomationProperties.AutomationId="ViewerPreviewImage"
-                                   AutomationProperties.Name="Viewer preview image"
-                                   RenderOptions.BitmapScalingMode="HighQuality"
-                                   Stretch="Fill" />
-                            <Canvas x:Name="AnnotationOverlay"
-                                    AutomationProperties.AutomationId="ViewerAnnotationOverlay"
-                                    AutomationProperties.Name="Viewer annotation surface"
-                                    Background="Transparent"
-                                    MouseLeftButtonDown="OnImageMouseLeftButtonDown"
-                                    MouseLeftButtonUp="OnImageMouseLeftButtonUp"
-                                    MouseMove="OnImageMouseMove" />
-                        </Grid>
+                        <Border HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="#0C0F0F"
+                                BorderBrush="#3A4148"
+                                BorderThickness="1">
+                            <Grid x:Name="ImageSurface">
+                                <Image x:Name="PreviewImage"
+                                       AutomationProperties.AutomationId="ViewerPreviewImage"
+                                       AutomationProperties.Name="Viewer preview image"
+                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                       Stretch="Fill" />
+                                <Canvas x:Name="AnnotationOverlay"
+                                        AutomationProperties.AutomationId="ViewerAnnotationOverlay"
+                                        AutomationProperties.Name="Viewer annotation surface"
+                                        Background="Transparent"
+                                        MouseLeftButtonDown="OnImageMouseLeftButtonDown"
+                                        MouseLeftButtonUp="OnImageMouseLeftButtonUp"
+                                        MouseMove="OnImageMouseMove" />
+                            </Grid>
+                        </Border>
                     </Grid>
                 </ScrollViewer>
                 <TextBlock x:Name="EmptyMessage"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
                            FontSize="14"
-                           Foreground="#cbd5e1"
+                           Foreground="{StaticResource ViewerMutedTextBrush}"
                            Text="표시할 이미지가 없습니다." />
             </Grid>
         </Grid>
 
-        <StatusBar Grid.Row="2"
-                   Background="#ffffff"
-                   BorderBrush="#d8e1eb"
+        <StatusBar Grid.Row="3"
+                   Background="#0C0F0F"
+                   BorderBrush="{StaticResource ViewerBorderBrush}"
                    BorderThickness="0,1,0,0">
-            <TextBlock x:Name="StatusText"
-                       AutomationProperties.AutomationId="ViewerStatusText"
-                       FontSize="12"
-                       Foreground="#627083" />
+            <DockPanel Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=StatusBar}}">
+                <TextBlock x:Name="StatusText"
+                           AutomationProperties.AutomationId="ViewerStatusText"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{StaticResource ViewerMutedTextBrush}"
+                           TextTrimming="CharacterEllipsis" />
+                <StackPanel DockPanel.Dock="Right"
+                            Margin="10,0,6,0"
+                            Orientation="Horizontal">
+                    <TextBlock x:Name="StatusMetaText"
+                               VerticalAlignment="Center"
+                               FontSize="11"
+                               Foreground="{StaticResource ViewerDimTextBrush}" />
+                    <Border Style="{StaticResource StatusBadgeStyle}">
+                        <TextBlock x:Name="SaveStateText"
+                                   FontSize="11"
+                                   Foreground="{StaticResource ViewerMutedTextBrush}"
+                                   Text="대기" />
+                    </Border>
+                    <Border Style="{StaticResource StatusBadgeStyle}">
+                        <TextBlock x:Name="StatusZoomText"
+                                   FontSize="11"
+                                   Foreground="{StaticResource ViewerMutedTextBrush}"
+                                   Text="-" />
+                    </Border>
+                </StackPanel>
+            </DockPanel>
         </StatusBar>
     </Grid>
 </Window>

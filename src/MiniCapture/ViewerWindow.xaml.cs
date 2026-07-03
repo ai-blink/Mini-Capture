@@ -28,6 +28,7 @@ namespace MiniCapture;
 internal enum ViewerEditTool
 {
     Pan,
+    Select,
     Rectangle,
     Ellipse,
     Mosaic,
@@ -197,7 +198,8 @@ public partial class ViewerWindow : Window
             _isDirty = false;
             PreviewImage.Source = _editableImage;
             EmptyMessage.Visibility = Visibility.Collapsed;
-            StatusText.Text = $"{file.Path}  |  {file.SizeText}";
+            StatusText.Text = file.Path;
+            UpdateStatusMetadata();
             UpdateDirtyIndicator();
 
             if (_fitMode)
@@ -231,9 +233,12 @@ public partial class ViewerWindow : Window
         AnnotationOverlay.Height = 0;
         CurrentFileText.Text = string.Empty;
         StatusText.Text = message;
+        StatusMetaText.Text = string.Empty;
+        SaveStateText.Text = "대기";
         EmptyMessage.Text = message;
         EmptyMessage.Visibility = Visibility.Visible;
         ZoomText.Text = "-";
+        StatusZoomText.Text = "-";
         UpdateNavigationButtons();
         UpdateEditButtons();
     }
@@ -364,6 +369,20 @@ public partial class ViewerWindow : Window
         SetViewerStatus($"열기: {path}");
     }
 
+    private void OnOpenFolderClick(object sender, RoutedEventArgs e)
+    {
+        var path = GetActiveFilePath();
+        if (path is null)
+        {
+            ShellService.OpenFile(CaptureFileIndex.RootDirectory);
+            SetViewerStatus($"폴더 열기: {CaptureFileIndex.RootDirectory}");
+            return;
+        }
+
+        ShellService.OpenContainingFolder(path);
+        SetViewerStatus($"폴더 열기: {path}");
+    }
+
     private void OnCopyPathClick(object sender, RoutedEventArgs e)
     {
         var path = GetActiveFilePath();
@@ -445,6 +464,7 @@ public partial class ViewerWindow : Window
         SetViewerStatus(tool switch
         {
             ViewerEditTool.Pan => "핸드툴: 이미지를 끌어 이동합니다.",
+            ViewerEditTool.Select => "선택: 보기 상태를 유지하고 편집하지 않습니다.",
             ViewerEditTool.Rectangle => "네모: 이미지 위에서 드래그해 그립니다.",
             ViewerEditTool.Ellipse => "동그라미: 이미지 위에서 드래그해 그립니다.",
             ViewerEditTool.Mosaic => "모자이크: 가릴 영역을 드래그합니다.",
@@ -485,6 +505,12 @@ public partial class ViewerWindow : Window
             _panStartVerticalOffset = ImageScrollViewer.VerticalOffset;
             AnnotationOverlay.CaptureMouse();
             AnnotationOverlay.Cursor = WpfCursors.SizeAll;
+            e.Handled = true;
+            return;
+        }
+
+        if (_editTool == ViewerEditTool.Select)
+        {
             e.Handled = true;
             return;
         }
@@ -610,7 +636,7 @@ public partial class ViewerWindow : Window
             FileList.View = CreateDetailsView();
             FileList.ItemTemplate = null;
             FileList.ItemsPanel = (ItemsPanelTemplate)Resources["DetailsItemsPanel"];
-            FileList.ItemContainerStyle = null;
+            FileList.ItemContainerStyle = (Style)Resources["ExplorerListItemStyle"];
         }
         else
         {
@@ -1340,7 +1366,9 @@ public partial class ViewerWindow : Window
         PreviewImage.Height = height;
         AnnotationOverlay.Width = width;
         AnnotationOverlay.Height = height;
-        ZoomText.Text = $"{_zoom * 100:0}%";
+        var zoomText = $"{_zoom * 100:0}%";
+        ZoomText.Text = zoomText;
+        StatusZoomText.Text = zoomText;
     }
 
     private void OnImageStageSizeChanged(object sender, SizeChangedEventArgs e)
@@ -1470,7 +1498,28 @@ public partial class ViewerWindow : Window
         }
 
         var position = index >= 0 ? index + 1 : 0;
-        StatusText.Text = $"{_currentFile.Path}  |  {_currentFile.SizeText}  |  {position}/{_files.Count}";
+        StatusText.Text = _currentFile.Path;
+        UpdateStatusMetadata(position);
+    }
+
+    private void UpdateStatusMetadata(int position = 0)
+    {
+        if (_currentFile is null || _editableImage is null)
+        {
+            StatusMetaText.Text = string.Empty;
+            return;
+        }
+
+        var format = IOPath.GetExtension(_currentFile.Path).TrimStart('.').ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(format))
+        {
+            format = "IMG";
+        }
+
+        var positionText = position > 0 && _files.Count > 0
+            ? $" | {position}/{_files.Count}"
+            : string.Empty;
+        StatusMetaText.Text = $"{_editableImage.PixelWidth:0}x{_editableImage.PixelHeight:0} | {format} | {_currentFile.SizeText}{positionText}";
     }
 
     private void UpdateDirtyIndicator()
@@ -1481,6 +1530,10 @@ public partial class ViewerWindow : Window
         Title = string.IsNullOrWhiteSpace(fileName)
             ? "Mini Capture Viewer"
             : $"{prefix}{fileName} - Mini Capture Viewer";
+        SaveStateText.Text = _isDirty ? "변경됨" : "저장됨";
+        SaveStateText.Foreground = _isDirty
+            ? new SolidColorBrush(WpfColor.FromRgb(250, 204, 21))
+            : new SolidColorBrush(WpfColor.FromRgb(94, 234, 212));
     }
 
     private void UpdateEditButtons()
@@ -1506,14 +1559,21 @@ public partial class ViewerWindow : Window
 
     private void UpdateToolButtons()
     {
-        SetViewButtonState(PanToolButton, _editTool == ViewerEditTool.Pan);
+        SetViewButtonState(PanToolButton, _editTool == ViewerEditTool.Pan || _spacePanActive);
+        SetViewButtonState(SelectToolButton, _editTool == ViewerEditTool.Select && !_spacePanActive);
         SetViewButtonState(RectangleToolButton, _editTool == ViewerEditTool.Rectangle);
         SetViewButtonState(EllipseToolButton, _editTool == ViewerEditTool.Ellipse);
         SetViewButtonState(MosaicToolButton, _editTool == ViewerEditTool.Mosaic);
         SetViewButtonState(TextToolButton, _editTool == ViewerEditTool.Text);
         SetViewButtonState(PenToolButton, _editTool == ViewerEditTool.Pen);
         SetViewButtonState(ArrowToolButton, _editTool == ViewerEditTool.Arrow);
-        AnnotationOverlay.Cursor = _editTool == ViewerEditTool.Pan || _spacePanActive ? WpfCursors.SizeAll : WpfCursors.Cross;
+        AnnotationOverlay.Cursor = _editTool switch
+        {
+            ViewerEditTool.Pan => WpfCursors.SizeAll,
+            ViewerEditTool.Select when !_spacePanActive => WpfCursors.Arrow,
+            _ when _spacePanActive => WpfCursors.SizeAll,
+            _ => WpfCursors.Cross
+        };
     }
 
     private void UpdateColorSwatches()
@@ -1529,8 +1589,8 @@ public partial class ViewerWindow : Window
                 System.Windows.Media.ColorConverter.ConvertFromString(colorText) is WpfColor color &&
                 color.Equals(_selectedColor);
             child.BorderBrush = selected
-                ? new SolidColorBrush(WpfColor.FromRgb(18, 165, 148))
-                : new SolidColorBrush(WpfColor.FromRgb(207, 216, 227));
+                ? new SolidColorBrush(WpfColor.FromRgb(0, 120, 212))
+                : new SolidColorBrush(WpfColor.FromRgb(64, 71, 82));
             child.BorderThickness = selected ? new Thickness(2) : new Thickness(1);
             child.Padding = selected ? new Thickness(1) : new Thickness(2);
         }
@@ -1545,12 +1605,13 @@ public partial class ViewerWindow : Window
     private static void SetViewButtonState(System.Windows.Controls.Button button, bool selected)
     {
         button.Background = selected
-            ? new SolidColorBrush(WpfColor.FromRgb(18, 165, 148))
-            : WpfBrushes.White;
-        button.Foreground = selected ? WpfBrushes.White : new SolidColorBrush(WpfColor.FromRgb(24, 33, 47));
+            ? new SolidColorBrush(WpfColor.FromRgb(0, 120, 212))
+            : new SolidColorBrush(WpfColor.FromRgb(36, 40, 42));
+        button.Foreground = selected ? WpfBrushes.White : new SolidColorBrush(WpfColor.FromRgb(226, 226, 226));
         button.BorderBrush = selected
-            ? new SolidColorBrush(WpfColor.FromRgb(15, 118, 110))
-            : new SolidColorBrush(WpfColor.FromRgb(207, 216, 227));
+            ? new SolidColorBrush(WpfColor.FromRgb(94, 175, 255))
+            : new SolidColorBrush(WpfColor.FromRgb(64, 71, 82));
+        button.BorderThickness = selected ? new Thickness(2) : new Thickness(1);
     }
 
     private void SelectFolderPath(string folderPath)

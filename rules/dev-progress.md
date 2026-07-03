@@ -17,10 +17,11 @@
 - 2026-07-04: Region/window selection no longer uses a virtual-screen-sized overlay; global input hooks drive a small hint or target-sized highlight window.
 - 2026-07-04: TabPaint-inspired editor workflow reinforcement completed with pen, arrow, stroke thickness, rotate, undo/redo, and lightweight keyboard shortcuts inside the existing viewer.
 - 2026-07-04: Viewer toolbar UI was reorganized around TabPaint-style compact icon actions, grouped edit tools, color swatches, and inline stroke/text controls.
+- 2026-07-04: ViewerWindow was redesigned as a Dark Screenshot Markup Shell with dark File/View/Markup/Properties command groups, a stronger markup row, capture-root library panes, dotted canvas workspace, and reinforced status/zoom metadata.
 
 ## Current Work
 
-- Viewer toolbar UI polish is complete. Next implementation slice is P4 hardening and package checks.
+- ViewerWindow Dark Screenshot Markup Shell redesign is complete. Next implementation slice is P4 hardening and package checks.
 
 ## Next Actions
 
@@ -66,3 +67,7 @@
 - Toolbar UI polish build: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors.
 - Toolbar UI polish smoke: UI Automation found 26 toolbar controls, selected the blue color swatch, changed stroke thickness, exercised all edit tool buttons, and verified path/image clipboard actions; screenshot saved at `%TEMP%\mini_capture_toolbar_after_tabpaint.png`.
 - Toolbar UI polish closeout checks: `git diff --check` passed with CRLF conversion warnings only; docs secret scan returned `SECRET_SCAN: PASS`.
+- Dark Screenshot Markup Shell build: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors.
+- Dark Screenshot Markup Shell UIA smoke: full capture opened the internal viewer, resized it to 980x580 DIP, verified save/open/copy-image/copy-path actions and pan/select/pen/arrow/rectangle/ellipse/text/mosaic/stroke controls, saved the active PNG, copied path text, copied image data, and confirmed `CloseMainWindow` returned true while the process stayed alive in tray.
+- Dark Screenshot Markup Shell visual check: clean `PrintWindow` screenshot saved at `%TEMP%\mini_capture_dark_shell_printwindow_980x580.png`; toolbar groups, markup tools, properties, status metadata, and zoom badge did not overlap at the target size.
+- Dark Screenshot Markup Shell whitespace check: `git diff --check` passed with CRLF conversion warnings only.
