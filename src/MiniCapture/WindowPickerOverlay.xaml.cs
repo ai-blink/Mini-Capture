@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -12,8 +11,12 @@ namespace MiniCapture;
 
 public partial class WindowPickerOverlay : Window
 {
+    private const double HintWidth = 340;
+    private const double HintHeight = 36;
+
     private readonly DispatcherTimer _pollTimer;
     private readonly int _currentProcessId = Environment.ProcessId;
+    private GlobalInputHook? _inputHook;
     private Matrix _fromDevice = Matrix.Identity;
     private WpfRect _virtualBoundsDip;
     private DrawingRectangle _virtualBounds;
@@ -37,13 +40,14 @@ public partial class WindowPickerOverlay : Window
         _virtualBounds = ScreenCaptureService.GetVirtualScreenBounds();
         _fromDevice = GetFromDeviceMatrix();
         _virtualBoundsDip = DeviceRectangleToDip(_virtualBounds);
-        Left = _virtualBoundsDip.Left;
-        Top = _virtualBoundsDip.Top;
-        Width = _virtualBoundsDip.Width;
-        Height = _virtualBoundsDip.Height;
+        Width = HintWidth;
+        Height = HintHeight;
+        ShowHintNearCursor(System.Windows.Forms.Cursor.Position);
 
-        Activate();
-        Focus();
+        _inputHook = new GlobalInputHook();
+        _inputHook.MouseMove += OnHookMouseMove;
+        _inputHook.LeftButtonDown += OnHookLeftButtonDown;
+        _inputHook.EscapePressed += OnHookEscapePressed;
         _pollTimer.Start();
         UpdateTargetFromCursor();
     }
@@ -56,14 +60,16 @@ public partial class WindowPickerOverlay : Window
     private void OnClosed(object? sender, EventArgs e)
     {
         _pollTimer.Stop();
+        _inputHook?.Dispose();
+        _inputHook = null;
     }
 
-    private void OnMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    private void OnHookMouseMove(object? sender, GlobalMouseHookEventArgs e)
     {
         UpdateTargetFromCursor();
     }
 
-    private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void OnHookLeftButtonDown(object? sender, GlobalMouseHookEventArgs e)
     {
         UpdateTargetFromCursor();
         if (_currentTarget is not { } target)
@@ -71,18 +77,17 @@ public partial class WindowPickerOverlay : Window
             return;
         }
 
+        e.Handled = true;
         SelectedTarget = target;
         DialogResult = true;
         Close();
     }
 
-    private void OnKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    private void OnHookEscapePressed(object? sender, GlobalKeyHookEventArgs e)
     {
-        if (e.Key == Key.Escape)
-        {
-            DialogResult = false;
-            Close();
-        }
+        e.Handled = true;
+        DialogResult = false;
+        Close();
     }
 
     private void UpdateTargetFromCursor()
@@ -93,6 +98,7 @@ public partial class WindowPickerOverlay : Window
         {
             HighlightBorder.Visibility = Visibility.Collapsed;
             TargetText.Visibility = Visibility.Collapsed;
+            ShowHintNearCursor(cursor);
             return;
         }
 
@@ -102,19 +108,32 @@ public partial class WindowPickerOverlay : Window
     private void UpdateHighlight(DrawingRectangle bounds, string title)
     {
         var boundsDip = DeviceRectangleToDip(bounds);
-        var left = boundsDip.Left - _virtualBoundsDip.Left;
-        var top = boundsDip.Top - _virtualBoundsDip.Top;
+        Left = boundsDip.Left;
+        Top = boundsDip.Top;
+        Width = Math.Max(1, boundsDip.Width);
+        Height = Math.Max(1, boundsDip.Height);
 
-        System.Windows.Controls.Canvas.SetLeft(HighlightBorder, left);
-        System.Windows.Controls.Canvas.SetTop(HighlightBorder, top);
-        HighlightBorder.Width = boundsDip.Width;
-        HighlightBorder.Height = boundsDip.Height;
+        HintText.Visibility = Visibility.Collapsed;
+        System.Windows.Controls.Canvas.SetLeft(HighlightBorder, 0);
+        System.Windows.Controls.Canvas.SetTop(HighlightBorder, 0);
+        HighlightBorder.Width = Width;
+        HighlightBorder.Height = Height;
         HighlightBorder.Visibility = Visibility.Visible;
 
         TargetText.Text = string.IsNullOrWhiteSpace(title) ? "선택된 창" : title;
-        System.Windows.Controls.Canvas.SetLeft(TargetText, left + 8);
-        System.Windows.Controls.Canvas.SetTop(TargetText, Math.Max(8, top - 34));
+        System.Windows.Controls.Canvas.SetLeft(TargetText, 8);
+        System.Windows.Controls.Canvas.SetTop(TargetText, 8);
         TargetText.Visibility = Visibility.Visible;
+    }
+
+    private void ShowHintNearCursor(DrawingPoint cursor)
+    {
+        var cursorDip = _fromDevice.Transform(new WpfPoint(cursor.X, cursor.Y));
+        Left = Math.Clamp(cursorDip.X + 18, _virtualBoundsDip.Left, _virtualBoundsDip.Right - HintWidth);
+        Top = Math.Clamp(cursorDip.Y + 18, _virtualBoundsDip.Top, _virtualBoundsDip.Bottom - HintHeight);
+        Width = HintWidth;
+        Height = HintHeight;
+        HintText.Visibility = Visibility.Visible;
     }
 
     private Matrix GetFromDeviceMatrix()

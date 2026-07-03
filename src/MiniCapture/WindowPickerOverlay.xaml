@@ -5,19 +5,19 @@
         AllowsTransparency="True"
         Background="Transparent"
         Cursor="Cross"
+        Focusable="False"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
+        ShowActivated="False"
         Topmost="True"
         WindowStartupLocation="Manual"
         WindowStyle="None"
         Loaded="OnLoaded"
         SourceInitialized="OnSourceInitialized"
         Closed="OnClosed"
-        KeyDown="OnKeyDown"
-        PreviewMouseLeftButtonDown="OnMouseLeftButtonDown"
-        MouseMove="OnMouseMove">
+        >
     <Canvas x:Name="OverlayCanvas"
-            Background="#22000000">
+            Background="Transparent">
         <Border x:Name="HighlightBorder"
                 Visibility="Collapsed"
                 BorderBrush="#12a594"
@@ -25,8 +25,6 @@
                 CornerRadius="7"
                 Background="#1112a594" />
         <TextBlock x:Name="HintText"
-                   Canvas.Left="18"
-                   Canvas.Top="18"
                    Padding="10,7"
                    FontFamily="Segoe UI"
                    FontSize="13"

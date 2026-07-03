@@ -278,3 +278,28 @@ The internal viewer and capture-root browser are strengthened within V1 scope: t
 
 - P4 still owns DPI/multi-monitor sweeps, repeated capture loops, packaging choice, and release notes.
 - FOLLOW_UP: if annotation undo or save-as is desired later, treat it as a separate V2 editor slice rather than extending this V1 reinforcement.
+
+## Overlay-Free Region And Window Selection
+
+### Finish Line
+
+Region and window selection no longer depend on a virtual-screen-sized topmost overlay window, so external capture targets are not visually covered by Mini Capture during selection.
+
+### Changes
+
+- Added a low-level global input hook for selection-mode mouse and Escape handling.
+- Changed region selection to show only a small hint before drag, then a selection-sized rectangle while dragging.
+- Changed window selection to show only a small hint or target-sized highlight window, instead of a full-screen transparent picker.
+- Kept the existing region/window capture output paths and `Esc` cancel behavior.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- UI Automation/global-mouse smoke confirmed region selection showed a small `446x58` hint and saved `C:\Users\user\Pictures\MiniCapture\2026\07\04\20260704_033557_384.png`.
+- UI Automation/global-mouse smoke confirmed window selection used a target-sized highlight and saved `C:\Users\user\Pictures\MiniCapture\2026\07\04\20260704_033559_480.png`.
+- `git diff --check`: passed with CRLF conversion warnings only.
+
+### Decisions
+
+- The selection windows remain best-effort excluded from capture, but they are no longer virtual-screen-sized.
+- The global hook consumes the selection click/drag so choosing a capture target does not also click or drag inside the target app.
