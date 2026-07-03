@@ -134,15 +134,25 @@
         </Style>
 
         <Style x:Key="ColorSwatchButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="22" />
-            <Setter Property="Height" Value="22" />
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
             <Setter Property="Margin" Value="0,0,5,0" />
             <Setter Property="Padding" Value="2" />
             <Setter Property="Background" Value="#24282A" />
             <Setter Property="BorderBrush" Value="{StaticResource ViewerMutedBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="ToolTipService.InitialShowDelay" Value="250" />
+        </Style>
+
+        <Style x:Key="ColorSwatchFillStyle" TargetType="Border">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="BorderBrush" Value="#0C0F0F" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
         </Style>
 
         <Style x:Key="ViewButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
@@ -590,7 +600,7 @@
                                             Tag="#ef4444"
                                             ToolTip="빨강">
                                         <Border Background="#ef4444"
-                                                CornerRadius="7" />
+                                                Style="{StaticResource ColorSwatchFillStyle}" />
                                     </Button>
                                     <Button AutomationProperties.AutomationId="ViewerColorYellowButton"
                                             AutomationProperties.Name="노랑"
@@ -599,7 +609,7 @@
                                             Tag="#facc15"
                                             ToolTip="노랑">
                                         <Border Background="#facc15"
-                                                CornerRadius="7" />
+                                                Style="{StaticResource ColorSwatchFillStyle}" />
                                     </Button>
                                     <Button AutomationProperties.AutomationId="ViewerColorGreenButton"
                                             AutomationProperties.Name="초록"
@@ -608,7 +618,7 @@
                                             Tag="#12a594"
                                             ToolTip="초록">
                                         <Border Background="#12a594"
-                                                CornerRadius="7" />
+                                                Style="{StaticResource ColorSwatchFillStyle}" />
                                     </Button>
                                     <Button AutomationProperties.AutomationId="ViewerColorBlueButton"
                                             AutomationProperties.Name="파랑"
@@ -617,7 +627,7 @@
                                             Tag="#2563eb"
                                             ToolTip="파랑">
                                         <Border Background="#2563eb"
-                                                CornerRadius="7" />
+                                                Style="{StaticResource ColorSwatchFillStyle}" />
                                     </Button>
                                     <Button AutomationProperties.AutomationId="ViewerColorWhiteButton"
                                             AutomationProperties.Name="흰색"
@@ -628,7 +638,7 @@
                                         <Border Background="#ffffff"
                                                 BorderBrush="#C0C7D4"
                                                 BorderThickness="1"
-                                                CornerRadius="7" />
+                                                Style="{StaticResource ColorSwatchFillStyle}" />
                                     </Button>
                                     <Button AutomationProperties.AutomationId="ViewerColorBlackButton"
                                             AutomationProperties.Name="검정"
@@ -637,7 +647,8 @@
                                             Tag="#111827"
                                             ToolTip="검정">
                                         <Border Background="#111827"
-                                                CornerRadius="7" />
+                                                BorderBrush="#6B7280"
+                                                Style="{StaticResource ColorSwatchFillStyle}" />
                                     </Button>
                                 </StackPanel>
                             </ContentControl>
