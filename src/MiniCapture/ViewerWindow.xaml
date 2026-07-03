@@ -374,8 +374,8 @@
                 BorderThickness="0,0,0,1">
             <Grid Margin="8,4">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="38" />
-                    <RowDefinition Height="54" />
+                    <RowDefinition Height="44" />
+                    <RowDefinition Height="52" />
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0"
