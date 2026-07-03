@@ -301,7 +301,7 @@
     <Grid Background="{StaticResource ViewerWindowBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="34" />
-            <RowDefinition Height="94" />
+            <RowDefinition Height="104" />
             <RowDefinition Height="*" />
             <RowDefinition Height="28" />
         </Grid.RowDefinitions>
@@ -362,10 +362,10 @@
                 Background="{StaticResource ViewerToolbarBackgroundBrush}"
                 BorderBrush="{StaticResource ViewerBorderBrush}"
                 BorderThickness="0,0,0,1">
-            <Grid Margin="8,5">
+            <Grid Margin="8,4">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="36" />
-                    <RowDefinition Height="45" />
+                    <RowDefinition Height="38" />
+                    <RowDefinition Height="54" />
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0"
@@ -472,7 +472,7 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="1"
-                            Margin="0,5,0,0"
+                            Margin="0,4,0,0"
                             Orientation="Horizontal">
                     <Border Background="{StaticResource ViewerToolbarGroupAltBrush}"
                             Style="{StaticResource RibbonGroupStyle}">
