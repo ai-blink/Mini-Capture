@@ -2,7 +2,7 @@
 
 ## Resume Point
 
-P0-P3, viewer/browser reinforcement, overlay-free selection, and TabPaint-inspired editor workflow reinforcement are complete. The next slice is P4 hardening and package checks.
+P0-P3, viewer/browser reinforcement, overlay-free selection, TabPaint-inspired editor workflow, and toolbar UI polish are complete. The next slice is P4 hardening and package checks.
 
 Recent commits:
 
@@ -18,6 +18,7 @@ Latest polish:
 - Floating button starts at the left edge, matches the HTML mock shape more closely, supports click/drag without duplicate menus, and opens a compact radial four-button menu above the main button.
 - Viewer icon file views wrap downward with horizontal scrolling disabled.
 - Viewer editor now has pen, arrow, stroke thickness, rotate, undo/redo, save, and clipboard workflows while staying raster-only and capture-root scoped.
+- Viewer toolbar now uses compact icon action groups, edit glyph buttons, color swatches, and inline stroke/text controls inspired by TabPaint.
 
 ## Active Design
 

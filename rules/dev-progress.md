@@ -16,10 +16,11 @@
 - 2026-07-03: Viewer/browser V1 reinforcement completed with richer capture-root tree, simple annotation tools, PNG save, open, path-copy, and image-copy actions.
 - 2026-07-04: Region/window selection no longer uses a virtual-screen-sized overlay; global input hooks drive a small hint or target-sized highlight window.
 - 2026-07-04: TabPaint-inspired editor workflow reinforcement completed with pen, arrow, stroke thickness, rotate, undo/redo, and lightweight keyboard shortcuts inside the existing viewer.
+- 2026-07-04: Viewer toolbar UI was reorganized around TabPaint-style compact icon actions, grouped edit tools, color swatches, and inline stroke/text controls.
 
 ## Current Work
 
-- Viewer editor workflow reinforcement is complete. Next implementation slice is P4 hardening and package checks.
+- Viewer toolbar UI polish is complete. Next implementation slice is P4 hardening and package checks.
 
 ## Next Actions
 
@@ -62,3 +63,6 @@
 - TabPaint-inspired editor build: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors.
 - TabPaint-inspired editor UIA smoke: full capture saved `C:\Users\user\Pictures\MiniCapture\2026\07\04\20260704_042336_550.png`; internal viewer verified rectangle, ellipse, mosaic, text, pen, arrow, stroke slider, rotate, undo/redo, save, path clipboard, and image clipboard.
 - TabPaint-inspired editor closeout checks: `git diff --check` passed with CRLF conversion warnings only; docs secret scan returned `SECRET_SCAN: PASS`.
+- Toolbar UI polish build: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors.
+- Toolbar UI polish smoke: UI Automation found 26 toolbar controls, selected the blue color swatch, changed stroke thickness, exercised all edit tool buttons, and verified path/image clipboard actions; screenshot saved at `%TEMP%\mini_capture_toolbar_after_tabpaint.png`.
+- Toolbar UI polish closeout checks: `git diff --check` passed with CRLF conversion warnings only; docs secret scan returned `SECRET_SCAN: PASS`.

@@ -335,3 +335,30 @@ The internal viewer keeps its V1 raster-only editor but adopts selected TabPaint
 
 - FOLLOW_UP: decide later whether V2 needs save-as, crop, blur, or richer editor history.
 - P4 still owns packaging and release checks.
+
+## TabPaint-Inspired Viewer Toolbar UI
+
+### Finish Line
+
+The viewer toolbar is reorganized so editing tools are easier to scan and use, taking TabPaint's dense top toolbar as visual reference while keeping Mini Capture's single-image, capture-root-scoped V1 behavior.
+
+### Changes
+
+- Reduced the toolbar from three text-heavy rows to two compact rows.
+- Converted primary viewer actions to icon buttons with accessible names and tooltips.
+- Grouped save/open/copy, undo/redo/rotate, navigation, zoom, and refresh controls with visual dividers.
+- Converted editor tools to compact glyph buttons.
+- Replaced the color combo box with direct color swatches and selected-state feedback.
+- Moved stroke thickness and text input inline with the editor tools.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- UI Automation smoke found 26 toolbar controls, selected the blue color swatch, changed stroke thickness, exercised all edit tool buttons, and verified file-path/image clipboard actions.
+- Visual screenshot check: `%TEMP%\mini_capture_toolbar_after_tabpaint.png` showed the compact two-row toolbar with no obvious text overlap in the default viewer window.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- Docs secret scan: `SECRET_SCAN: PASS`.
+
+### Decisions
+
+- This slice changes toolbar presentation only. It does not add multi-tabs, delete/rename/copy/move file manager operations, AI/OCR, cloud sharing, scrolling capture, video/GIF, or a layer-based editor.

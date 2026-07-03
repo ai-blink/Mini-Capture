@@ -76,6 +76,7 @@ public partial class ViewerWindow : Window
         _pendingPath = imagePath;
         FileList.ItemsSource = _files;
         UpdateToolButtons();
+        UpdateColorSwatches();
     }
 
     public void OpenImage(string? imagePath)
@@ -453,9 +454,9 @@ public partial class ViewerWindow : Window
         });
     }
 
-    private void OnColorSelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnColorSwatchClick(object sender, RoutedEventArgs e)
     {
-        if (ColorSelector?.SelectedItem is not ComboBoxItem { Tag: string colorText })
+        if (sender is not System.Windows.Controls.Button { Tag: string colorText })
         {
             return;
         }
@@ -463,6 +464,8 @@ public partial class ViewerWindow : Window
         if (System.Windows.Media.ColorConverter.ConvertFromString(colorText) is WpfColor color)
         {
             _selectedColor = color;
+            UpdateColorSwatches();
+            SetViewerStatus("색상을 선택했습니다.");
         }
     }
 
@@ -1511,6 +1514,26 @@ public partial class ViewerWindow : Window
         SetViewButtonState(PenToolButton, _editTool == ViewerEditTool.Pen);
         SetViewButtonState(ArrowToolButton, _editTool == ViewerEditTool.Arrow);
         AnnotationOverlay.Cursor = _editTool == ViewerEditTool.Pan || _spacePanActive ? WpfCursors.SizeAll : WpfCursors.Cross;
+    }
+
+    private void UpdateColorSwatches()
+    {
+        if (ColorSwatches is null)
+        {
+            return;
+        }
+
+        foreach (var child in ColorSwatches.Children.OfType<System.Windows.Controls.Button>())
+        {
+            var selected = child.Tag is string colorText &&
+                System.Windows.Media.ColorConverter.ConvertFromString(colorText) is WpfColor color &&
+                color.Equals(_selectedColor);
+            child.BorderBrush = selected
+                ? new SolidColorBrush(WpfColor.FromRgb(18, 165, 148))
+                : new SolidColorBrush(WpfColor.FromRgb(207, 216, 227));
+            child.BorderThickness = selected ? new Thickness(2) : new Thickness(1);
+            child.Padding = selected ? new Thickness(1) : new Thickness(2);
+        }
     }
 
     private void SetViewerStatus(string message)

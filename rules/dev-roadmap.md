@@ -13,4 +13,5 @@
 | done | Viewer/browser V1 reinforcement | richer capture-root tree, annotation tools, PNG save/open/copy actions, `dotnet build MiniCapture.slnx`, UIA viewer smoke |
 | done | Overlay-free region/window selection | global input hook, small region hint, target-sized window highlight, `dotnet build MiniCapture.slnx`, UIA selection smoke |
 | done | TabPaint-inspired viewer editor workflow | pen, arrow, stroke slider, rotate, undo/redo, UIA editor smoke, `dotnet build MiniCapture.slnx` |
+| done | TabPaint-inspired viewer toolbar UI | compact icon actions, grouped edit tools, color swatches, inline stroke/text controls, UIA toolbar smoke |
 | planned | P4 packaging and release checks | pending implementation |
