@@ -15,10 +15,11 @@
 - 2026-07-03: Close-to-tray behavior added so closing the floating window hides it while keeping the app alive in the system tray.
 - 2026-07-03: Viewer/browser V1 reinforcement completed with richer capture-root tree, simple annotation tools, PNG save, open, path-copy, and image-copy actions.
 - 2026-07-04: Region/window selection no longer uses a virtual-screen-sized overlay; global input hooks drive a small hint or target-sized highlight window.
+- 2026-07-04: TabPaint-inspired editor workflow reinforcement completed with pen, arrow, stroke thickness, rotate, undo/redo, and lightweight keyboard shortcuts inside the existing viewer.
 
 ## Current Work
 
-- Overlay-free region/window selection slice is complete. Next implementation slice is P4 hardening and package checks.
+- Viewer editor workflow reinforcement is complete. Next implementation slice is P4 hardening and package checks.
 
 ## Next Actions
 
@@ -58,3 +59,6 @@
 - Overlay-free selection build: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors.
 - Overlay-free selection smoke: region selection showed a small `446x58` hint and saved `C:\Users\user\Pictures\MiniCapture\2026\07\04\20260704_033557_384.png`; window selection showed target-sized highlight and saved `C:\Users\user\Pictures\MiniCapture\2026\07\04\20260704_033559_480.png`.
 - Overlay-free selection whitespace check: `git diff --check` passed with CRLF conversion warnings only.
+- TabPaint-inspired editor build: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors.
+- TabPaint-inspired editor UIA smoke: full capture saved `C:\Users\user\Pictures\MiniCapture\2026\07\04\20260704_042336_550.png`; internal viewer verified rectangle, ellipse, mosaic, text, pen, arrow, stroke slider, rotate, undo/redo, save, path clipboard, and image clipboard.
+- TabPaint-inspired editor closeout checks: `git diff --check` passed with CRLF conversion warnings only; docs secret scan returned `SECRET_SCAN: PASS`.

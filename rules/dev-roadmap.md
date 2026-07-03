@@ -12,4 +12,5 @@
 | done | Timer UX and window capture fix | delay choices 3/5/7/10, countdown text/sound path, delayed window capture smoke, `dotnet build MiniCapture.slnx`, `git diff --check` |
 | done | Viewer/browser V1 reinforcement | richer capture-root tree, annotation tools, PNG save/open/copy actions, `dotnet build MiniCapture.slnx`, UIA viewer smoke |
 | done | Overlay-free region/window selection | global input hook, small region hint, target-sized window highlight, `dotnet build MiniCapture.slnx`, UIA selection smoke |
+| done | TabPaint-inspired viewer editor workflow | pen, arrow, stroke slider, rotate, undo/redo, UIA editor smoke, `dotnet build MiniCapture.slnx` |
 | planned | P4 packaging and release checks | pending implementation |

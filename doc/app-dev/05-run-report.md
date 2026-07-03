@@ -303,3 +303,35 @@ Region and window selection no longer depend on a virtual-screen-sized topmost o
 
 - The selection windows remain best-effort excluded from capture, but they are no longer virtual-screen-sized.
 - The global hook consumes the selection click/drag so choosing a capture target does not also click or drag inside the target app.
+
+## TabPaint-Inspired Editor Workflow
+
+### Finish Line
+
+The internal viewer keeps its V1 raster-only editor but adopts selected TabPaint workflow ideas: faster annotation tools, undo/redo, stroke sizing, rotation, and keyboard shortcuts without becoming a full paint app.
+
+### Changes
+
+- Added pen and arrow tools to the existing viewer toolbar.
+- Added stroke thickness control shared by rectangle, ellipse, pen, arrow, and text/mosaic sizing where applicable.
+- Added in-memory undo/redo snapshots capped to a small stack.
+- Added rotate-left and rotate-right actions.
+- Added dirty title/current-file indicator and kept save writing the edited PNG back to the active capture file.
+- Added keyboard shortcuts for save, undo, redo, rotate-left/right, plus temporary space-to-pan behavior while preserving text input focus.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- UI Automation smoke saved `C:\Users\user\Pictures\MiniCapture\2026\07\04\20260704_042336_550.png`, opened the internal viewer, verified new toolbar controls, exercised rectangle, ellipse, mosaic, text, pen, arrow, stroke slider, rotate, undo/redo, save, file-path clipboard, and image clipboard.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- Docs secret scan: `SECRET_SCAN: PASS`.
+
+### Decisions
+
+- TabPaint was used only as a workflow reference. Multi-tab editing, AI/OCR tools, layer/object systems, cloud/upload sharing, delete/rename/copy/move file manager actions, scrolling capture, video/GIF, and heavy editing remain out of V1 scope.
+- Editing remains immediate raster compositing inside `ViewerWindow`; no new editor architecture was introduced.
+
+### Follow-ups
+
+- FOLLOW_UP: decide later whether V2 needs save-as, crop, blur, or richer editor history.
+- P4 still owns packaging and release checks.

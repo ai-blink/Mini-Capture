@@ -13,7 +13,8 @@
         UseLayoutRounding="True"
         WindowStartupLocation="CenterScreen"
         Loaded="OnLoaded"
-        KeyDown="OnKeyDown">
+        KeyDown="OnKeyDown"
+        KeyUp="OnKeyUp">
     <Window.Resources>
         <local:ThumbnailImageConverter x:Key="ThumbnailConverter" />
 
@@ -143,7 +144,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="88" />
+            <RowDefinition Height="122" />
             <RowDefinition Height="*" />
             <RowDefinition Height="28" />
         </Grid.RowDefinitions>
@@ -154,6 +155,7 @@
                 BorderThickness="0,0,0,1">
             <Grid Margin="12,7">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="34" />
                     <RowDefinition Height="34" />
                     <RowDefinition Height="34" />
                 </Grid.RowDefinitions>
@@ -185,6 +187,26 @@
                         <Button AutomationProperties.AutomationId="ViewerCopyImageButton"
                                 Click="OnCopyImageClick"
                                 Content="이미지"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button x:Name="UndoButton"
+                                AutomationProperties.AutomationId="ViewerUndoButton"
+                                Click="OnUndoClick"
+                                Content="되돌리기"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button x:Name="RedoButton"
+                                AutomationProperties.AutomationId="ViewerRedoButton"
+                                Click="OnRedoClick"
+                                Content="다시"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button AutomationProperties.AutomationId="ViewerRotateLeftButton"
+                                Click="OnRotateLeftClick"
+                                Content="⟲"
+                                FontSize="15"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                        <Button AutomationProperties.AutomationId="ViewerRotateRightButton"
+                                Click="OnRotateRightClick"
+                                Content="⟳"
+                                FontSize="15"
                                 Style="{StaticResource ToolbarButtonStyle}" />
                         <Button x:Name="PreviousButton"
                                 AutomationProperties.AutomationId="ViewerPreviousButton"
@@ -261,6 +283,18 @@
                                 Content="텍스트"
                                 Style="{StaticResource ToolbarButtonStyle}"
                                 Tag="Text" />
+                        <Button x:Name="PenToolButton"
+                                AutomationProperties.AutomationId="ViewerPenToolButton"
+                                Click="OnToolButtonClick"
+                                Content="펜"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Tag="Pen" />
+                        <Button x:Name="ArrowToolButton"
+                                AutomationProperties.AutomationId="ViewerArrowToolButton"
+                                Click="OnToolButtonClick"
+                                Content="화살표"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Tag="Arrow" />
                         <ComboBox x:Name="ColorSelector"
                                   Width="94"
                                   Height="30"
@@ -281,6 +315,32 @@
                                  AutomationProperties.AutomationId="ViewerTextInput"
                                  Text="텍스트"
                                  VerticalContentAlignment="Center" />
+                    </StackPanel>
+                </DockPanel>
+
+                <DockPanel Grid.Row="2"
+                           Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="12"
+                                   Foreground="#627083"
+                                   Text="굵기" />
+                        <Slider x:Name="StrokeSlider"
+                                Width="132"
+                                Margin="8,0,6,0"
+                                AutomationProperties.AutomationId="ViewerStrokeSlider"
+                                Minimum="1"
+                                Maximum="18"
+                                TickFrequency="1"
+                                IsSnapToTickEnabled="True"
+                                Value="4"
+                                ValueChanged="OnStrokeSliderChanged" />
+                        <TextBlock x:Name="StrokeText"
+                                   Width="34"
+                                   VerticalAlignment="Center"
+                                   FontSize="12"
+                                   Foreground="#3c4a5f"
+                                   Text="4px" />
                     </StackPanel>
                 </DockPanel>
             </Grid>
