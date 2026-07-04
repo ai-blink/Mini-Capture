@@ -395,3 +395,47 @@ ViewerWindow now follows the Dark Screenshot Markup Shell direction: a dark scre
 
 - P4 still owns DPI/multi-monitor sweeps, repeated capture loops, packaging choice, and release notes.
 - FOLLOW_UP: if the Capture Library tree should visually remove the existing `내 PC > 사진` grouping, treat it as a separate navigation-copy polish slice because selectable paths are already constrained to the capture root.
+
+## P4 Hardening And Package
+
+### Finish Line
+
+P4 complete: Mini Capture has a verified build baseline, DPI/capture smoke evidence, a selected first packaging path, a launchable local publish folder, and recorded release-readiness follow-ups.
+
+### Changes
+
+- Added `artifacts/` to `.gitignore` so generated publish outputs stay out of source control.
+- Chose a framework-dependent `win-x64` folder publish as the first V1 package baseline.
+- Published the app to `artifacts\publish\MiniCapture-win-x64-framework-dependent`.
+- Updated live progress, roadmap, context, and execution-task docs with P4 evidence and known gaps.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors after stopping a stale running `MiniCapture` process that had locked the Debug output.
+- `git diff --check`: passed before and after the P4 doc/package updates; the final run emitted CRLF conversion warnings only.
+- DPI probe: launched app reported `APP_DPI_AWARENESS=2`; the local environment exposed one active display, and the app saw virtual bounds `0,0,3840,2160`.
+- Repeated capture loop: UI Automation created three consecutive full-screen PNGs at `3840x2160`: `20260704_171554_088.png`, `20260704_171555_214.png`, and `20260704_171556_257.png`.
+- Drag capture smoke: the drag UI path saved `C:\Users\user\Pictures\MiniCapture\2026\07\04\20260704_172455_279.png` at `766x505`.
+- Window capture smoke: the window UI picker saved `C:\Users\user\Pictures\MiniCapture\2026\07\04\20260704_172602_252.png` at `977x569`.
+- Timer capture smoke: timer delay plus full-screen capture saved `C:\Users\user\Pictures\MiniCapture\2026\07\04\20260704_172303_357.png` at `3840x2160` and 6,172,894 bytes.
+- Viewer regression smoke: after timer capture, the internal viewer exposed save, open, copy image, copy path, pen, and stroke controls.
+- Close-to-tray smoke: `CloseMainWindow` returned true and the process remained alive until the smoke script explicitly cleaned it up.
+- Packaging check: `dotnet publish src\MiniCapture\MiniCapture.csproj -c Release -r win-x64 --self-contained false -o artifacts\publish\MiniCapture-win-x64-framework-dependent` passed, and the published `MiniCapture.exe` launched with a visible `Mini Capture` main window.
+
+### Decisions
+
+- V1 package baseline is a framework-dependent folder publish. It is simple, small, and matches the current local-build maturity; it requires the .NET 8 Windows Desktop Runtime on target machines.
+- No installer, self-contained single-file package, auto-update, code signing, OCR, upload/cloud sharing, scrolling capture, video/GIF, heavy editing, or general file-manager behavior was added in P4.
+- Current local hardware has one active display, so true cross-monitor manual validation remains a follow-up rather than a completed P4 claim.
+
+### Release Notes
+
+- Mini Capture now has verified drag, window, full-screen, and timer capture smoke coverage in the local test environment.
+- The internal viewer/browser/editor regression smoke confirms the Dark Screenshot Markup Shell still exposes core save/open/copy and markup controls.
+- A first launchable package can be produced with the documented `dotnet publish` command under `artifacts\publish\MiniCapture-win-x64-framework-dependent`.
+
+### Follow-ups
+
+- FOLLOW_UP: run a true multi-monitor hardware pass on a machine with multiple displays and mixed DPI if available.
+- FOLLOW_UP: decide whether V1 distribution should stay framework-dependent or move to a self-contained/installer package.
+- FOLLOW_UP: keep Windows.Graphics.Capture, protected/accelerated-window coverage, thumbnail cancellation, and large-folder perf sweeps as later hardening unless a release blocker appears.

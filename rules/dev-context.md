@@ -2,7 +2,7 @@
 
 ## Resume Point
 
-P0-P3, viewer/browser reinforcement, overlay-free selection, TabPaint-inspired editor workflow, and toolbar UI polish are complete. The next slice is P4 hardening and package checks.
+P0-P4, viewer/browser reinforcement, overlay-free selection, TabPaint-inspired editor workflow, toolbar UI polish, Dark Screenshot Markup Shell, and first package checks are complete. The next slice is V1 release-candidate cleanup or manual hardware validation.
 
 Recent commits:
 
@@ -19,6 +19,7 @@ Latest polish:
 - Viewer icon file views wrap downward with horizontal scrolling disabled.
 - Viewer editor now has pen, arrow, stroke thickness, rotate, undo/redo, save, and clipboard workflows while staying raster-only and capture-root scoped.
 - Viewer toolbar now uses compact icon action groups, edit glyph buttons, color swatches, and inline stroke/text controls inspired by TabPaint.
+- P4 checks confirmed Per-Monitor DPI awareness, repeated PNG capture, drag/window/full/timer smoke coverage, viewer action availability, close-to-tray behavior, and a launchable framework-dependent `win-x64` publish folder.
 
 ## Active Design
 
@@ -27,7 +28,7 @@ Latest polish:
 
 ## Immediate Next Step
 
-Start P4 from `doc/app-dev/04-execution-tasks.md`: DPI/multi-monitor checks, repeated capture loops, packaging choice, and release notes.
+Use the P4 run report in `doc/app-dev/05-run-report.md` as the latest release-readiness baseline. True multi-monitor hardware validation and any installer/self-contained package decision remain follow-ups.
 
 ## Current Stack Decision
 

@@ -18,16 +18,17 @@
 - 2026-07-04: TabPaint-inspired editor workflow reinforcement completed with pen, arrow, stroke thickness, rotate, undo/redo, and lightweight keyboard shortcuts inside the existing viewer.
 - 2026-07-04: Viewer toolbar UI was reorganized around TabPaint-style compact icon actions, grouped edit tools, color swatches, and inline stroke/text controls.
 - 2026-07-04: ViewerWindow was redesigned as a Dark Screenshot Markup Shell with dark File/View/Markup/Properties command groups, a stronger markup row, capture-root library panes, dotted canvas workspace, and reinforced status/zoom metadata.
+- 2026-07-04: P4 hardening and package checks completed with DPI/publish evidence, repeated capture smoke, drag/window/full/timer coverage, viewer regression smoke, and close-to-tray verification.
 
 ## Current Work
 
-- ViewerWindow Dark Screenshot Markup Shell redesign is complete. Next implementation slice is P4 hardening and package checks.
+- P4 hardening and package checks are complete. Next implementation slice is V1 release-candidate cleanup or manual hardware validation.
 
 ## Next Actions
 
-- Run DPI/multi-monitor and repeated capture validation.
-- Choose the first packaging path and record release notes.
-- Keep Windows.Graphics.Capture and thumbnail cancellation/perf work as hardening follow-ups unless a P4 blocker appears.
+- Run a true multi-monitor hardware pass when a multi-display setup is available.
+- Decide later whether V1 needs an installer or self-contained package; the current baseline is a framework-dependent `win-x64` publish folder.
+- Keep Windows.Graphics.Capture and thumbnail cancellation/perf work as hardening follow-ups unless a release blocker appears.
 
 ## Blockers
 
@@ -71,3 +72,9 @@
 - Dark Screenshot Markup Shell UIA smoke: full capture opened the internal viewer, resized it to 980x580 DIP, verified save/open/copy-image/copy-path actions and pan/select/pen/arrow/rectangle/ellipse/text/mosaic/stroke controls, saved the active PNG, copied path text, copied image data, and confirmed `CloseMainWindow` returned true while the process stayed alive in tray.
 - Dark Screenshot Markup Shell visual check: clean `PrintWindow` screenshot saved at `%TEMP%\mini_capture_dark_shell_printwindow_980x580.png`; toolbar groups, markup tools, properties, status metadata, and zoom badge did not overlap at the target size.
 - Dark Screenshot Markup Shell whitespace check: `git diff --check` passed with CRLF conversion warnings only.
+- P4 build baseline: after stopping a stale running `MiniCapture` process that locked the Debug apphost, `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `git diff --check` passed.
+- P4 DPI check: launched app reported `APP_DPI_AWARENESS=2`; current test environment had one active screen and app virtual bounds `0,0,3840,2160`.
+- P4 repeated full capture smoke: UI Automation created three consecutive full-screen PNGs at `3840x2160` (`20260704_171554_088.png`, `20260704_171555_214.png`, `20260704_171556_257.png`).
+- P4 capture path smoke: drag UI saved `20260704_172455_279.png` at `766x505`; window UI saved `20260704_172602_252.png` at `977x569`; timer+full saved `20260704_172303_357.png` at `3840x2160`; region and window engine probes also saved PNGs directly.
+- P4 viewer/tray smoke: internal viewer exposed save/open/copy-image/copy-path/pen/stroke controls after timer capture; `CloseMainWindow` returned true and the app process remained alive.
+- P4 package check: `dotnet publish src\MiniCapture\MiniCapture.csproj -c Release -r win-x64 --self-contained false -o artifacts\publish\MiniCapture-win-x64-framework-dependent` passed, and the published `MiniCapture.exe` launched successfully.

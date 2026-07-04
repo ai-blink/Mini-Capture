@@ -87,6 +87,8 @@ Evidence:
 
 ## P4: Hardening And Package
 
+Status: done in the P4 hardening/package slice.
+
 Owner: integration slice.
 
 Scope:
@@ -101,3 +103,16 @@ Acceptance:
 - Manual test matrix passes.
 - Known gaps are recorded in run report.
 - User can launch a packaged or clearly documented local build.
+
+Evidence:
+
+- `dotnet build MiniCapture.slnx` passed after stopping a stale running app instance that locked the Debug output.
+- UI Automation/full capture loop created three consecutive full-screen PNGs.
+- Drag UI, window UI, timer+full, viewer controls, and close-to-tray smoke checks passed in the available local environment.
+- App DPI awareness reported `2`; the local environment exposed one active display with app virtual bounds `0,0,3840,2160`.
+- `dotnet publish src\MiniCapture\MiniCapture.csproj -c Release -r win-x64 --self-contained false -o artifacts\publish\MiniCapture-win-x64-framework-dependent` passed, and the published app launched.
+
+FOLLOW_UP:
+
+- Run a true multi-monitor hardware pass on a multi-display machine.
+- Decide later whether V1 needs an installer or self-contained package; current package baseline requires the .NET 8 Windows Desktop Runtime.
