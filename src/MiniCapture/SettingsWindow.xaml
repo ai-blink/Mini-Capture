@@ -2,10 +2,10 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Mini Capture 설정"
-        Width="780"
-        Height="620"
-        MinWidth="720"
-        MinHeight="560"
+        Width="936"
+        Height="837"
+        MinWidth="864"
+        MinHeight="756"
         Background="#121414"
         FontFamily="Segoe UI"
         ShowInTaskbar="True"
@@ -29,6 +29,26 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="{StaticResource SettingsTextBrush}" />
             <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style TargetType="ScrollBar">
+            <Setter Property="Background" Value="#111516" />
+            <Setter Property="Foreground" Value="#708090" />
+            <Setter Property="Width" Value="12" />
+            <Setter Property="MinWidth" Value="12" />
+        </Style>
+
+        <Style TargetType="Thumb">
+            <Setter Property="Background" Value="#526170" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border Margin="3,2"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="ExtensionCheckBoxStyle" TargetType="CheckBox">
@@ -271,34 +291,45 @@
                             </ItemsControl>
                         </ScrollViewer>
 
-                        <WrapPanel Grid.Row="1"
-                                   Margin="0,2,0,0">
-                            <Button AutomationProperties.AutomationId="SelectAllExtensionCandidatesButton"
-                                    Click="OnSelectAllClick"
-                                    Content="전체 선택"
-                                    Margin="0,0,10,10"
-                                    Style="{StaticResource SettingsButtonStyle}" />
-                            <Button AutomationProperties.AutomationId="ClearExtensionCandidatesButton"
-                                    Click="OnClearSelectionClick"
-                                    Content="선택 안 함"
-                                    Margin="0,0,10,10"
-                                    Style="{StaticResource SettingsButtonStyle}" />
-                            <Button AutomationProperties.AutomationId="RefreshExtensionAssociationsButton"
-                                    Click="OnRefreshAssociationsClick"
-                                    Content="새로고침"
-                                    Margin="0,0,10,10"
-                                    Style="{StaticResource SettingsButtonStyle}" />
-                            <Button AutomationProperties.AutomationId="OpenWindowsDefaultAppsButton"
-                                    Click="OnOpenDefaultAppsClick"
-                                    Content="Windows 기본 앱 열기"
-                                    Margin="0,0,10,10"
-                                    Style="{StaticResource SettingsButtonStyle}" />
-                            <Button AutomationProperties.AutomationId="CopyExecutablePathButton"
-                                    Click="OnCopyExecutablePathClick"
-                                    Content="실행 파일 경로 복사"
-                                    Margin="0,0,0,10"
-                                    Style="{StaticResource SettingsButtonStyle}" />
-                        </WrapPanel>
+                        <Border Grid.Row="1"
+                                Margin="0,6,0,0"
+                                Padding="10,10,10,0"
+                                Background="{StaticResource SettingsBackgroundBrush}"
+                                BorderBrush="{StaticResource SettingsBorderBrush}"
+                                BorderThickness="0,1,0,0">
+                            <WrapPanel>
+                                <Button AutomationProperties.AutomationId="SelectAllExtensionCandidatesButton"
+                                        Click="OnSelectAllClick"
+                                        Content="전체 선택"
+                                        Margin="0,0,10,10"
+                                        MinWidth="96"
+                                        Style="{StaticResource SettingsButtonStyle}" />
+                                <Button AutomationProperties.AutomationId="ClearExtensionCandidatesButton"
+                                        Click="OnClearSelectionClick"
+                                        Content="선택 안 함"
+                                        Margin="0,0,10,10"
+                                        MinWidth="106"
+                                        Style="{StaticResource SettingsButtonStyle}" />
+                                <Button AutomationProperties.AutomationId="RefreshExtensionAssociationsButton"
+                                        Click="OnRefreshAssociationsClick"
+                                        Content="새로고침"
+                                        Margin="0,0,10,10"
+                                        MinWidth="96"
+                                        Style="{StaticResource SettingsButtonStyle}" />
+                                <Button AutomationProperties.AutomationId="OpenWindowsDefaultAppsButton"
+                                        Click="OnOpenDefaultAppsClick"
+                                        Content="Windows 기본 앱 열기"
+                                        Margin="0,0,10,10"
+                                        MinWidth="178"
+                                        Style="{StaticResource SettingsButtonStyle}" />
+                                <Button AutomationProperties.AutomationId="CopyExecutablePathButton"
+                                        Click="OnCopyExecutablePathClick"
+                                        Content="실행 파일 경로 복사"
+                                        Margin="0,0,0,10"
+                                        MinWidth="178"
+                                        Style="{StaticResource SettingsButtonStyle}" />
+                            </WrapPanel>
+                        </Border>
 
                         <Border Grid.Row="2"
                                 Margin="0,8,0,0"
