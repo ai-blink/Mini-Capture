@@ -5,6 +5,7 @@ using System.Windows.Controls.Primitives;
 using System.ComponentModel;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Markup;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using WpfBrushes = System.Windows.Media.Brushes;
@@ -22,6 +23,7 @@ public partial class MainWindow : Window
     private bool _isDraggingButton;
     private string? _lastCapturePath;
     private bool _suppressNextCaptureClick;
+    private SettingsWindow? _settingsWindow;
     private ViewerWindow? _viewerWindow;
     private CaptureMode _selectedMode = CaptureMode.Drag;
     private int _captureDelaySeconds;
@@ -89,6 +91,12 @@ public partial class MainWindow : Window
     {
         ClosePopups();
         OpenInternalViewer(CaptureFileIndex.GetLatestImage()?.Path);
+    }
+
+    private void OnOpenSettingsClick(object sender, RoutedEventArgs e)
+    {
+        ClosePopups();
+        OpenSettings();
     }
 
     private void OnTimerDelayClick(object sender, RoutedEventArgs e)
@@ -279,7 +287,7 @@ public partial class MainWindow : Window
     private void SelectMode(CaptureMode mode, bool showStatus)
     {
         _selectedMode = mode;
-        CaptureButton.ToolTip = $"{CaptureModeInfo.DisplayName(mode)} 선택됨. 드래그하면 위치를 옮길 수 있습니다. 우클릭하면 이미지 뷰어와 종료 메뉴를 열 수 있습니다.";
+        CaptureButton.ToolTip = $"{CaptureModeInfo.DisplayName(mode)} 선택됨. 드래그하면 위치를 옮길 수 있습니다. 우클릭하면 이미지 뷰어, 설정, 종료 메뉴를 열 수 있습니다.";
         AutomationProperties.SetName(CaptureButton, $"{CaptureModeInfo.DisplayName(mode)} 모드 선택됨");
         StatusText.Text = CaptureModeInfo.PlaceholderStatus(mode);
         StatusText.Foreground = WpfBrushes.White;
@@ -536,5 +544,28 @@ public partial class MainWindow : Window
     public void OpenViewer(string? path)
     {
         OpenInternalViewer(path);
+    }
+
+    public void OpenSettings()
+    {
+        try
+        {
+            if (_settingsWindow is null || !_settingsWindow.IsVisible)
+            {
+                _settingsWindow = new SettingsWindow
+                {
+                    Owner = IsVisible ? this : null
+                };
+                _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+                _settingsWindow.Show();
+                return;
+            }
+
+            _settingsWindow.Activate();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or XamlParseException)
+        {
+            ShowStatus($"설정을 열 수 없습니다: {ex.Message}");
+        }
     }
 }

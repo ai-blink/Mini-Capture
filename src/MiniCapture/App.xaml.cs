@@ -1,10 +1,12 @@
 using System.Windows;
+using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 
 namespace MiniCapture;
 
 public partial class App : System.Windows.Application
 {
+    private readonly bool _openSettingsOnStartup;
     private readonly string? _startupImagePath;
     private Forms.NotifyIcon? _trayIcon;
     private MainWindow? _mainWindow;
@@ -16,6 +18,7 @@ public partial class App : System.Windows.Application
 
     public App(string[] args)
     {
+        _openSettingsOnStartup = args.Any(arg => string.Equals(arg, "--settings", StringComparison.OrdinalIgnoreCase));
         _startupImagePath = args.FirstOrDefault(CaptureFileIndex.IsImagePath);
     }
 
@@ -32,6 +35,14 @@ public partial class App : System.Windows.Application
         var window = new MainWindow();
         _mainWindow = window;
         MainWindow = window;
+
+        if (_openSettingsOnStartup)
+        {
+            window.Loaded += (_, _) => Dispatcher.BeginInvoke(
+                window.OpenSettings,
+                DispatcherPriority.ApplicationIdle);
+        }
+
         window.Show();
 
         if (_startupImagePath is not null)
@@ -82,8 +93,20 @@ public partial class App : System.Windows.Application
     {
         var menu = new Forms.ContextMenuStrip();
         menu.Items.Add("열기", null, (_, _) => Dispatcher.Invoke(ShowCaptureWindow));
+        menu.Items.Add("설정", null, (_, _) => Dispatcher.Invoke(ShowSettingsWindow));
         menu.Items.Add("종료", null, (_, _) => Dispatcher.Invoke(ExitApplication));
         return menu;
+    }
+
+    private void ShowSettingsWindow()
+    {
+        if (_mainWindow is null)
+        {
+            _mainWindow = new MainWindow();
+            MainWindow = _mainWindow;
+        }
+
+        _mainWindow.OpenSettings();
     }
 
     private static void EnsureWindowsDirectoryEnvironment()

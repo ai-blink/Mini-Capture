@@ -20,10 +20,11 @@
 - 2026-07-04: ViewerWindow was redesigned as a Dark Screenshot Markup Shell with dark File/View/Markup/Properties command groups, a stronger markup row, capture-root library panes, dotted canvas workspace, and reinforced status/zoom metadata.
 - 2026-07-04: P4 hardening and package checks completed with DPI/publish evidence, repeated capture smoke, drag/window/full/timer coverage, viewer regression smoke, and close-to-tray verification.
 - 2026-07-05: Viewer performance and file-argument entry slice completed with async folder loading, background thumbnail decode, optimized latest-image lookup, and PNG/JPG/JPEG command-line image opening.
+- 2026-07-05: A separate SettingsWindow was added with an extension-association section for PNG/JPG/JPEG, plus floating-button/tray `설정` entry points and a `--settings` startup path; Windows Default Apps settings remain one button inside that settings UI without direct registry mutation.
 
 ## Current Work
 
-- Viewer performance and file-argument entry cleanup is complete. Next implementation slice is manual hardware validation or installer/default-app packaging, if V1 distribution requires it.
+- Separate settings UI for extension association is complete. Next implementation slice is manual hardware validation or installer/default-app registration, if V1 distribution requires Mini Capture to appear directly in Windows default-app choices.
 
 ## Next Actions
 
@@ -84,3 +85,4 @@
 - Viewer perf/file-arg smoke: launched `MiniCapture.exe <png path>` against a temporary 420-file capture folder; ViewerWindow became available in 1911ms, reported `폴더 로딩 완료: 420개, 131ms`, invoked medium icon view in 42ms and details view in 864ms, and the temporary `_perf_smoke_*` folder was removed after path-safety verification.
 - Viewer perf/file-arg capture regression: UI Automation found exactly the four radial capture buttons, full capture saved `C:\Users\user\Pictures\MiniCapture\2026\07\05\20260705_021751_249.png`, result-panel `보기` opened ViewerWindow, save/open/copy-image/copy-path/pen/stroke controls were available, and close-to-tray kept the process alive after `CloseMainWindow`.
 - Viewer perf/file-arg static context check: `MainWindow.xaml` keeps `OpenImageViewerMenuItem` only in the capture button context menu while the left-click radial menu exposes only `ModeDragButton`, `ModeWindowButton`, `ModeFullScreenButton`, and `ModeTimerButton`.
+- Settings UI build/smoke: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `MiniCapture.exe --settings` opened the settings UI and UI Automation found the section list, extension section, Windows default-apps button, executable path copy button, executable path text, and status text.

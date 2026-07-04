@@ -26,6 +26,11 @@ public static class ShellService
         });
     }
 
+    public static void OpenDefaultAppsSettings()
+    {
+        StartShellProcess("ms-settings:defaultapps");
+    }
+
     private static void StartShellProcess(string path)
     {
         Process.Start(new ProcessStartInfo
