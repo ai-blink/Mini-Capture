@@ -2,7 +2,7 @@
 
 ## Resume Point
 
-P0-P4, viewer/browser reinforcement, overlay-free selection, TabPaint-inspired editor workflow, toolbar UI polish, Dark Screenshot Markup Shell, and first package checks are complete. The next slice is V1 release-candidate cleanup or manual hardware validation.
+P0-P4, viewer/browser reinforcement, overlay-free selection, TabPaint-inspired editor workflow, toolbar UI polish, Dark Screenshot Markup Shell, first package checks, and V1 viewer performance/file-entry cleanup are complete. The next slice is manual hardware validation or installer/default-app packaging if distribution needs it.
 
 Recent commits:
 
@@ -20,6 +20,8 @@ Latest polish:
 - Viewer editor now has pen, arrow, stroke thickness, rotate, undo/redo, save, and clipboard workflows while staying raster-only and capture-root scoped.
 - Viewer toolbar now uses compact icon action groups, edit glyph buttons, color swatches, and inline stroke/text controls inspired by TabPaint.
 - P4 checks confirmed Per-Monitor DPI awareness, repeated PNG capture, drag/window/full/timer smoke coverage, viewer action availability, close-to-tray behavior, and a launchable framework-dependent `win-x64` publish folder.
+- ViewerWindow now resolves latest images without sorting the full index, loads folder contents asynchronously in UI batches, decodes thumbnails in the background with limited concurrency, and accepts PNG/JPG/JPEG file paths as startup arguments.
+- Windows PNG/JPG/JPEG default-app association is intentionally deferred to an installer/registry slice; V1 code now supports the required quoted `%1`-style file path argument but does not mutate system associations.
 
 ## Active Design
 
@@ -28,8 +30,8 @@ Latest polish:
 
 ## Immediate Next Step
 
-Use the P4 run report in `doc/app-dev/05-run-report.md` as the latest release-readiness baseline. True multi-monitor hardware validation and any installer/self-contained package decision remain follow-ups.
+Use the latest sections of `doc/app-dev/05-run-report.md` as the release-readiness baseline. True multi-monitor hardware validation and any installer/self-contained/default-app association decision remain follow-ups.
 
 ## Current Stack Decision
 
-C# WPF plus Win32 P/Invoke remains the stack. Capture uses GDI `CopyFromScreen` with DWM bounds for window capture; the viewer/browser/editor is WPF-only and indexes PNG/JPG/JPEG files under `Pictures\MiniCapture`.
+C# WPF plus Win32 P/Invoke remains the stack. Capture uses GDI `CopyFromScreen` with DWM bounds for window capture; the viewer/browser/editor is WPF-only, indexes PNG/JPG/JPEG files under `Pictures\MiniCapture`, and can preview a PNG/JPG/JPEG path passed on the command line.

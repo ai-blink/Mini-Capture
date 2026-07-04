@@ -439,3 +439,43 @@ P4 complete: Mini Capture has a verified build baseline, DPI/capture smoke evide
 - FOLLOW_UP: run a true multi-monitor hardware pass on a machine with multiple displays and mixed DPI if available.
 - FOLLOW_UP: decide whether V1 distribution should stay framework-dependent or move to a self-contained/installer package.
 - FOLLOW_UP: keep Windows.Graphics.Capture, protected/accelerated-window coverage, thumbnail cancellation, and large-folder perf sweeps as later hardening unless a release blocker appears.
+
+## V1 Viewer Performance And File Entry
+
+### Finish Line
+
+Viewer performance and Windows image entry cleanup complete: ViewerWindow avoids the main UI-thread bottlenecks found in folder indexing and thumbnails, Mini Capture accepts PNG/JPG/JPEG file paths on startup, and Windows extension association is scoped as an installer/registry follow-up rather than a direct V1 system mutation.
+
+### Changes
+
+- Changed latest-image lookup from full recursive list sort to a single-pass scan.
+- Reused the built capture-folder tree instead of reading the same directory tree twice for quick access and `내 PC > 사진`.
+- Changed ViewerWindow refresh/folder loading to run index work on a background task and populate the file list in UI batches.
+- Changed icon-view thumbnails from synchronous binding-converter decoding to background thumbnail properties with limited concurrency.
+- Removed the now-unused thumbnail converter.
+- Added startup argument handling so `MiniCapture.exe <image-path>` opens ViewerWindow with a PNG/JPG/JPEG path while keeping the capture library browser scoped to `Pictures\MiniCapture`.
+- Preserved the left-click radial menu as four capture controls only and kept image viewer entry in the capture button context menu.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- Large-folder/file-argument smoke: launched `MiniCapture.exe <png path>` against a temporary 420-file folder under `Pictures\MiniCapture`; ViewerWindow became available in 1911ms, reported `폴더 로딩 완료: 420개, 131ms`, invoked medium icon view in 42ms and details view in 864ms, then removed the temporary `_perf_smoke_*` folder after confirming the path stayed under the capture root.
+- Capture/viewer regression smoke: UI Automation found the four radial capture buttons, full capture saved `C:\Users\user\Pictures\MiniCapture\2026\07\05\20260705_021751_249.png` at 1,245,184 bytes, result-panel `보기` opened ViewerWindow, save/open/copy-image/copy-path/pen/stroke controls were available, and `CloseMainWindow` returned true while the process stayed alive.
+- Context-menu placement check: `MainWindow.xaml` contains `OpenImageViewerMenuItem` only inside `CaptureButton.ContextMenu`; direct UIA mouse-coordinate right-click was unreliable in the scaled desktop harness, so this check was recorded as static placement plus shared handler-path verification.
+
+### Decisions
+
+- V1 should not directly write PNG/JPG/JPEG registry associations from the app. Microsoft documents file associations as Shell/default-app behavior that controls double-click/open behavior, and recommends proper application registration practices such as versioned ProgIDs and quoted command arguments. Treat this as an installer/default-app packaging slice, not a runtime viewer-performance slice.
+- Startup file arguments are enough code support for the next installer/Open With step: a future command can pass the selected image path as the first argument.
+- File arguments may point outside the capture root for preview, but the browser remains scoped to `Pictures\MiniCapture` so V1 does not become a general file manager.
+
+References:
+
+- https://learn.microsoft.com/en-us/windows/win32/shell/fa-how-work
+- https://learn.microsoft.com/en-us/windows/win32/shell/fa-best-practices
+
+### Follow-ups
+
+- FOLLOW_UP: add installer/registry default-app registration for PNG/JPG/JPEG only if V1 distribution requires Windows Settings/Open With integration.
+- FOLLOW_UP: decide framework-dependent vs self-contained/installer packaging together with extension association.
+- FOLLOW_UP: add thumbnail cancellation/cache eviction only if a concrete release-blocking large-library case appears.

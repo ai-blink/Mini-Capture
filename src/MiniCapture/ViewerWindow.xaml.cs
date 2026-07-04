@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -8,6 +9,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using IOPath = System.IO.Path;
 using WpfBinding = System.Windows.Data.Binding;
 using WpfBrushes = System.Windows.Media.Brushes;
@@ -43,11 +45,18 @@ public partial class ViewerWindow : Window
     private const double MaxZoom = 8.0;
     private const double ZoomStep = 1.25;
     private const int MaxUndoSnapshots = 20;
+    private const int FilePopulateBatchSize = 160;
+
+    private sealed record ViewerIndexSnapshot(
+        ObservableCollection<FolderTreeNode> FolderNodes,
+        string? TargetPath,
+        string TargetFolder);
 
     private readonly ObservableCollection<CaptureImageFile> _files = new();
     private readonly List<WpfPoint> _penPoints = new();
     private readonly Stack<BitmapSource> _redoImages = new();
     private readonly Stack<BitmapSource> _undoImages = new();
+    private CancellationTokenSource? _loadCancellation;
     private ObservableCollection<FolderTreeNode> _folderNodes = new();
     private BitmapSource? _editableImage;
     private WpfShape? _previewShape;
@@ -60,6 +69,7 @@ public partial class ViewerWindow : Window
     private bool _isDirty;
     private bool _isDrawing;
     private bool _isLoadingSelection;
+    private bool _isSelectingFolder;
     private bool _isPanning;
     private bool _spacePanActive;
     private WpfPoint _drawStartPoint;
@@ -83,29 +93,58 @@ public partial class ViewerWindow : Window
     public void OpenImage(string? imagePath)
     {
         _pendingPath = imagePath;
-        RefreshIndex();
+        _ = RefreshIndexAsync();
         Activate();
     }
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
+    private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         SetViewMode(ExplorerViewMode.Details);
-        RefreshIndex();
+        await RefreshIndexAsync();
     }
 
-    private void RefreshIndex()
+    protected override void OnClosed(EventArgs e)
     {
-        _folderNodes = CaptureFileIndex.BuildFolderTree();
-        FolderTree.ItemsSource = _folderNodes;
-
-        var targetPath = ResolveTargetPath(_pendingPath);
-        var targetFolder = GetTargetFolder(targetPath);
-        SelectFolderPath(targetFolder);
-        LoadFolder(targetFolder, targetPath);
-        _pendingPath = null;
+        _loadCancellation?.Cancel();
+        _loadCancellation?.Dispose();
+        _loadCancellation = null;
+        base.OnClosed(e);
     }
 
-    private string? ResolveTargetPath(string? requestedPath)
+    private async Task RefreshIndexAsync()
+    {
+        var load = StartNewLoad();
+        var stopwatch = Stopwatch.StartNew();
+        var requestedPath = _pendingPath;
+        _pendingPath = null;
+        SetViewerStatus("캡처 라이브러리를 읽는 중입니다.");
+
+        try
+        {
+            var snapshot = await Task.Run(() => BuildIndexSnapshot(requestedPath), load.Token);
+            if (!IsCurrentLoad(load))
+            {
+                return;
+            }
+
+            _folderNodes = snapshot.FolderNodes;
+            FolderTree.ItemsSource = _folderNodes;
+            SelectFolderPath(snapshot.TargetFolder);
+            await LoadFolderAsync(snapshot.TargetFolder, snapshot.TargetPath, load, stopwatch);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private static ViewerIndexSnapshot BuildIndexSnapshot(string? requestedPath)
+    {
+        var folderNodes = CaptureFileIndex.BuildFolderTree();
+        var targetPath = ResolveTargetPath(requestedPath);
+        return new ViewerIndexSnapshot(folderNodes, targetPath, GetTargetFolder(targetPath));
+    }
+
+    private static string? ResolveTargetPath(string? requestedPath)
     {
         if (CaptureFileIndex.IsImagePath(requestedPath))
         {
@@ -120,7 +159,7 @@ public partial class ViewerWindow : Window
         if (!string.IsNullOrWhiteSpace(targetPath))
         {
             var folder = IOPath.GetDirectoryName(targetPath);
-            if (!string.IsNullOrWhiteSpace(folder))
+            if (!string.IsNullOrWhiteSpace(folder) && CaptureFileIndex.IsUnderRoot(folder))
             {
                 return folder;
             }
@@ -129,25 +168,119 @@ public partial class ViewerWindow : Window
         return CaptureFileIndex.RootDirectory;
     }
 
-    private void LoadFolder(string folderPath, string? preferredPath)
+    private async Task LoadFolderAsync(
+        string folderPath,
+        string? preferredPath,
+        CancellationTokenSource load,
+        Stopwatch? existingStopwatch = null)
     {
+        var stopwatch = existingStopwatch ?? Stopwatch.StartNew();
         _currentFolderPath = folderPath;
         _files.Clear();
-        foreach (var file in CaptureFileIndex.GetImages(folderPath))
+        AddressText.Text = folderPath;
+        FileCountText.Text = "읽는 중...";
+
+        var preferredIsInFolder = false;
+        if (CaptureFileIndex.TryCreateImageFile(preferredPath, out var preferredFile) && preferredFile is not null)
         {
-            _files.Add(file);
+            preferredIsInFolder = string.Equals(preferredFile.FolderPath, folderPath, StringComparison.OrdinalIgnoreCase);
+            LoadImage(preferredFile);
         }
 
-        AddressText.Text = folderPath;
+        IReadOnlyList<CaptureImageFile> files;
+        try
+        {
+            files = await Task.Run(() => CaptureFileIndex.GetImages(folderPath), load.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (!IsCurrentLoad(load))
+        {
+            return;
+        }
+
+        try
+        {
+            await PopulateFilesAsync(files, preferredPath, load.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        if (!IsCurrentLoad(load))
+        {
+            return;
+        }
+
         FileCountText.Text = $"{_files.Count:0}개";
 
-        var selected = FindFile(preferredPath) ?? FindFile(_currentFile?.Path) ?? _files.FirstOrDefault();
-        SelectFile(selected);
+        var selected = preferredIsInFolder
+            ? FindFile(preferredPath) ?? FindFile(_currentFile?.Path) ?? _files.FirstOrDefault()
+            : FindFile(_currentFile?.Path);
 
-        if (selected is null)
+        if (selected is not null)
+        {
+            SelectFile(selected);
+        }
+        else if (_currentFile is null)
+        {
+            SelectFile(_files.FirstOrDefault());
+        }
+        else
+        {
+            _isLoadingSelection = true;
+            FileList.SelectedItem = null;
+            _isLoadingSelection = false;
+            UpdateNavigationButtons();
+        }
+
+        if (_currentFile is null)
         {
             ClearImage("선택한 폴더에 이미지가 없습니다.");
         }
+
+        SetViewerStatus($"폴더 로딩 완료: {_files.Count:0}개, {stopwatch.ElapsedMilliseconds:0}ms");
+    }
+
+    private async Task PopulateFilesAsync(
+        IReadOnlyList<CaptureImageFile> files,
+        string? preferredPath,
+        CancellationToken cancellationToken)
+    {
+        for (var index = 0; index < files.Count; index++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _files.Add(files[index]);
+
+            if ((index + 1) % FilePopulateBatchSize == 0)
+            {
+                FileCountText.Text = $"{index + 1:0}/{files.Count:0}개";
+                await Dispatcher.Yield(DispatcherPriority.Background);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(preferredPath) && FindFile(preferredPath) is { } preferredFile)
+        {
+            _isLoadingSelection = true;
+            FileList.SelectedItem = preferredFile;
+            FileList.ScrollIntoView(preferredFile);
+            _isLoadingSelection = false;
+        }
+    }
+
+    private CancellationTokenSource StartNewLoad()
+    {
+        _loadCancellation?.Cancel();
+        _loadCancellation = new CancellationTokenSource();
+        return _loadCancellation;
+    }
+
+    private bool IsCurrentLoad(CancellationTokenSource load)
+    {
+        return ReferenceEquals(_loadCancellation, load) && !load.IsCancellationRequested;
     }
 
     private CaptureImageFile? FindFile(string? path)
@@ -245,12 +378,18 @@ public partial class ViewerWindow : Window
 
     private void OnFolderTreeSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
+        if (_isSelectingFolder)
+        {
+            return;
+        }
+
         if (e.NewValue is not FolderTreeNode { Path: { } path })
         {
             return;
         }
 
-        LoadFolder(path, null);
+        var load = StartNewLoad();
+        _ = LoadFolderAsync(path, null, load);
     }
 
     private void OnFileSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -312,7 +451,7 @@ public partial class ViewerWindow : Window
     private void OnRefreshClick(object sender, RoutedEventArgs e)
     {
         _pendingPath = _currentFile?.Path;
-        RefreshIndex();
+        _ = RefreshIndexAsync();
     }
 
     private void OnViewModeClick(object sender, RoutedEventArgs e)
@@ -1616,8 +1755,16 @@ public partial class ViewerWindow : Window
 
     private void SelectFolderPath(string folderPath)
     {
-        ClearFolderSelection(_folderNodes);
-        _ = SelectFolderPath(_folderNodes, folderPath);
+        _isSelectingFolder = true;
+        try
+        {
+            ClearFolderSelection(_folderNodes);
+            _ = SelectFolderPath(_folderNodes, folderPath);
+        }
+        finally
+        {
+            _isSelectingFolder = false;
+        }
     }
 
     private static void ClearFolderSelection(IEnumerable<FolderTreeNode> nodes)

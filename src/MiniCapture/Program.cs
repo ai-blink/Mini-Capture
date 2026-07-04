@@ -5,11 +5,11 @@ namespace MiniCapture;
 public static class Program
 {
     [STAThread]
-    public static void Main()
+    public static void Main(string[] args)
     {
         DpiAwarenessApi.TryEnablePerMonitorV2();
 
-        var app = new App();
+        var app = new App(args);
         app.InitializeComponent();
         app.Run();
     }

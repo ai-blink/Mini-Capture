@@ -85,6 +85,12 @@ public partial class MainWindow : Window
         TimerPopup.IsOpen = true;
     }
 
+    private void OnOpenViewerEntryClick(object sender, RoutedEventArgs e)
+    {
+        ClosePopups();
+        OpenInternalViewer(CaptureFileIndex.GetLatestImage()?.Path);
+    }
+
     private void OnTimerDelayClick(object sender, RoutedEventArgs e)
     {
         if (sender is not System.Windows.Controls.Button { Tag: string secondsText } ||
@@ -273,7 +279,7 @@ public partial class MainWindow : Window
     private void SelectMode(CaptureMode mode, bool showStatus)
     {
         _selectedMode = mode;
-        CaptureButton.ToolTip = $"{CaptureModeInfo.DisplayName(mode)} 선택됨. 드래그하면 위치를 옮길 수 있습니다. 우클릭하면 종료할 수 있습니다.";
+        CaptureButton.ToolTip = $"{CaptureModeInfo.DisplayName(mode)} 선택됨. 드래그하면 위치를 옮길 수 있습니다. 우클릭하면 이미지 뷰어와 종료 메뉴를 열 수 있습니다.";
         AutomationProperties.SetName(CaptureButton, $"{CaptureModeInfo.DisplayName(mode)} 모드 선택됨");
         StatusText.Text = CaptureModeInfo.PlaceholderStatus(mode);
         StatusText.Foreground = WpfBrushes.White;
@@ -514,7 +520,7 @@ public partial class MainWindow : Window
         ResultPopup.IsOpen = false;
     }
 
-    private void OpenInternalViewer(string path)
+    private void OpenInternalViewer(string? path)
     {
         if (_viewerWindow is null || !_viewerWindow.IsVisible)
         {
@@ -525,5 +531,10 @@ public partial class MainWindow : Window
         }
 
         _viewerWindow.OpenImage(path);
+    }
+
+    public void OpenViewer(string? path)
+    {
+        OpenInternalViewer(path);
     }
 }

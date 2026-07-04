@@ -16,8 +16,6 @@
         KeyDown="OnKeyDown"
         KeyUp="OnKeyUp">
     <Window.Resources>
-        <local:ThumbnailImageConverter x:Key="ThumbnailConverter" />
-
         <SolidColorBrush x:Key="ViewerWindowBackgroundBrush" Color="#121414" />
         <SolidColorBrush x:Key="ViewerToolbarBackgroundBrush" Color="#1A1C1C" />
         <SolidColorBrush x:Key="ViewerToolbarGroupBrush" Color="#1E2020" />
@@ -225,7 +223,7 @@
                             BorderBrush="{StaticResource ViewerMutedBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="3">
-                        <Image Source="{Binding Converter={StaticResource ThumbnailConverter}, ConverterParameter=64}"
+                        <Image Source="{Binding SmallThumbnail}"
                                Stretch="Uniform" />
                     </Border>
                     <TextBlock Margin="0,5,0,0"
@@ -249,7 +247,7 @@
                             BorderBrush="{StaticResource ViewerMutedBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="3">
-                        <Image Source="{Binding Converter={StaticResource ThumbnailConverter}, ConverterParameter=112}"
+                        <Image Source="{Binding MediumThumbnail}"
                                Stretch="Uniform" />
                     </Border>
                     <TextBlock Margin="0,6,0,0"
@@ -273,7 +271,7 @@
                             BorderBrush="{StaticResource ViewerMutedBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="3">
-                        <Image Source="{Binding Converter={StaticResource ThumbnailConverter}, ConverterParameter=168}"
+                        <Image Source="{Binding LargeThumbnail}"
                                Stretch="Uniform" />
                     </Border>
                     <TextBlock Margin="0,7,0,0"

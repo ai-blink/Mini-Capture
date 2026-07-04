@@ -5,8 +5,19 @@ namespace MiniCapture;
 
 public partial class App : System.Windows.Application
 {
+    private readonly string? _startupImagePath;
     private Forms.NotifyIcon? _trayIcon;
     private MainWindow? _mainWindow;
+
+    public App()
+        : this(Environment.GetCommandLineArgs().Skip(1).ToArray())
+    {
+    }
+
+    public App(string[] args)
+    {
+        _startupImagePath = args.FirstOrDefault(CaptureFileIndex.IsImagePath);
+    }
 
     public bool IsExitRequested { get; private set; }
 
@@ -22,6 +33,11 @@ public partial class App : System.Windows.Application
         _mainWindow = window;
         MainWindow = window;
         window.Show();
+
+        if (_startupImagePath is not null)
+        {
+            Dispatcher.BeginInvoke(() => window.OpenViewer(_startupImagePath));
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)

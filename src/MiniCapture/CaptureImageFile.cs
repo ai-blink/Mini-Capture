@@ -1,13 +1,19 @@
 using System.IO;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace MiniCapture;
 
-public sealed class CaptureImageFile
+public sealed class CaptureImageFile : INotifyPropertyChanged
 {
-    private ImageSource? _thumbnail;
-    private int _thumbnailPixelSize;
+    private static readonly SemaphoreSlim ThumbnailGate = new(2);
+
+    private readonly Dictionary<int, ImageSource?> _thumbnails = new();
+    private readonly HashSet<int> _loadingThumbnailSizes = new();
+    private readonly object _thumbnailLock = new();
 
     public CaptureImageFile(FileInfo file)
     {
@@ -18,6 +24,8 @@ public sealed class CaptureImageFile
         Length = file.Length;
         LastWriteTime = file.LastWriteTime;
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public string Path { get; }
 
@@ -35,13 +43,60 @@ public sealed class CaptureImageFile
 
     public string ModifiedText => LastWriteTime.ToString("yyyy-MM-dd HH:mm");
 
-    public ImageSource? GetThumbnail(int pixelSize)
+    public ImageSource? SmallThumbnail => GetOrQueueThumbnail(64, nameof(SmallThumbnail));
+
+    public ImageSource? MediumThumbnail => GetOrQueueThumbnail(112, nameof(MediumThumbnail));
+
+    public ImageSource? LargeThumbnail => GetOrQueueThumbnail(168, nameof(LargeThumbnail));
+
+    private ImageSource? GetOrQueueThumbnail(int pixelSize, string propertyName)
     {
-        if (_thumbnail is not null && _thumbnailPixelSize == pixelSize)
+        lock (_thumbnailLock)
         {
-            return _thumbnail;
+            if (_thumbnails.TryGetValue(pixelSize, out var thumbnail))
+            {
+                return thumbnail;
+            }
+
+            if (!_loadingThumbnailSizes.Add(pixelSize))
+            {
+                return null;
+            }
         }
 
+        _ = LoadThumbnailAsync(pixelSize, propertyName);
+        return null;
+    }
+
+    private async Task LoadThumbnailAsync(int pixelSize, string propertyName)
+    {
+        ImageSource? thumbnail = null;
+        try
+        {
+            await ThumbnailGate.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                thumbnail = LoadThumbnail(pixelSize);
+            }
+            finally
+            {
+                ThumbnailGate.Release();
+            }
+        }
+        finally
+        {
+            lock (_thumbnailLock)
+            {
+                _thumbnails[pixelSize] = thumbnail;
+                _loadingThumbnailSizes.Remove(pixelSize);
+            }
+
+            RaisePropertyChanged(propertyName);
+        }
+    }
+
+    private ImageSource? LoadThumbnail(int pixelSize)
+    {
         try
         {
             using var stream = File.Open(Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
@@ -52,10 +107,7 @@ public sealed class CaptureImageFile
             image.StreamSource = stream;
             image.EndInit();
             image.Freeze();
-
-            _thumbnail = image;
-            _thumbnailPixelSize = pixelSize;
-            return _thumbnail;
+            return image;
         }
         catch (IOException)
         {
@@ -69,6 +121,20 @@ public sealed class CaptureImageFile
         {
             return null;
         }
+    }
+
+    private void RaisePropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess())
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            return;
+        }
+
+        _ = dispatcher.BeginInvoke(
+            () => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)),
+            DispatcherPriority.Background);
     }
 
     private static string FormatSize(long length)

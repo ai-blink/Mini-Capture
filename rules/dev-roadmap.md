@@ -16,3 +16,4 @@
 | done | TabPaint-inspired viewer toolbar UI | compact icon actions, grouped edit tools, color swatches, inline stroke/text controls, UIA toolbar smoke |
 | done | Dark Screenshot Markup Shell viewer redesign | dark File/View/Markup/Properties ribbon, stronger markup row, capture-root library panes, status/zoom bar, 980x580 UIA/PrintWindow check |
 | done | P4 packaging and release checks | `dotnet build MiniCapture.slnx`, repeated capture smoke, DPI check, framework-dependent `win-x64` publish launch |
+| done | V1 viewer performance and file entry | async folder loading, background thumbnails, PNG/JPG/JPEG file argument opening, 420-file smoke, extension association deferred to installer/registry |

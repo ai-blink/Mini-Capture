@@ -31,7 +31,21 @@ public static class CaptureFileIndex
 
     public static CaptureImageFile? GetLatestImage()
     {
-        return GetImages(RootDirectory).FirstOrDefault();
+        Directory.CreateDirectory(RootDirectory);
+
+        FileInfo? latest = null;
+        foreach (var file in EnumerateImageFiles(RootDirectory))
+        {
+            if (latest is null ||
+                file.LastWriteTime > latest.LastWriteTime ||
+                (file.LastWriteTime == latest.LastWriteTime &&
+                    string.Compare(file.Name, latest.Name, StringComparison.OrdinalIgnoreCase) < 0))
+            {
+                latest = file;
+            }
+        }
+
+        return latest is null ? null : new CaptureImageFile(latest);
     }
 
     public static ObservableCollection<FolderTreeNode> BuildFolderTree()
@@ -41,6 +55,8 @@ public static class CaptureFileIndex
 
         var miniCaptureQuick = BuildDirectoryNode("MiniCapture", root, "캡처 루트");
         miniCaptureQuick.IsExpanded = true;
+        var miniCaptureUnderPictures = CloneNode(miniCaptureQuick);
+        miniCaptureUnderPictures.IsExpanded = true;
 
         var latest = GetLatestImage();
         if (latest is not null && IsUnderRoot(latest.FolderPath))
@@ -53,9 +69,6 @@ public static class CaptureFileIndex
         {
             miniCaptureQuick.Children.Insert(0, new FolderTreeNode("오늘", todayFolder, "\uE787", DateTime.Now.ToString("yyyy-MM-dd")));
         }
-
-        var miniCaptureUnderPictures = BuildDirectoryNode("MiniCapture", root, "캡처 루트");
-        miniCaptureUnderPictures.IsExpanded = true;
 
         var pictures = new FolderTreeNode("사진", null, "\uEB9F");
         pictures.Children.Add(miniCaptureUnderPictures);
@@ -83,6 +96,33 @@ public static class CaptureFileIndex
             File.Exists(path);
     }
 
+    public static bool TryCreateImageFile(string? path, out CaptureImageFile? imageFile)
+    {
+        imageFile = null;
+        if (!IsImagePath(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            imageFile = new CaptureImageFile(new FileInfo(path!));
+            return true;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            return false;
+        }
+    }
+
     public static bool IsUnderRoot(string folderPath)
     {
         var root = EnsureTrailingSeparator(Path.GetFullPath(RootDirectory));
@@ -99,6 +139,21 @@ public static class CaptureFileIndex
         }
 
         return node;
+    }
+
+    private static FolderTreeNode CloneNode(FolderTreeNode source)
+    {
+        var clone = new FolderTreeNode(source.Name, source.Path, source.IconGlyph, source.Detail)
+        {
+            IsExpanded = source.IsExpanded
+        };
+
+        foreach (var child in source.Children)
+        {
+            clone.Children.Add(CloneNode(child));
+        }
+
+        return clone;
     }
 
     private static string? NormalizeFolder(string? folderPath)

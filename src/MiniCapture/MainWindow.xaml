@@ -78,7 +78,7 @@
                 PreviewMouseLeftButtonDown="OnCaptureButtonPreviewMouseLeftButtonDown"
                 PreviewMouseLeftButtonUp="OnCaptureButtonPreviewMouseLeftButtonUp"
                 PreviewMouseMove="OnCaptureButtonPreviewMouseMove"
-                ToolTip="캡처 메뉴 열기. 드래그하면 위치를 옮길 수 있습니다. 우클릭하면 종료할 수 있습니다.">
+                ToolTip="캡처 메뉴 열기. 드래그하면 위치를 옮길 수 있습니다. 우클릭하면 이미지 뷰어와 종료 메뉴를 열 수 있습니다.">
             <Button.Resources>
                 <Style TargetType="Border">
                     <Setter Property="CornerRadius" Value="29" />
@@ -86,6 +86,10 @@
             </Button.Resources>
             <Button.ContextMenu>
                 <ContextMenu>
+                    <MenuItem Header="이미지 뷰어"
+                              AutomationProperties.AutomationId="OpenImageViewerMenuItem"
+                              Click="OnOpenViewerEntryClick" />
+                    <Separator />
                     <MenuItem Header="종료"
                               AutomationProperties.AutomationId="ExitMenuItem"
                               Click="OnExitClick" />

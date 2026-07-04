@@ -19,16 +19,18 @@
 - 2026-07-04: Viewer toolbar UI was reorganized around TabPaint-style compact icon actions, grouped edit tools, color swatches, and inline stroke/text controls.
 - 2026-07-04: ViewerWindow was redesigned as a Dark Screenshot Markup Shell with dark File/View/Markup/Properties command groups, a stronger markup row, capture-root library panes, dotted canvas workspace, and reinforced status/zoom metadata.
 - 2026-07-04: P4 hardening and package checks completed with DPI/publish evidence, repeated capture smoke, drag/window/full/timer coverage, viewer regression smoke, and close-to-tray verification.
+- 2026-07-05: Viewer performance and file-argument entry slice completed with async folder loading, background thumbnail decode, optimized latest-image lookup, and PNG/JPG/JPEG command-line image opening.
 
 ## Current Work
 
-- P4 hardening and package checks are complete. Next implementation slice is V1 release-candidate cleanup or manual hardware validation.
+- Viewer performance and file-argument entry cleanup is complete. Next implementation slice is manual hardware validation or installer/default-app packaging, if V1 distribution requires it.
 
 ## Next Actions
 
 - Run a true multi-monitor hardware pass when a multi-display setup is available.
 - Decide later whether V1 needs an installer or self-contained package; the current baseline is a framework-dependent `win-x64` publish folder.
-- Keep Windows.Graphics.Capture and thumbnail cancellation/perf work as hardening follow-ups unless a release blocker appears.
+- If Mini Capture should appear as a Windows default app for PNG/JPG/JPEG, implement that in an installer/registry slice with versioned ProgIDs and quoted `%1` command registration.
+- Keep Windows.Graphics.Capture, protected/accelerated-window coverage, and deeper thumbnail cancellation/cache eviction as hardening follow-ups unless a release blocker appears.
 
 ## Blockers
 
@@ -78,3 +80,7 @@
 - P4 capture path smoke: drag UI saved `20260704_172455_279.png` at `766x505`; window UI saved `20260704_172602_252.png` at `977x569`; timer+full saved `20260704_172303_357.png` at `3840x2160`; region and window engine probes also saved PNGs directly.
 - P4 viewer/tray smoke: internal viewer exposed save/open/copy-image/copy-path/pen/stroke controls after timer capture; `CloseMainWindow` returned true and the app process remained alive.
 - P4 package check: `dotnet publish src\MiniCapture\MiniCapture.csproj -c Release -r win-x64 --self-contained false -o artifacts\publish\MiniCapture-win-x64-framework-dependent` passed, and the published `MiniCapture.exe` launched successfully.
+- Viewer perf/file-arg build: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors.
+- Viewer perf/file-arg smoke: launched `MiniCapture.exe <png path>` against a temporary 420-file capture folder; ViewerWindow became available in 1911ms, reported `폴더 로딩 완료: 420개, 131ms`, invoked medium icon view in 42ms and details view in 864ms, and the temporary `_perf_smoke_*` folder was removed after path-safety verification.
+- Viewer perf/file-arg capture regression: UI Automation found exactly the four radial capture buttons, full capture saved `C:\Users\user\Pictures\MiniCapture\2026\07\05\20260705_021751_249.png`, result-panel `보기` opened ViewerWindow, save/open/copy-image/copy-path/pen/stroke controls were available, and close-to-tray kept the process alive after `CloseMainWindow`.
+- Viewer perf/file-arg static context check: `MainWindow.xaml` keeps `OpenImageViewerMenuItem` only in the capture button context menu while the left-click radial menu exposes only `ModeDragButton`, `ModeWindowButton`, `ModeFullScreenButton`, and `ModeTimerButton`.
