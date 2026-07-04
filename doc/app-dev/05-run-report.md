@@ -479,3 +479,38 @@ References:
 - FOLLOW_UP: add installer/registry default-app registration for PNG/JPG/JPEG only if V1 distribution requires Windows Settings/Open With integration.
 - FOLLOW_UP: decide framework-dependent vs self-contained/installer packaging together with extension association.
 - FOLLOW_UP: add thumbnail cancellation/cache eviction only if a concrete release-blocking large-library case appears.
+
+## Extension Settings V1 Reinforcement
+
+### Finish Line
+
+SettingsWindow extension association UI now has a V1-complete image extension settings surface: category-based current status checks, separate request candidate selection, Windows default-app guidance, executable path copy support, and full association status refresh on a 10-second timer or settings-window activation.
+
+### Changes
+
+- Replaced the simple PNG/JPG/JPEG status list with category groups for 기본 이미지 and 추가 이미지.
+- Added displayed image extensions `.png`, `.jpg`, `.jpeg`, `.bmp`, `.gif`, `.webp`, `.tif`, and `.tiff`.
+- Added disabled current-association checkboxes separate from editable request-candidate checkboxes.
+- Added 전체 선택, 선택 안 함, 새로고침, Windows 기본 앱 열기, and 실행 파일 경로 복사 controls.
+- Added read-only registry status detection for per-extension UserChoice/default ProgID/open command references to Mini Capture.
+- Added 10-second `DispatcherTimer` refresh and `Activated` refresh without registry writes or system default-app mutation.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- UI Automation smoke launched `MiniCapture.exe --settings` and verified category labels, all eight image extensions, separate `현재 연결` and `요청 선택` checks, select/clear/refresh/default-app/copy-path controls, executable path text, and status text.
+- Timer smoke observed status changing from `설정 창 열림: 전체 확장자 연결 상태를 갱신했습니다. 03:16:25` to `10초 자동 갱신: 전체 확장자 연결 상태를 갱신했습니다. 03:16:35`.
+- Regression smoke verified the left-click radial menu still exposes `ModeDragButton`, `ModeWindowButton`, `ModeFullScreenButton`, and `ModeTimerButton`.
+- Close-to-tray smoke verified `CloseMainWindow=True` and the process remained alive until the smoke script cleaned it up.
+
+### Decisions
+
+- V1 reads association state but does not write registry keys or force Windows default-app choices.
+- The request checkboxes are only candidate selection for the user-guided Windows Default Apps/Open With flow.
+- Default-app registration, versioned ProgIDs, and installer/self-contained packaging remain a future packaging slice.
+
+### Follow-ups
+
+- FOLLOW_UP: implement proper installer/default-app registration only if V1 distribution requires Mini Capture to appear directly in Windows default-app choices.
+- FOLLOW_UP: run true multi-monitor hardware validation separately when hardware is available.

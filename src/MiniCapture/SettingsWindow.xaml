@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Mini Capture 설정"
         Width="780"
-        Height="520"
+        Height="620"
         MinWidth="720"
-        MinHeight="460"
+        MinHeight="560"
         Background="#121414"
         FontFamily="Segoe UI"
         ShowInTaskbar="True"
@@ -29,6 +29,12 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="{StaticResource SettingsTextBrush}" />
             <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style x:Key="ExtensionCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource SettingsTextBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0" />
         </Style>
 
         <Style x:Key="SettingsNavItemStyle" TargetType="ListBoxItem">
@@ -122,12 +128,12 @@
                         <TextBlock Margin="0,5,0,0"
                                    FontSize="12"
                                    Foreground="{StaticResource SettingsMutedTextBrush}"
-                                   Text="PNG, JPG, JPEG 파일을 Mini Capture Viewer로 열기" />
+                                   Text="이미지 파일을 Mini Capture Viewer로 열기 위한 현재 상태 확인과 Windows 기본 앱 연결 안내" />
                     </StackPanel>
 
                     <Border Grid.Row="1"
-                            Margin="0,18,0,16"
-                            Padding="14"
+                            Margin="0,18,0,12"
+                            Padding="14,12"
                             Background="{StaticResource SettingsPanelAltBrush}"
                             BorderBrush="{StaticResource SettingsBorderBrush}"
                             BorderThickness="1"
@@ -136,83 +142,166 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="84" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="148" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Grid.Row="0"
                                        Grid.Column="0"
+                                       FontWeight="SemiBold"
                                        Foreground="{StaticResource SettingsTextBrush}"
-                                       Text=".png" />
-                            <TextBlock Grid.Row="0"
-                                       Grid.Column="1"
-                                       Foreground="{StaticResource SettingsMutedTextBrush}"
-                                       Text="Portable Network Graphics" />
-                            <TextBlock Grid.Row="0"
-                                       Grid.Column="2"
-                                       Foreground="#5EEAD4"
-                                       Text="파일 인자 지원" />
-
+                                       Text="연결 상태" />
                             <TextBlock Grid.Row="1"
                                        Grid.Column="0"
-                                       Margin="0,12,0,0"
-                                       Foreground="{StaticResource SettingsTextBrush}"
-                                       Text=".jpg" />
-                            <TextBlock Grid.Row="1"
-                                       Grid.Column="1"
-                                       Margin="0,12,0,0"
+                                       Margin="0,6,20,0"
+                                       FontSize="12"
                                        Foreground="{StaticResource SettingsMutedTextBrush}"
-                                       Text="JPEG Image" />
-                            <TextBlock Grid.Row="1"
-                                       Grid.Column="2"
-                                       Margin="0,12,0,0"
-                                       Foreground="#5EEAD4"
-                                       Text="파일 인자 지원" />
-
-                            <TextBlock Grid.Row="2"
-                                       Grid.Column="0"
-                                       Margin="0,12,0,0"
-                                       Foreground="{StaticResource SettingsTextBrush}"
-                                       Text=".jpeg" />
-                            <TextBlock Grid.Row="2"
+                                       TextWrapping="Wrap"
+                                       Text="왼쪽 체크는 현재 Windows 연결 상태 표시, 오른쪽 체크는 Windows 기본 앱 화면에서 바꿀 후보 선택입니다. 앱은 기본 연결을 직접 강제 변경하지 않습니다." />
+                            <TextBlock Grid.Row="0"
+                                       Grid.RowSpan="2"
                                        Grid.Column="1"
-                                       Margin="0,12,0,0"
-                                       Foreground="{StaticResource SettingsMutedTextBrush}"
-                                       Text="JPEG Image" />
-                            <TextBlock Grid.Row="2"
-                                       Grid.Column="2"
-                                       Margin="0,12,0,0"
+                                       x:Name="AssociationSummaryText"
+                                       AutomationProperties.AutomationId="AssociationSummaryText"
+                                       VerticalAlignment="Center"
+                                       FontSize="12"
                                        Foreground="#5EEAD4"
-                                       Text="파일 인자 지원" />
+                                       Text="확인 대기" />
                         </Grid>
                     </Border>
 
                     <Grid Grid.Row="2">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Row="0"
-                                    Orientation="Horizontal">
+                        <ScrollViewer Grid.Row="0"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl x:Name="ExtensionGroupsList"
+                                          AutomationProperties.AutomationId="ExtensionGroupsList"
+                                          ItemsSource="{Binding ExtensionGroups}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,0,0,12"
+                                                Padding="14"
+                                                Background="{StaticResource SettingsPanelBrush}"
+                                                BorderBrush="{StaticResource SettingsBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="6">
+                                            <StackPanel>
+                                                <DockPanel LastChildFill="True">
+                                                    <TextBlock DockPanel.Dock="Left"
+                                                               FontSize="15"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{StaticResource SettingsTextBrush}"
+                                                               Text="{Binding Name}" />
+                                                    <TextBlock Margin="10,2,0,0"
+                                                               FontSize="12"
+                                                               Foreground="{StaticResource SettingsMutedTextBrush}"
+                                                               Text="{Binding Description}" />
+                                                </DockPanel>
+
+                                                <Grid Margin="0,12,0,5">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="86" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="108" />
+                                                        <ColumnDefinition Width="108" />
+                                                        <ColumnDefinition Width="140" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="확장자" />
+                                                    <TextBlock Grid.Column="1" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="형식" />
+                                                    <TextBlock Grid.Column="2" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="현재 연결" />
+                                                    <TextBlock Grid.Column="3" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="요청 선택" />
+                                                    <TextBlock Grid.Column="4" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="Windows 상태" />
+                                                </Grid>
+
+                                                <ItemsControl ItemsSource="{Binding Extensions}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid MinHeight="34">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="86" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="108" />
+                                                                    <ColumnDefinition Width="108" />
+                                                                    <ColumnDefinition Width="140" />
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0"
+                                                                           VerticalAlignment="Center"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="{StaticResource SettingsTextBrush}"
+                                                                           Text="{Binding Extension}" />
+                                                                <TextBlock Grid.Column="1"
+                                                                           Margin="0,0,12,0"
+                                                                           VerticalAlignment="Center"
+                                                                           Foreground="{StaticResource SettingsMutedTextBrush}"
+                                                                           Text="{Binding DisplayName}"
+                                                                           TextTrimming="CharacterEllipsis" />
+                                                                <CheckBox Grid.Column="2"
+                                                                          AutomationProperties.Name="{Binding CurrentStateAutomationName}"
+                                                                          IsChecked="{Binding IsAssociated, Mode=OneWay}"
+                                                                          IsEnabled="False"
+                                                                          Style="{StaticResource ExtensionCheckBoxStyle}" />
+                                                                <CheckBox Grid.Column="3"
+                                                                          AutomationProperties.Name="{Binding CandidateAutomationName}"
+                                                                          IsChecked="{Binding IsSelected}"
+                                                                          Style="{StaticResource ExtensionCheckBoxStyle}" />
+                                                                <TextBlock Grid.Column="4"
+                                                                           VerticalAlignment="Center"
+                                                                           FontSize="12"
+                                                                           Foreground="{Binding StatusBrush}"
+                                                                           Text="{Binding StatusText}"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           ToolTip="{Binding StatusDetail}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <WrapPanel Grid.Row="1"
+                                   Margin="0,2,0,0">
+                            <Button AutomationProperties.AutomationId="SelectAllExtensionCandidatesButton"
+                                    Click="OnSelectAllClick"
+                                    Content="전체 선택"
+                                    Margin="0,0,10,10"
+                                    Style="{StaticResource SettingsButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ClearExtensionCandidatesButton"
+                                    Click="OnClearSelectionClick"
+                                    Content="선택 안 함"
+                                    Margin="0,0,10,10"
+                                    Style="{StaticResource SettingsButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="RefreshExtensionAssociationsButton"
+                                    Click="OnRefreshAssociationsClick"
+                                    Content="새로고침"
+                                    Margin="0,0,10,10"
+                                    Style="{StaticResource SettingsButtonStyle}" />
                             <Button AutomationProperties.AutomationId="OpenWindowsDefaultAppsButton"
                                     Click="OnOpenDefaultAppsClick"
                                     Content="Windows 기본 앱 열기"
-                                    Margin="0,0,10,0"
+                                    Margin="0,0,10,10"
                                     Style="{StaticResource SettingsButtonStyle}" />
                             <Button AutomationProperties.AutomationId="CopyExecutablePathButton"
                                     Click="OnCopyExecutablePathClick"
                                     Content="실행 파일 경로 복사"
+                                    Margin="0,0,0,10"
                                     Style="{StaticResource SettingsButtonStyle}" />
-                        </StackPanel>
+                        </WrapPanel>
 
-                        <Border Grid.Row="1"
-                                Margin="0,18,0,0"
+                        <Border Grid.Row="2"
+                                Margin="0,8,0,0"
                                 Padding="12,9"
                                 Background="#101213"
                                 BorderBrush="{StaticResource SettingsBorderBrush}"
@@ -225,10 +314,10 @@
                                        TextTrimming="CharacterEllipsis" />
                         </Border>
 
-                        <TextBlock Grid.Row="2"
+                        <TextBlock Grid.Row="3"
                                    x:Name="SettingsStatusText"
                                    AutomationProperties.AutomationId="SettingsStatusText"
-                                   Margin="0,16,0,0"
+                                   Margin="0,12,0,0"
                                    FontSize="12"
                                    Foreground="{StaticResource SettingsMutedTextBrush}" />
                     </Grid>

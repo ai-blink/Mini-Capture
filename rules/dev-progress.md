@@ -21,10 +21,11 @@
 - 2026-07-04: P4 hardening and package checks completed with DPI/publish evidence, repeated capture smoke, drag/window/full/timer coverage, viewer regression smoke, and close-to-tray verification.
 - 2026-07-05: Viewer performance and file-argument entry slice completed with async folder loading, background thumbnail decode, optimized latest-image lookup, and PNG/JPG/JPEG command-line image opening.
 - 2026-07-05: A separate SettingsWindow was added with an extension-association section for PNG/JPG/JPEG, plus floating-button/tray `설정` entry points and a `--settings` startup path; Windows Default Apps settings remain one button inside that settings UI without direct registry mutation.
+- 2026-07-05: SettingsWindow extension association UI was expanded into category-based image extension status/request controls for PNG/JPG/JPEG/BMP/GIF/WEBP/TIF/TIFF, with read-only current association checks, separate request candidate checks, select/clear/refresh actions, 10-second refresh, and Activated refresh.
 
 ## Current Work
 
-- Separate settings UI for extension association is complete. Next implementation slice is manual hardware validation or installer/default-app registration, if V1 distribution requires Mini Capture to appear directly in Windows default-app choices.
+- Category-based settings UI for image extension association status/request handling is complete. Next implementation slice is manual hardware validation or installer/default-app registration, if V1 distribution requires Mini Capture to appear directly in Windows default-app choices.
 
 ## Next Actions
 
@@ -86,3 +87,4 @@
 - Viewer perf/file-arg capture regression: UI Automation found exactly the four radial capture buttons, full capture saved `C:\Users\user\Pictures\MiniCapture\2026\07\05\20260705_021751_249.png`, result-panel `보기` opened ViewerWindow, save/open/copy-image/copy-path/pen/stroke controls were available, and close-to-tray kept the process alive after `CloseMainWindow`.
 - Viewer perf/file-arg static context check: `MainWindow.xaml` keeps `OpenImageViewerMenuItem` only in the capture button context menu while the left-click radial menu exposes only `ModeDragButton`, `ModeWindowButton`, `ModeFullScreenButton`, and `ModeTimerButton`.
 - Settings UI build/smoke: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `MiniCapture.exe --settings` opened the settings UI and UI Automation found the section list, extension section, Windows default-apps button, executable path copy button, executable path text, and status text.
+- Extension association settings V1 build/smoke: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `git diff --check` passed with CRLF conversion warnings only; UI Automation verified `MiniCapture.exe --settings`, category labels `기본 이미지`/`추가 이미지`, extensions `.png/.jpg/.jpeg/.bmp/.gif/.webp/.tif/.tiff`, separate `현재 연결` and `요청 선택` checks, select/clear/refresh/default-app/copy-path buttons, 10-second automatic refresh status, four radial capture buttons, and close-to-tray behavior.
