@@ -8,9 +8,12 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <StartupObject>MiniCapture.Program</StartupObject>
+    <ApplicationIcon>Assets\App\MiniCapture.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\App\MiniCapture.ico" />
+    <Resource Include="Assets\App\MiniCapture.png" />
     <Resource Include="Assets\Toolbar\*.png" />
   </ItemGroup>
 

@@ -62,6 +62,74 @@ public static class WindowPickerService
         return SmallestArea(windowCandidates) ?? SmallestArea(fullScreenCandidates);
     }
 
+    public static IReadOnlyList<WindowCaptureTarget> GetSelectableTargetsInZOrder(int currentProcessId)
+    {
+        var targets = new List<WindowCaptureTarget>();
+        foreach (var hwnd in NativeWindowApi.EnumerateTopLevelWindows())
+        {
+            if (!TryCreateTarget(hwnd, currentProcessId, out var target))
+            {
+                continue;
+            }
+
+            targets.Add(target);
+        }
+
+        return targets;
+    }
+
+    public static WindowCaptureTarget? FindTargetAt(Point screenPoint, IReadOnlyList<WindowCaptureTarget> targets)
+    {
+        var virtualBounds = ScreenCaptureService.GetVirtualScreenBounds();
+        WindowCaptureTarget? fullScreenFallback = null;
+
+        foreach (var target in targets)
+        {
+            if (!target.Bounds.Contains(screenPoint))
+            {
+                continue;
+            }
+
+            if (CoversMostOfVirtualScreen(target.Bounds, virtualBounds))
+            {
+                fullScreenFallback ??= target;
+                continue;
+            }
+
+            return target;
+        }
+
+        return fullScreenFallback;
+    }
+
+    private static bool TryCreateTarget(IntPtr hwnd, int currentProcessId, out WindowCaptureTarget target)
+    {
+        target = default;
+        if (!IsCandidate(hwnd, currentProcessId))
+        {
+            return false;
+        }
+
+        if (!NativeWindowApi.TryGetVisibleBounds(hwnd, out var bounds))
+        {
+            return false;
+        }
+
+        if (bounds.Width < 24 || bounds.Height < 24)
+        {
+            return false;
+        }
+
+        var title = NativeWindowApi.GetTitle(hwnd);
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            title = NativeWindowApi.GetClassName(hwnd);
+        }
+
+        target = new WindowCaptureTarget(hwnd, bounds, title);
+        return true;
+    }
+
     private static bool IsCandidate(IntPtr hwnd, int currentProcessId)
     {
         if (!NativeWindowApi.IsVisible(hwnd))

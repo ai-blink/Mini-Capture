@@ -32,6 +32,41 @@ public static class ScreenCaptureService
         return filePath;
     }
 
+    public static ScreenCaptureSnapshot CaptureSnapshot()
+    {
+        var bounds = GetVirtualScreenBounds();
+        var bitmap = new Bitmap(bounds.Width, bounds.Height, PixelFormat.Format32bppArgb);
+        using var graphics = Graphics.FromImage(bitmap);
+        graphics.CopyFromScreen(bounds.Left, bounds.Top, 0, 0, bounds.Size, CopyPixelOperation.SourceCopy);
+        return new ScreenCaptureSnapshot(bounds, bitmap);
+    }
+
+    public static string SaveSnapshotRegion(ScreenCaptureSnapshot snapshot, Rectangle region)
+    {
+        var clipped = Rectangle.Intersect(region, snapshot.Bounds);
+        if (clipped.Width <= 0 || clipped.Height <= 0)
+        {
+            throw new InvalidOperationException("캡처 영역이 정지 화면 밖에 있습니다.");
+        }
+
+        var sourceRegion = new Rectangle(
+            clipped.Left - snapshot.Bounds.Left,
+            clipped.Top - snapshot.Bounds.Top,
+            clipped.Width,
+            clipped.Height);
+
+        var filePath = CreateCapturePath(DateTime.Now);
+        using var bitmap = new Bitmap(clipped.Width, clipped.Height, PixelFormat.Format32bppArgb);
+        using var graphics = Graphics.FromImage(bitmap);
+        graphics.DrawImage(
+            snapshot.Bitmap,
+            new Rectangle(0, 0, clipped.Width, clipped.Height),
+            sourceRegion,
+            GraphicsUnit.Pixel);
+        bitmap.Save(filePath, ImageFormat.Png);
+        return filePath;
+    }
+
     public static Rectangle GetVirtualScreenBounds()
     {
         var screens = FormsScreen.AllScreens;

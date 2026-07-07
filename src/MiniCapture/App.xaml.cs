@@ -1,5 +1,7 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Threading;
+using Drawing = System.Drawing;
 using Forms = System.Windows.Forms;
 
 namespace MiniCapture;
@@ -81,12 +83,39 @@ public partial class App : System.Windows.Application
     {
         _trayIcon = new Forms.NotifyIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = LoadTrayIcon(),
             Text = "Mini Capture",
             Visible = true,
             ContextMenuStrip = BuildTrayMenu()
         };
         _trayIcon.DoubleClick += (_, _) => Dispatcher.Invoke(ShowCaptureWindow);
+    }
+
+    private static Drawing.Icon LoadTrayIcon()
+    {
+        try
+        {
+            var resource = GetResourceStream(new Uri("pack://application:,,,/Assets/App/MiniCapture.ico", UriKind.Absolute));
+            if (resource?.Stream is not null)
+            {
+                using var icon = new Drawing.Icon(resource.Stream);
+                return (Drawing.Icon)icon.Clone();
+            }
+        }
+        catch (ArgumentException)
+        {
+        }
+        catch (IOException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (NotSupportedException)
+        {
+        }
+
+        return Drawing.SystemIcons.Application;
     }
 
     private Forms.ContextMenuStrip BuildTrayMenu()

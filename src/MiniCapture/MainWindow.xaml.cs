@@ -510,6 +510,7 @@ public partial class MainWindow : Window
         ModePopup.IsOpen = false;
         TimerPopup.IsOpen = false;
 
+        ScreenCaptureSnapshot? frozenSnapshot = null;
         if (_captureDelaySeconds > 0)
         {
             if (!await RunCountdownIfNeededAsync())
@@ -517,23 +518,38 @@ public partial class MainWindow : Window
                 return null;
             }
 
-            ShowStatus("캡처할 영역을 드래그하세요. Esc로 취소할 수 있습니다.");
+            ShowStatus("타이머 시점 화면을 고정합니다.");
+            Hide();
+            await Task.Delay(180);
+            frozenSnapshot = ScreenCaptureService.CaptureSnapshot();
+            ShowStatus("정지 화면에서 캡처할 영역을 드래그하세요. Esc로 취소할 수 있습니다.");
+        }
+        else
+        {
+            Hide();
         }
 
-        Hide();
-
-        var overlay = new RegionCaptureOverlay
+        try
         {
-            Owner = null
-        };
+            var overlay = frozenSnapshot is null
+                ? new RegionCaptureOverlay()
+                : new RegionCaptureOverlay(frozenSnapshot.CreatePreviewSource());
+            overlay.Owner = null;
 
-        var accepted = overlay.ShowDialog() == true;
-        if (!accepted || overlay.SelectedRegion is not { } region)
-        {
-            return null;
+            var accepted = overlay.ShowDialog() == true;
+            if (!accepted || overlay.SelectedRegion is not { } region)
+            {
+                return null;
+            }
+
+            return frozenSnapshot is null
+                ? ScreenCaptureService.CaptureRegion(region)
+                : ScreenCaptureService.SaveSnapshotRegion(frozenSnapshot, region);
         }
-
-        return ScreenCaptureService.CaptureRegion(region);
+        finally
+        {
+            frozenSnapshot?.Dispose();
+        }
     }
 
     private async Task<string?> CaptureWindowAsync()
@@ -549,15 +565,40 @@ public partial class MainWindow : Window
         ShowStatus("캡처할 창 위에 마우스를 올리고 클릭하세요. Esc로 취소할 수 있습니다.");
         Hide();
 
-        var overlay = new WindowPickerOverlay();
-        var accepted = overlay.ShowDialog() == true;
-        if (!accepted || overlay.SelectedTarget is not { } target)
+        ScreenCaptureSnapshot? frozenSnapshot = null;
+        IReadOnlyList<WindowCaptureTarget>? frozenTargets = null;
+        if (_captureDelaySeconds > 0)
         {
-            return null;
+            await Task.Delay(180);
+            frozenTargets = WindowPickerService.GetSelectableTargetsInZOrder(Environment.ProcessId);
+            frozenSnapshot = ScreenCaptureService.CaptureSnapshot();
+            ShowStatus("정지 화면에서 캡처할 창을 클릭하세요. Esc로 취소할 수 있습니다.");
         }
 
-        await Task.Delay(180);
-        return ScreenCaptureService.CaptureWindow(target);
+        try
+        {
+            var overlay = frozenSnapshot is null || frozenTargets is null
+                ? new WindowPickerOverlay()
+                : new WindowPickerOverlay(frozenSnapshot.CreatePreviewSource(), frozenTargets);
+
+            var accepted = overlay.ShowDialog() == true;
+            if (!accepted || overlay.SelectedTarget is not { } target)
+            {
+                return null;
+            }
+
+            if (frozenSnapshot is not null)
+            {
+                return ScreenCaptureService.SaveSnapshotRegion(frozenSnapshot, target.Bounds);
+            }
+
+            await Task.Delay(180);
+            return ScreenCaptureService.CaptureWindow(target);
+        }
+        finally
+        {
+            frozenSnapshot?.Dispose();
+        }
     }
 
     private async Task<bool> RunCountdownIfNeededAsync(int? delaySeconds = null)

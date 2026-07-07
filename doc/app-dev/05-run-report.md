@@ -773,3 +773,80 @@ The floating capture UI exclusion is now configurable, and the main quick button
 - `git diff --check`: passed with CRLF conversion warnings only.
 - Static check found the setting and handlers in `MainWindow`, `SettingsWindow`, `NativeWindowApi`, `RegionCaptureOverlay`, and `WindowPickerOverlay`.
 - UI Automation `--settings` smoke did not find the settings window in this harness; the launched process exposed only the main `Mini Capture` window. Treat manual settings-window validation as a follow-up if needed.
+
+## 3D App Icon
+
+### Finish Line
+
+Mini Capture now has a glossy 3D app icon applied to the executable, main capture window, viewer, settings window, and tray icon.
+
+### Changes
+
+- Generated a strict 2x2 3D icon sprite source and selected the glossy capture-lens candidate.
+- Normalized the selected candidate into `Assets/App/MiniCapture.png` and a multi-frame `Assets/App/MiniCapture.ico`.
+- Set the WPF executable `ApplicationIcon`, embedded the app icon assets as resources, and loaded the same icon for the Windows Forms tray icon with a default icon fallback.
+- Added WPF window icon references for the floating capture window, viewer, and settings window.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- PNG alpha validation: 256x256 RGBA, corner alpha `[0, 0, 0, 0]`, visible bbox `(23, 21, 239, 239)`.
+- ICO header validation: 16, 20, 24, 32, 48, 64, 128, and 256px frames are present.
+- Dark background previews at 20, 24, 32, 48, and 64px remain recognizable.
+
+### Decisions
+
+- Kept the generated source and split candidates under `artifacts/icon-sprite/20260708-app-icon-3d/` for traceability.
+- Did not touch installer/default-app association behavior in this slice.
+
+## Region Capture Mouse Release Recovery
+
+### Finish Line
+
+Region capture is back on the initial working interaction model: a full-screen WPF selection overlay captures mouse input directly, and releasing the left mouse button completes the capture when the selected area is large enough. Esc remains the explicit cancel path.
+
+### Changes
+
+- Replaced the small hint-window/global-hook region selection path with the initial full-screen WPF overlay path.
+- Restored `Mouse.Capture`, `MouseLeftButtonDown`, `MouseMove`, and `MouseLeftButtonUp` as the region selection input contract.
+- Kept DPI-aware device/DIP conversion and the existing capture UI exclusion call.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-region-initial-path\`: passed with 0 warnings and 0 errors.
+- UI Automation/mouse smoke invoked region capture, confirmed the overlay covered the full virtual screen, dragged a region, released the left mouse button, and saved `C:\Users\user\Pictures\MiniCapture\2026\07\08\20260708_042410_255.png`.
+- `git diff --check`: passed with CRLF conversion warnings only.
+
+### Decisions
+
+- Prioritized the initial proven interaction over the overlay-free global-hook path because the global-hook path could leave the hint visible and miss completion on left-button release.
+- Kept the fix scoped to region overlay selection handling; capture saving, hotkeys, viewer, and app icon work were not changed.
+
+## Frozen Timer Selection
+
+### Finish Line
+
+Timer-delayed region and window capture now use the timer-expiry screen state as the capture baseline: after countdown, Mini Capture snapshots the virtual screen, shows that frozen image for selection, and saves the selected region/window by cropping the snapshot.
+
+### Changes
+
+- Added `ScreenCaptureSnapshot` and `ScreenCaptureService.SaveSnapshotRegion(...)` for crop-from-frozen-bitmap saving.
+- Changed delayed region capture to create a virtual-screen snapshot after countdown and let the user drag on the frozen preview.
+- Changed delayed window capture to capture visible top-level window metadata around the timer-expiry point, select against that stored metadata, and save by cropping the frozen bitmap.
+- Kept non-delayed region/window capture on the existing live `CopyFromScreen` paths.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+
+### Decisions
+
+- Timer expiry is the capture baseline for delayed region/window selection.
+- Delayed window selection uses frozen bounds/title metadata instead of live HWND hit-testing after the countdown.
+- A separate "select a window first, then capture that HWND after a delay" mode remains out of V1 unless manual use shows it is needed.
+
+### Follow-ups
+
+- FOLLOW_UP: manually validate frozen timer region/window behavior on the target hardware, especially multi-monitor and DPI-scaled setups.
+- FOLLOW_UP: consider a separate preselected-window delayed capture mode only if users need delayed capture of a specific live HWND instead of crop-from-frozen-screen behavior.
