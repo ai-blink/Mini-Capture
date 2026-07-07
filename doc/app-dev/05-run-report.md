@@ -850,3 +850,33 @@ Timer-delayed region and window capture now use the timer-expiry screen state as
 
 - FOLLOW_UP: manually validate frozen timer region/window behavior on the target hardware, especially multi-monitor and DPI-scaled setups.
 - FOLLOW_UP: consider a separate preselected-window delayed capture mode only if users need delayed capture of a specific live HWND instead of crop-from-frozen-screen behavior.
+
+## Window Picker Frontmost Selection Fix
+
+### Finish Line
+
+Window capture selection now prefers the frontmost selectable window under the cursor instead of choosing the smallest overlapping window behind it.
+
+### Changes
+
+- Replaced the live window picker area-sort path with the same Z-order candidate selection contract used by frozen timer window metadata.
+- Removed the generic full-screen deferral heuristic so a real large, maximized, or full-screen foreground window can be selected first.
+- Kept existing minimized, cloaked, tiny, app-owned, shell, and known helper-window filters.
+- Added a no-package regression harness for the pure target-selection logic.
+
+### Verification
+
+- Initial `dotnet build MiniCapture.slnx` and test run against the default Debug output were blocked by the currently running `MiniCapture` process locking `bin/obj` files.
+- Follow-up `dotnet build MiniCapture.slnx` against the default Debug output later passed with 0 warnings and 0 errors after the lock cleared.
+- `dotnet build MiniCapture.slnx --artifacts-path artifacts\build-picker-fix -p:UseAppHost=false`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-picker-fix -p:UseAppHost=false`: passed 4 regression cases, including large front window before smaller covered window.
+- `git diff --check`: passed with CRLF conversion warnings only.
+
+### Decisions
+
+- Frontmost visible target wins after explicit filters; unknown full-screen helper overlays are not treated as a generic reason to skip the actual foreground window.
+- Kept the fix scoped to window picking. Region selection, capture saving, viewer, settings, and packaging behavior were not changed.
+
+### Follow-ups
+
+- FOLLOW_UP: manually validate frontmost window picking against the specific app/window that previously would not highlight, plus a maximized-window-over-smaller-window setup.

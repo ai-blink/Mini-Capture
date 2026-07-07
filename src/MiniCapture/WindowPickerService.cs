@@ -4,8 +4,6 @@ namespace MiniCapture;
 
 public static class WindowPickerService
 {
-    private const double FullScreenCoverageThreshold = 0.9;
-
     private static readonly HashSet<string> IgnoredWindowClasses = new(StringComparer.Ordinal)
     {
         "Progman",
@@ -22,44 +20,7 @@ public static class WindowPickerService
 
     public static WindowCaptureTarget? FindTargetAt(Point screenPoint, int currentProcessId)
     {
-        var virtualBounds = ScreenCaptureService.GetVirtualScreenBounds();
-        var fullScreenCandidates = new List<WindowCaptureTarget>();
-        var windowCandidates = new List<WindowCaptureTarget>();
-
-        foreach (var hwnd in NativeWindowApi.EnumerateTopLevelWindows())
-        {
-            if (!IsCandidate(hwnd, currentProcessId))
-            {
-                continue;
-            }
-
-            if (!NativeWindowApi.TryGetVisibleBounds(hwnd, out var bounds) || !bounds.Contains(screenPoint))
-            {
-                continue;
-            }
-
-            if (bounds.Width < 24 || bounds.Height < 24)
-            {
-                continue;
-            }
-
-            var title = NativeWindowApi.GetTitle(hwnd);
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                title = NativeWindowApi.GetClassName(hwnd);
-            }
-
-            var target = new WindowCaptureTarget(hwnd, bounds, title);
-            if (!CoversMostOfVirtualScreen(bounds, virtualBounds))
-            {
-                windowCandidates.Add(target);
-                continue;
-            }
-
-            fullScreenCandidates.Add(target);
-        }
-
-        return SmallestArea(windowCandidates) ?? SmallestArea(fullScreenCandidates);
+        return FindTargetAt(screenPoint, GetSelectableTargetsInZOrder(currentProcessId));
     }
 
     public static IReadOnlyList<WindowCaptureTarget> GetSelectableTargetsInZOrder(int currentProcessId)
@@ -80,9 +41,11 @@ public static class WindowPickerService
 
     public static WindowCaptureTarget? FindTargetAt(Point screenPoint, IReadOnlyList<WindowCaptureTarget> targets)
     {
-        var virtualBounds = ScreenCaptureService.GetVirtualScreenBounds();
-        WindowCaptureTarget? fullScreenFallback = null;
+        return SelectTargetAt(screenPoint, targets);
+    }
 
+    internal static WindowCaptureTarget? SelectTargetAt(Point screenPoint, IEnumerable<WindowCaptureTarget> targets)
+    {
         foreach (var target in targets)
         {
             if (!target.Bounds.Contains(screenPoint))
@@ -90,16 +53,10 @@ public static class WindowPickerService
                 continue;
             }
 
-            if (CoversMostOfVirtualScreen(target.Bounds, virtualBounds))
-            {
-                fullScreenFallback ??= target;
-                continue;
-            }
-
             return target;
         }
 
-        return fullScreenFallback;
+        return null;
     }
 
     private static bool TryCreateTarget(IntPtr hwnd, int currentProcessId, out WindowCaptureTarget target)
@@ -156,21 +113,4 @@ public static class WindowPickerService
         return !IgnoredWindowTitles.Contains(NativeWindowApi.GetTitle(hwnd));
     }
 
-    private static bool CoversMostOfVirtualScreen(Rectangle bounds, Rectangle virtualBounds)
-    {
-        if (virtualBounds.Width <= 0 || virtualBounds.Height <= 0)
-        {
-            return false;
-        }
-
-        return bounds.Width >= virtualBounds.Width * FullScreenCoverageThreshold &&
-            bounds.Height >= virtualBounds.Height * FullScreenCoverageThreshold;
-    }
-
-    private static WindowCaptureTarget? SmallestArea(IReadOnlyList<WindowCaptureTarget> candidates)
-    {
-        return candidates
-            .OrderBy(candidate => candidate.Bounds.Width * candidate.Bounds.Height)
-            .FirstOrDefault();
-    }
 }

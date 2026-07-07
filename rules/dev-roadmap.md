@@ -20,3 +20,4 @@
 | done | Extension settings UI | separate settings window with extension-association section, floating-button/tray `설정` entries, `--settings` smoke, no direct registry mutation |
 | done | Extension settings V1 reinforcement | category-based image extension status/request UI, 10-second and Activated refresh, default-app/copy-path guidance, UIA smoke |
 | done | Viewer layout persistence | viewer window bounds/state, Explorer view mode, and browser pane widths persist through existing `settings.json`; `dotnet build MiniCapture.slnx` |
+| done | Window picker frontmost selection fix | Z-order first matching window selection, large-front-window overlap regression, isolated artifacts build/test |

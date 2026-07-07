@@ -25,10 +25,11 @@
 - 2026-07-05: Viewer editor markup now stays selectable before save: new rectangle/ellipse/pen/arrow/text annotations can be selected, moved, resized, deleted, and exported through save/copy image composition; text annotations use normal WPF text boxes for direct editing.
 - 2026-07-08: Viewer layout persistence added so `ViewerWindow` restores window bounds/state, Explorer view mode, and capture-library/file-list pane widths through the existing local `settings.json`.
 - 2026-07-08: Timer-delayed region/window capture now freezes the timer-expiry virtual-screen bitmap, selects on that frozen preview, and saves by cropping the snapshot with stored window metadata for delayed window selection.
+- 2026-07-08: Window picker frontmost selection fixed: live and frozen window picking now use Z-order first matching target selection instead of area/full-screen heuristics, with a regression harness covering large-front-window overlap.
 
 ## Current Work
 
-- Frozen timer region/window selection is complete within the current V1 scope. Next implementation slice is manual hardware validation or installer/default-app registration, if V1 distribution requires Mini Capture to appear directly in Windows default-app choices.
+- Window picker frontmost selection is complete within the current V1 scope. Next implementation slice is manual hardware validation of the reported hard-to-pick window or installer/default-app registration if distribution requires Mini Capture to appear directly in Windows default-app choices.
 
 ## Next Actions
 
@@ -94,3 +95,4 @@
 - Editable viewer markup build/smoke: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; UI Automation launched `MiniCapture.exe <png path>` and found save/copy-image/select/text/delete/text-input/stroke controls; `git diff --check` passed with CRLF conversion warnings only.
 - Viewer layout persistence build/check: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `git diff --check` passed with CRLF conversion warnings only before the docs-only follow-up.
 - Frozen timer selection build/check: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `git diff --check` passed with CRLF conversion warnings only.
+- Window picker frontmost selection build/check: default Debug output was initially locked by a running `MiniCapture` process, so verification used isolated artifacts paths; later `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors after the lock cleared; `dotnet build MiniCapture.slnx --artifacts-path artifacts\build-picker-fix -p:UseAppHost=false` passed; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-picker-fix -p:UseAppHost=false` passed 4 cases; `git diff --check` passed with CRLF conversion warnings only.

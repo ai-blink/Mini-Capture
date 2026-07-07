@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/MiniCapture/MiniCapture.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MiniCapture.Tests/MiniCapture.Tests.csproj" />
+  </Folder>
 </Solution>
