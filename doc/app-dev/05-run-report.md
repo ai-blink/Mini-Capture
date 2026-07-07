@@ -688,3 +688,27 @@ Each capture shortcut now has its own shortcut list box and matching key-detect 
 - `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-build\`: passed with 0 warnings and 0 errors.
 - `git diff --check`: passed with CRLF conversion warnings only.
 - Default `dotnet build MiniCapture.slnx` was blocked by a running `MiniCapture.exe` process locking `bin\Debug\net8.0-windows\MiniCapture.exe`; the app was not force-closed, and the alternate output build verified compilation.
+
+## Viewer Layout Persistence
+
+### Finish Line
+
+Viewer layout persistence is complete: the internal image viewer restores its previous window size/position/maximized state, Explorer-style file pane view mode, and capture-library/file-list pane widths across viewer reopen and app restart.
+
+### Changes
+
+- Extended `settings.json` storage with viewer window bounds, window state, Explorer view mode, folder-tree width, and file-list width.
+- Restored the saved viewer layout during `ViewerWindow` construction so the first shown frame uses the persisted size and pane layout.
+- Saved viewer layout on close while preserving current settings written by other app surfaces.
+- Guarded window restore against off-screen virtual-screen bounds and clamped saved pane widths to practical limits.
+- Named the folder-tree and file-list `ColumnDefinition` entries so resized pane widths can be captured and restored.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+
+### Decisions
+
+- Viewer layout state reuses the existing Mini Capture local app data `settings.json` instead of adding a second persistence file.
+- This slice does not add a general file-manager layout system, registry/default-app changes, or new viewer/editor features.
