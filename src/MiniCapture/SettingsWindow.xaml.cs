@@ -22,10 +22,7 @@ internal enum SettingsSection
 public partial class SettingsWindow : Window
 {
     private readonly DispatcherTimer _associationRefreshTimer;
-    private readonly DispatcherTimer _hotkeyDetectTimer;
     private MiniCaptureSettings _captureSettings;
-    private CaptureHotkeySettingItem? _detectingHotkey;
-    private DateTime _hotkeyDetectDeadline;
 
     public ObservableCollection<ExtensionCategory> ExtensionGroups { get; } =
     [
@@ -61,7 +58,8 @@ public partial class SettingsWindow : Window
         [
             new(CaptureHotkeyKind.Window, "창 선택"),
             new(CaptureHotkeyKind.Region, "영역 선택"),
-            new(CaptureHotkeyKind.FullScreen, "전체 화면 캡처")
+            new(CaptureHotkeyKind.FullScreen, "전체 화면 캡처"),
+            new(CaptureHotkeyKind.Timer, "타이머 캡처")
         ];
         DataContext = this;
         _captureSettings = MiniCaptureSettingsStore.Load();
@@ -71,12 +69,6 @@ public partial class SettingsWindow : Window
             Interval = TimeSpan.FromSeconds(10)
         };
         _associationRefreshTimer.Tick += (_, _) => RefreshAssociationStates("10초 자동 갱신");
-
-        _hotkeyDetectTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(200)
-        };
-        _hotkeyDetectTimer.Tick += (_, _) => UpdateHotkeyDetectCountdown();
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -97,7 +89,6 @@ public partial class SettingsWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _associationRefreshTimer.Stop();
-        CancelHotkeyDetection("키 감지를 취소했습니다.");
         base.OnClosed(e);
     }
 
@@ -215,8 +206,11 @@ public partial class SettingsWindow : Window
         SetHotkeyTexts(CaptureHotkeyKind.Window, _captureSettings.GetHotkeySlots(CaptureHotkeyKind.Window));
         SetHotkeyTexts(CaptureHotkeyKind.Region, _captureSettings.GetHotkeySlots(CaptureHotkeyKind.Region));
         SetHotkeyTexts(CaptureHotkeyKind.FullScreen, _captureSettings.GetHotkeySlots(CaptureHotkeyKind.FullScreen));
+        SetHotkeyTexts(CaptureHotkeyKind.Timer, _captureSettings.GetHotkeySlots(CaptureHotkeyKind.Timer));
         TimerDelayBox.Text = _captureSettings.TimerDelaySeconds.ToString();
+        ShortcutTimerDelayBox.Text = _captureSettings.ShortcutTimerDelaySeconds.ToString();
         QuickButtonVisibleCheck.IsChecked = _captureSettings.QuickButtonVisible;
+        CaptureUiExcludedCheck.IsChecked = _captureSettings.CaptureUiExcludedFromCapture;
     }
 
     private bool TryBuildCaptureSettings(out MiniCaptureSettings settings, out string error)
@@ -226,7 +220,15 @@ public partial class SettingsWindow : Window
 
         if (!int.TryParse(TimerDelayBox.Text, out var seconds) || seconds < 0 || seconds > 60)
         {
-            error = "타이머 시간은 0부터 60 사이의 초 단위 숫자로 입력하세요.";
+            error = "전역 타이머 시간은 0부터 60 사이의 초 단위 숫자로 입력하세요.";
+            return false;
+        }
+
+        if (!int.TryParse(ShortcutTimerDelayBox.Text, out var shortcutTimerSeconds) ||
+            shortcutTimerSeconds < 1 ||
+            shortcutTimerSeconds > 60)
+        {
+            error = "타이머 단축키 시간은 1부터 60 사이의 초 단위 숫자로 입력하세요.";
             return false;
         }
 
@@ -271,93 +273,40 @@ public partial class SettingsWindow : Window
         settings.SetHotkeySlots(CaptureHotkeyKind.Window, normalizedByKind[CaptureHotkeyKind.Window]);
         settings.SetHotkeySlots(CaptureHotkeyKind.Region, normalizedByKind[CaptureHotkeyKind.Region]);
         settings.SetHotkeySlots(CaptureHotkeyKind.FullScreen, normalizedByKind[CaptureHotkeyKind.FullScreen]);
+        settings.SetHotkeySlots(CaptureHotkeyKind.Timer, normalizedByKind[CaptureHotkeyKind.Timer]);
         settings.TimerDelaySeconds = seconds;
+        settings.ShortcutTimerDelaySeconds = shortcutTimerSeconds;
         settings.QuickButtonVisible = QuickButtonVisibleCheck.IsChecked == true;
+        settings.CaptureUiExcludedFromCapture = CaptureUiExcludedCheck.IsChecked == true;
         return true;
     }
 
-    private void OnDetectHotkeyClick(object sender, RoutedEventArgs e)
+    private void OnDetectKeyPartClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not System.Windows.Controls.Button { Tag: CaptureHotkeySettingItem item })
+        if (sender is not System.Windows.Controls.Button { DataContext: CaptureHotkeySettingItem item, Tag: string partText } ||
+            !Enum.TryParse<CaptureHotkeyPart>(partText, out var part))
         {
             return;
         }
 
-        CancelHotkeyDetection(null);
-        _detectingHotkey = item;
-        _hotkeyDetectDeadline = DateTime.UtcNow.AddSeconds(5);
-        item.StatusText = "5초 안에 단축키를 누르세요.";
         SelectHotkeyList(item);
-        Focus();
-        Keyboard.Focus(this);
-        _hotkeyDetectTimer.Start();
-        SetStatus($"{item.Label} 단축키 감지 중입니다.");
-    }
-
-    private void OnPreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-    {
-        if (_detectingHotkey is not { } item)
+        var dialog = new HotkeyDetectDialog(item.Label, part)
         {
-            return;
-        }
+            Owner = this
+        };
 
-        var key = e.Key == Key.System ? e.SystemKey : e.Key;
-        if (IsModifierKey(key))
+        if (dialog.ShowDialog() != true || string.IsNullOrWhiteSpace(dialog.DetectedValue))
         {
+            item.StatusText = "대기";
+            SetStatus("키 감지를 취소했습니다.");
             e.Handled = true;
             return;
         }
 
-        var modifiers = Keyboard.Modifiers;
-        if (modifiers == ModifierKeys.None)
-        {
-            item.StatusText = "Ctrl, Alt, Shift 중 하나와 함께 누르세요.";
-            e.Handled = true;
-            return;
-        }
-
-        var hotkey = new CaptureHotkey(modifiers, key);
-        item.HotkeyText = hotkey.DisplayText;
+        ApplyDetectedHotkeyPart(item, part, dialog.DetectedValue);
         item.StatusText = "감지 완료";
-        _detectingHotkey = null;
-        _hotkeyDetectTimer.Stop();
-        SetStatus($"{item.Label} 단축키를 {hotkey.DisplayText}(으)로 선택했습니다. 저장을 누르면 적용됩니다.");
+        SetStatus($"{item.Label} {CaptureHotkeyPartDisplayName(part)}을 {dialog.DetectedValue}(으)로 선택했습니다. 저장을 누르면 적용됩니다.");
         e.Handled = true;
-    }
-
-    private void UpdateHotkeyDetectCountdown()
-    {
-        if (_detectingHotkey is not { } item)
-        {
-            _hotkeyDetectTimer.Stop();
-            return;
-        }
-
-        var remaining = (int)Math.Ceiling((_hotkeyDetectDeadline - DateTime.UtcNow).TotalSeconds);
-        if (remaining <= 0)
-        {
-            CancelHotkeyDetection("키 감지 시간이 초과되었습니다.");
-            return;
-        }
-
-        item.StatusText = $"{remaining}초 안에 단축키를 누르세요.";
-        SetStatus($"{item.Label} 단축키 감지 중: {remaining}초 남음");
-    }
-
-    private void CancelHotkeyDetection(string? status)
-    {
-        _hotkeyDetectTimer.Stop();
-        if (_detectingHotkey is not { } item)
-        {
-            return;
-        }
-
-        item.StatusText = "대기";
-        _detectingHotkey = null;
-        if (!string.IsNullOrWhiteSpace(status))
-        {
-            SetStatus(status);
-        }
     }
 
     private void SetHotkeyTexts(CaptureHotkeyKind kind, IReadOnlyList<string> hotkeys)
@@ -383,9 +332,29 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private static bool IsModifierKey(Key key) =>
-        key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt or
-            Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin;
+    private static void ApplyDetectedHotkeyPart(CaptureHotkeySettingItem item, CaptureHotkeyPart part, string value)
+    {
+        switch (part)
+        {
+            case CaptureHotkeyPart.First:
+                item.FirstKey = value;
+                break;
+            case CaptureHotkeyPart.Second:
+                item.SecondKey = value;
+                break;
+            case CaptureHotkeyPart.Main:
+                item.MainKey = value;
+                break;
+        }
+    }
+
+    private static string CaptureHotkeyPartDisplayName(CaptureHotkeyPart part) =>
+        part switch
+        {
+            CaptureHotkeyPart.First => "첫 번째 키",
+            CaptureHotkeyPart.Second => "두 번째 키",
+            _ => "세 번째 키"
+        };
 
     private void SetStatus(string message)
     {
@@ -455,7 +424,15 @@ public enum CaptureHotkeyKind
 {
     Window,
     Region,
-    FullScreen
+    FullScreen,
+    Timer
+}
+
+public enum CaptureHotkeyPart
+{
+    First,
+    Second,
+    Main
 }
 
 public sealed class CaptureHotkeyGroup
@@ -466,9 +443,7 @@ public sealed class CaptureHotkeyGroup
         Label = label;
         Slots =
         [
-            new(kind, $"{label} 조합 1", 1),
-            new(kind, $"{label} 조합 2", 2),
-            new(kind, $"{label} 조합 3", 3)
+            new(kind, label, 1)
         ];
     }
 
@@ -514,13 +489,25 @@ public sealed class CaptureHotkeySettingItem(
 
     public string MainKeyAutomationName => $"{Label} 세 번째 키";
 
-    public string SlotLabel => $"단축키 {SlotNumber}";
+    public string SlotLabel => "단축키";
 
-    public string PlusText => SlotNumber < 3 ? "+" : string.Empty;
+    public string PlusText => string.Empty;
 
     public string ListAutomationId => $"{Kind}HotkeyList{SlotNumber}";
 
     public string DetectAutomationId => $"Detect{Kind}HotkeyButton{SlotNumber}";
+
+    public string DetectFirstKeyAutomationId => $"Detect{Kind}Hotkey{SlotNumber}FirstKeyButton";
+
+    public string DetectSecondKeyAutomationId => $"Detect{Kind}Hotkey{SlotNumber}SecondKeyButton";
+
+    public string DetectMainKeyAutomationId => $"Detect{Kind}Hotkey{SlotNumber}MainKeyButton";
+
+    public string DetectFirstKeyAutomationName => $"{Label} 첫 번째 키 감지";
+
+    public string DetectSecondKeyAutomationName => $"{Label} 두 번째 키 감지";
+
+    public string DetectMainKeyAutomationName => $"{Label} 세 번째 키 감지";
 
     public IReadOnlyList<string> ModifierOptions { get; } =
     [

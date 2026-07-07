@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.ComponentModel;
 using System.Windows.Input;
@@ -27,6 +28,7 @@ public partial class MainWindow : Window
     private ViewerWindow? _viewerWindow;
     private CaptureMode _selectedMode = CaptureMode.Drag;
     private int _captureDelaySeconds;
+    private int _shortcutTimerDelaySeconds;
     private MiniCaptureSettings _settings;
     private CaptureHotkeyManager? _hotkeyManager;
 
@@ -35,6 +37,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         _settings = MiniCaptureSettingsStore.Load();
         _captureDelaySeconds = _settings.TimerDelaySeconds;
+        _shortcutTimerDelaySeconds = _settings.ShortcutTimerDelaySeconds;
         MiniCaptureSettingsStore.SettingsChanged += OnSettingsChanged;
 
         _statusTimer = new DispatcherTimer
@@ -60,7 +63,7 @@ public partial class MainWindow : Window
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
         var helper = new WindowInteropHelper(this);
-        NativeWindowApi.TryExcludeFromCapture(helper.Handle);
+        ApplyCaptureExclusion(helper.Handle);
 
         if (HwndSource.FromHwnd(helper.Handle) is { } source)
         {
@@ -83,6 +86,22 @@ public partial class MainWindow : Window
         }
 
         ToggleModePopup();
+    }
+
+    private void OnOverlayPopupOpened(object? sender, EventArgs e)
+    {
+        if (sender is Popup popup)
+        {
+            ApplyCaptureExclusion(popup);
+        }
+    }
+
+    private void OnCaptureButtonContextMenuOpened(object sender, RoutedEventArgs e)
+    {
+        if (sender is ContextMenu menu)
+        {
+            ApplyCaptureExclusion(menu);
+        }
     }
 
     private async void OnModeButtonClick(object sender, RoutedEventArgs e)
@@ -130,7 +149,7 @@ public partial class MainWindow : Window
         MiniCaptureSettingsStore.Save(_settings);
         ApplyTimerButtonText();
         TimerPopup.IsOpen = false;
-        ShowStatus($"{seconds}초 지연이 설정되었습니다. 영역, 창, 전체 캡처에 적용됩니다.");
+        ShowStatus($"{seconds}초 전역 지연이 설정되었습니다. 영역, 창, 전체 캡처에 적용됩니다.");
     }
 
     private void OnExitClick(object sender, RoutedEventArgs e)
@@ -393,6 +412,7 @@ public partial class MainWindow : Window
             var savedPath = mode switch
             {
                 CaptureMode.Window => await CaptureWindowAsync(),
+                CaptureMode.Timer => await CaptureTimerFullScreenAsync(),
                 CaptureMode.FullScreen => await CaptureFullScreenAsync(),
                 _ => await CaptureDragRegionAsync()
             };
@@ -436,6 +456,12 @@ public partial class MainWindow : Window
     {
         _settings = settings.Clone();
         _captureDelaySeconds = Math.Clamp(_settings.TimerDelaySeconds, 0, 60);
+        _shortcutTimerDelaySeconds = Math.Clamp(_settings.ShortcutTimerDelaySeconds, 1, 60);
+        ApplyCaptureExclusion(new WindowInteropHelper(this).Handle);
+        ApplyCaptureExclusion(ModePopup);
+        ApplyCaptureExclusion(TimerPopup);
+        ApplyCaptureExclusion(StatusPopup);
+        ApplyCaptureExclusion(ResultPopup);
         ApplyTimerButtonText();
         ApplyStoredPosition();
         UpdatePopupPlacement();
@@ -457,6 +483,22 @@ public partial class MainWindow : Window
         }
 
         ShowStatus("전체 화면을 캡처합니다.");
+        Hide();
+        await Task.Delay(180);
+        return ScreenCaptureService.CaptureFullScreen();
+    }
+
+    private async Task<string?> CaptureTimerFullScreenAsync()
+    {
+        ModePopup.IsOpen = false;
+        TimerPopup.IsOpen = false;
+
+        if (!await RunCountdownIfNeededAsync(_shortcutTimerDelaySeconds))
+        {
+            return null;
+        }
+
+        ShowStatus("타이머 전체 화면을 캡처합니다.");
         Hide();
         await Task.Delay(180);
         return ScreenCaptureService.CaptureFullScreen();
@@ -518,9 +560,10 @@ public partial class MainWindow : Window
         return ScreenCaptureService.CaptureWindow(target);
     }
 
-    private async Task<bool> RunCountdownIfNeededAsync()
+    private async Task<bool> RunCountdownIfNeededAsync(int? delaySeconds = null)
     {
-        if (_captureDelaySeconds <= 0)
+        var seconds = delaySeconds ?? _captureDelaySeconds;
+        if (seconds <= 0)
         {
             return true;
         }
@@ -529,7 +572,7 @@ public partial class MainWindow : Window
         StatusPopup.IsOpen = true;
         StatusText.Foreground = WpfBrushes.Red;
 
-        for (var remaining = _captureDelaySeconds; remaining > 0; remaining--)
+        for (var remaining = seconds; remaining > 0; remaining--)
         {
             StatusText.Text = $"{remaining}";
             AutomationProperties.SetName(StatusText, $"{remaining}초 후 캡처");
@@ -657,11 +700,19 @@ public partial class MainWindow : Window
         {
             if (_settingsWindow is null || !_settingsWindow.IsVisible)
             {
+                _hotkeyManager?.Suspend();
                 _settingsWindow = new SettingsWindow
                 {
                     Owner = IsVisible ? this : null
                 };
-                _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+                _settingsWindow.Closed += (_, _) =>
+                {
+                    _settingsWindow = null;
+                    if (_hotkeyManager is not null)
+                    {
+                        ShowStatus(_hotkeyManager.Register(_settings));
+                    }
+                };
                 _settingsWindow.Show();
                 return;
             }
@@ -672,5 +723,31 @@ public partial class MainWindow : Window
         {
             ShowStatus($"설정을 열 수 없습니다: {ex.Message}");
         }
+    }
+
+    private void ApplyCaptureExclusion(Popup popup)
+    {
+        if (popup.Child is not { } child)
+        {
+            return;
+        }
+
+        if (PresentationSource.FromVisual(child) is HwndSource source)
+        {
+            ApplyCaptureExclusion(source.Handle);
+        }
+    }
+
+    private void ApplyCaptureExclusion(ContextMenu menu)
+    {
+        if (PresentationSource.FromVisual(menu) is HwndSource source)
+        {
+            ApplyCaptureExclusion(source.Handle);
+        }
+    }
+
+    private void ApplyCaptureExclusion(IntPtr hwnd)
+    {
+        NativeWindowApi.TrySetCaptureExclusion(hwnd, _settings.CaptureUiExcludedFromCapture);
     }
 }

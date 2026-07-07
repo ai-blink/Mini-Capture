@@ -9,7 +9,11 @@ public sealed class MiniCaptureSettings
 {
     public int TimerDelaySeconds { get; set; }
 
+    public int ShortcutTimerDelaySeconds { get; set; } = 5;
+
     public bool QuickButtonVisible { get; set; } = true;
+
+    public bool CaptureUiExcludedFromCapture { get; set; } = true;
 
     public double? QuickButtonLeft { get; set; }
 
@@ -21,11 +25,15 @@ public sealed class MiniCaptureSettings
 
     public string FullScreenCaptureHotkey { get; set; } = "Ctrl+Alt+F";
 
+    public string TimerCaptureHotkey { get; set; } = "Ctrl+Alt+T";
+
     public List<string> WindowCaptureHotkeys { get; set; } = ["Ctrl+Alt+W", "", ""];
 
     public List<string> RegionCaptureHotkeys { get; set; } = ["Ctrl+Alt+R", "", ""];
 
     public List<string> FullScreenCaptureHotkeys { get; set; } = ["Ctrl+Alt+F", "", ""];
+
+    public List<string> TimerCaptureHotkeys { get; set; } = ["Ctrl+Alt+T", "", ""];
 
     public double? ViewerLeft { get; set; }
 
@@ -43,19 +51,25 @@ public sealed class MiniCaptureSettings
 
     public double? ViewerFileListWidth { get; set; }
 
+    public List<ViewerImageViewState> ViewerImageStates { get; set; } = [];
+
     public MiniCaptureSettings Clone() =>
         new()
         {
             TimerDelaySeconds = TimerDelaySeconds,
+            ShortcutTimerDelaySeconds = ShortcutTimerDelaySeconds,
             QuickButtonVisible = QuickButtonVisible,
+            CaptureUiExcludedFromCapture = CaptureUiExcludedFromCapture,
             QuickButtonLeft = QuickButtonLeft,
             QuickButtonTop = QuickButtonTop,
             WindowCaptureHotkey = WindowCaptureHotkey,
             RegionCaptureHotkey = RegionCaptureHotkey,
             FullScreenCaptureHotkey = FullScreenCaptureHotkey,
+            TimerCaptureHotkey = TimerCaptureHotkey,
             WindowCaptureHotkeys = NormalizeHotkeySlots(WindowCaptureHotkeys, WindowCaptureHotkey).ToList(),
             RegionCaptureHotkeys = NormalizeHotkeySlots(RegionCaptureHotkeys, RegionCaptureHotkey).ToList(),
             FullScreenCaptureHotkeys = NormalizeHotkeySlots(FullScreenCaptureHotkeys, FullScreenCaptureHotkey).ToList(),
+            TimerCaptureHotkeys = NormalizeHotkeySlots(TimerCaptureHotkeys, TimerCaptureHotkey).ToList(),
             ViewerLeft = ViewerLeft,
             ViewerTop = ViewerTop,
             ViewerWidth = ViewerWidth,
@@ -63,7 +77,10 @@ public sealed class MiniCaptureSettings
             ViewerWindowState = ViewerWindowState,
             ViewerExplorerViewMode = ViewerExplorerViewMode,
             ViewerFolderTreeWidth = ViewerFolderTreeWidth,
-            ViewerFileListWidth = ViewerFileListWidth
+            ViewerFileListWidth = ViewerFileListWidth,
+            ViewerImageStates = ViewerImageStates
+                .Select(state => state.Clone())
+                .ToList()
         };
 
     public IReadOnlyList<string> GetHotkeySlots(CaptureHotkeyKind kind) =>
@@ -72,6 +89,7 @@ public sealed class MiniCaptureSettings
             CaptureHotkeyKind.Window => NormalizeHotkeySlots(WindowCaptureHotkeys, WindowCaptureHotkey),
             CaptureHotkeyKind.Region => NormalizeHotkeySlots(RegionCaptureHotkeys, RegionCaptureHotkey),
             CaptureHotkeyKind.FullScreen => NormalizeHotkeySlots(FullScreenCaptureHotkeys, FullScreenCaptureHotkey),
+            CaptureHotkeyKind.Timer => NormalizeHotkeySlots(TimerCaptureHotkeys, TimerCaptureHotkey),
             _ => []
         };
 
@@ -92,6 +110,10 @@ public sealed class MiniCaptureSettings
                 FullScreenCaptureHotkeys = normalized;
                 FullScreenCaptureHotkey = normalized.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
                 break;
+            case CaptureHotkeyKind.Timer:
+                TimerCaptureHotkeys = normalized;
+                TimerCaptureHotkey = normalized.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+                break;
         }
     }
 
@@ -100,7 +122,7 @@ public sealed class MiniCaptureSettings
         var slots = new List<string>();
         if (hotkeys is not null)
         {
-            slots.AddRange(hotkeys.Take(3).Select(value => value ?? string.Empty));
+            slots.AddRange(hotkeys.Take(1).Select(value => value ?? string.Empty));
         }
 
         if (slots.Count == 0 && !string.IsNullOrWhiteSpace(fallback))
@@ -108,13 +130,36 @@ public sealed class MiniCaptureSettings
             slots.Add(fallback);
         }
 
-        while (slots.Count < 3)
+        while (slots.Count < 1)
         {
             slots.Add(string.Empty);
         }
 
         return slots;
     }
+}
+
+public sealed class ViewerImageViewState
+{
+    public string Path { get; set; } = string.Empty;
+
+    public double Zoom { get; set; } = 1.0;
+
+    public bool FitMode { get; set; } = true;
+
+    public double HorizontalOffset { get; set; }
+
+    public double VerticalOffset { get; set; }
+
+    public ViewerImageViewState Clone() =>
+        new()
+        {
+            Path = Path,
+            Zoom = Zoom,
+            FitMode = FitMode,
+            HorizontalOffset = HorizontalOffset,
+            VerticalOffset = VerticalOffset
+        };
 }
 
 public static class MiniCaptureSettingsStore
@@ -140,7 +185,7 @@ public static class MiniCaptureSettingsStore
             }
 
             using var stream = File.OpenRead(SettingsPath);
-            return JsonSerializer.Deserialize<MiniCaptureSettings>(stream, JsonOptions) ?? new MiniCaptureSettings();
+            return NormalizeLoadedSettings(JsonSerializer.Deserialize<MiniCaptureSettings>(stream, JsonOptions) ?? new MiniCaptureSettings());
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
@@ -148,12 +193,43 @@ public static class MiniCaptureSettingsStore
         }
     }
 
-    public static void Save(MiniCaptureSettings settings)
+    public static void Save(MiniCaptureSettings settings, bool notify = true)
     {
         SettingsPathHelper.EnsureAppDataDirectory();
         using var stream = File.Create(SettingsPath);
-        JsonSerializer.Serialize(stream, settings, JsonOptions);
-        SettingsChanged?.Invoke(null, settings.Clone());
+        var normalized = NormalizeLoadedSettings(settings);
+        JsonSerializer.Serialize(stream, normalized, JsonOptions);
+        if (notify)
+        {
+            SettingsChanged?.Invoke(null, normalized.Clone());
+        }
+    }
+
+    private static MiniCaptureSettings NormalizeLoadedSettings(MiniCaptureSettings settings)
+    {
+        if (settings.TimerDelaySeconds < 0)
+        {
+            settings.TimerDelaySeconds = 0;
+        }
+        else if (settings.TimerDelaySeconds > 60)
+        {
+            settings.TimerDelaySeconds = 60;
+        }
+
+        if (settings.ShortcutTimerDelaySeconds <= 0)
+        {
+            settings.ShortcutTimerDelaySeconds = 5;
+        }
+        else if (settings.ShortcutTimerDelaySeconds > 60)
+        {
+            settings.ShortcutTimerDelaySeconds = 60;
+        }
+
+        settings.SetHotkeySlots(CaptureHotkeyKind.Window, settings.GetHotkeySlots(CaptureHotkeyKind.Window));
+        settings.SetHotkeySlots(CaptureHotkeyKind.Region, settings.GetHotkeySlots(CaptureHotkeyKind.Region));
+        settings.SetHotkeySlots(CaptureHotkeyKind.FullScreen, settings.GetHotkeySlots(CaptureHotkeyKind.FullScreen));
+        settings.SetHotkeySlots(CaptureHotkeyKind.Timer, settings.GetHotkeySlots(CaptureHotkeyKind.Timer));
+        return settings;
     }
 }
 

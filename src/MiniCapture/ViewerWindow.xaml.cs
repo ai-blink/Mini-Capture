@@ -59,6 +59,7 @@ public partial class ViewerWindow : Window
     private const double MinStoredViewerWidth = 980;
     private const double MinStoredViewerHeight = 580;
     private const double MaxStoredPanelWidth = 1200;
+    private const int MaxStoredImageViewStates = 200;
 
     private sealed record ViewerIndexSnapshot(
         ObservableCollection<FolderTreeNode> FolderNodes,
@@ -87,6 +88,7 @@ public partial class ViewerWindow : Window
     private readonly List<WpfPoint> _penPoints = new();
     private readonly Stack<BitmapSource> _redoImages = new();
     private readonly Stack<BitmapSource> _undoImages = new();
+    private readonly DispatcherTimer _viewStateSaveTimer;
     private CancellationTokenSource? _loadCancellation;
     private ObservableCollection<FolderTreeNode> _folderNodes = new();
     private BitmapSource? _editableImage;
@@ -107,6 +109,8 @@ public partial class ViewerWindow : Window
     private bool _isPanning;
     private bool _isResizingAnnotation;
     private bool _isMovingAnnotation;
+    private bool _isRestoringImageViewState;
+    private bool _isUpdatingZoomSlider;
     private bool _spacePanActive;
     private WpfPoint _annotationDragStartPoint;
     private WpfRect _annotationStartBounds;
@@ -125,6 +129,11 @@ public partial class ViewerWindow : Window
         InitializeComponent();
         _pendingPath = imagePath;
         FileList.ItemsSource = _files;
+        _viewStateSaveTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(500)
+        };
+        _viewStateSaveTimer.Tick += OnViewStateSaveTimerTick;
         ApplyStoredViewerLayout();
         UpdateToolButtons();
         UpdateColorSwatches();
@@ -144,12 +153,14 @@ public partial class ViewerWindow : Window
 
     protected override void OnClosing(CancelEventArgs e)
     {
+        FlushCurrentImageViewState();
         SaveViewerLayout();
         base.OnClosing(e);
     }
 
     protected override void OnClosed(EventArgs e)
     {
+        _viewStateSaveTimer.Stop();
         _loadCancellation?.Cancel();
         _loadCancellation?.Dispose();
         _loadCancellation = null;
@@ -359,6 +370,12 @@ public partial class ViewerWindow : Window
             return;
         }
 
+        if (_currentFile is not null &&
+            !string.Equals(_currentFile.Path, file.Path, StringComparison.OrdinalIgnoreCase))
+        {
+            FlushCurrentImageViewState();
+        }
+
         try
         {
             using var stream = File.Open(file.Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
@@ -389,6 +406,8 @@ public partial class ViewerWindow : Window
             {
                 ApplyZoom();
             }
+
+            RestoreImageViewState(file.Path);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
         {
@@ -400,6 +419,7 @@ public partial class ViewerWindow : Window
 
     private void ClearImage(string message)
     {
+        FlushCurrentImageViewState();
         _currentFile = null;
         _lastSavedPath = null;
         _editableImage = null;
@@ -419,6 +439,7 @@ public partial class ViewerWindow : Window
         EmptyMessage.Visibility = Visibility.Visible;
         ZoomText.Text = "-";
         StatusZoomText.Text = "-";
+        UpdateZoomSlider(null);
         UpdateNavigationButtons();
         UpdateEditButtons();
     }
@@ -488,6 +509,7 @@ public partial class ViewerWindow : Window
     {
         _fitMode = true;
         FitToStage();
+        ScheduleCurrentImageViewStateSave();
     }
 
     private void OnActualSizeClick(object sender, RoutedEventArgs e)
@@ -779,6 +801,7 @@ public partial class ViewerWindow : Window
             _isPanning = false;
             AnnotationOverlay.ReleaseMouseCapture();
             AnnotationOverlay.Cursor = _editTool == ViewerEditTool.Pan ? WpfCursors.SizeAll : WpfCursors.Cross;
+            ScheduleCurrentImageViewStateSave();
             e.Handled = true;
             return;
         }
@@ -941,6 +964,108 @@ public partial class ViewerWindow : Window
             ? FileListColumn.ActualWidth
             : FileListColumn.Width.Value;
         MiniCaptureSettingsStore.Save(settings);
+    }
+
+    private void OnViewStateSaveTimerTick(object? sender, EventArgs e)
+    {
+        _viewStateSaveTimer.Stop();
+        SaveCurrentImageViewState();
+    }
+
+    private void FlushCurrentImageViewState()
+    {
+        if (_viewStateSaveTimer.IsEnabled)
+        {
+            _viewStateSaveTimer.Stop();
+        }
+
+        SaveCurrentImageViewState();
+    }
+
+    private void ScheduleCurrentImageViewStateSave()
+    {
+        if (_currentFile is null || _editableImage is null || _isRestoringImageViewState)
+        {
+            return;
+        }
+
+        _viewStateSaveTimer.Stop();
+        _viewStateSaveTimer.Start();
+    }
+
+    private void SaveCurrentImageViewState()
+    {
+        if (_currentFile is null || _editableImage is null || _isRestoringImageViewState)
+        {
+            return;
+        }
+
+        var settings = MiniCaptureSettingsStore.Load();
+        var states = settings.ViewerImageStates
+            .Where(state => !string.IsNullOrWhiteSpace(state.Path))
+            .Where(state => !string.Equals(state.Path, _currentFile.Path, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        states.Insert(0, new ViewerImageViewState
+        {
+            Path = _currentFile.Path,
+            Zoom = Math.Clamp(_zoom, MinZoom, MaxZoom),
+            FitMode = _fitMode,
+            HorizontalOffset = Math.Max(0, ImageScrollViewer.HorizontalOffset),
+            VerticalOffset = Math.Max(0, ImageScrollViewer.VerticalOffset)
+        });
+
+        settings.ViewerImageStates = states
+            .Take(MaxStoredImageViewStates)
+            .ToList();
+        MiniCaptureSettingsStore.Save(settings, notify: false);
+    }
+
+    private void RestoreImageViewState(string path)
+    {
+        var state = MiniCaptureSettingsStore.Load().ViewerImageStates
+            .FirstOrDefault(candidate => string.Equals(candidate.Path, path, StringComparison.OrdinalIgnoreCase));
+        if (state is null)
+        {
+            _fitMode = true;
+            FitToStage();
+            return;
+        }
+
+        _isRestoringImageViewState = true;
+        try
+        {
+            _fitMode = state.FitMode;
+            if (_fitMode)
+            {
+                FitToStage();
+            }
+            else
+            {
+                _zoom = Math.Clamp(state.Zoom, MinZoom, MaxZoom);
+                ApplyZoom();
+            }
+
+            Dispatcher.BeginInvoke(
+                DispatcherPriority.Loaded,
+                new Action(() =>
+                {
+                    try
+                    {
+                        ImageScrollViewer.ScrollToHorizontalOffset(Math.Max(0, state.HorizontalOffset));
+                        ImageScrollViewer.ScrollToVerticalOffset(Math.Max(0, state.VerticalOffset));
+                    }
+                    finally
+                    {
+                        _isRestoringImageViewState = false;
+                    }
+                }));
+        }
+        catch
+        {
+            _isRestoringImageViewState = false;
+            throw;
+        }
     }
 
     private static bool IsDefinedViewMode(ExplorerViewMode? mode) =>
@@ -2249,6 +2374,7 @@ public partial class ViewerWindow : Window
         _fitMode = false;
         _zoom = Math.Clamp(zoom, MinZoom, MaxZoom);
         ApplyZoom();
+        ScheduleCurrentImageViewStateSave();
     }
 
     private void FitToStage()
@@ -2304,6 +2430,28 @@ public partial class ViewerWindow : Window
         var zoomText = $"{_zoom * 100:0}%";
         ZoomText.Text = zoomText;
         StatusZoomText.Text = zoomText;
+        UpdateZoomSlider(_zoom);
+    }
+
+    private void UpdateZoomSlider(double? zoom)
+    {
+        if (StatusZoomSlider is null)
+        {
+            return;
+        }
+
+        _isUpdatingZoomSlider = true;
+        try
+        {
+            StatusZoomSlider.IsEnabled = zoom.HasValue;
+            StatusZoomSlider.Value = zoom.HasValue
+                ? Math.Clamp(zoom.Value * 100, MinZoom * 100, MaxZoom * 100)
+                : MinZoom * 100;
+        }
+        finally
+        {
+            _isUpdatingZoomSlider = false;
+        }
     }
 
     private void OnImageStageSizeChanged(object sender, SizeChangedEventArgs e)
@@ -2312,6 +2460,26 @@ public partial class ViewerWindow : Window
         {
             FitToStage();
         }
+    }
+
+    private void OnImageScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        if (Math.Abs(e.HorizontalChange) < 0.1 && Math.Abs(e.VerticalChange) < 0.1)
+        {
+            return;
+        }
+
+        ScheduleCurrentImageViewStateSave();
+    }
+
+    private void OnStatusZoomSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isUpdatingZoomSlider || _editableImage is null)
+        {
+            return;
+        }
+
+        SetZoom(e.NewValue / 100.0);
     }
 
     private void OnImagePreviewMouseWheel(object sender, MouseWheelEventArgs e)

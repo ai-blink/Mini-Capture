@@ -102,6 +102,17 @@
             <Setter Property="HorizontalContentAlignment" Value="Center" />
         </Style>
 
+        <Style x:Key="ZoomIconButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarIconButtonStyle}">
+            <Setter Property="Width" Value="26" />
+            <Setter Property="MinWidth" Value="26" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="MinHeight" Value="26" />
+            <Setter Property="Margin" Value="0,0,3,0" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
         <Style x:Key="ToolGlyphButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarIconButtonStyle}">
             <Setter Property="Width" Value="36" />
             <Setter Property="MinWidth" Value="36" />
@@ -451,12 +462,10 @@
                                     AutomationProperties.Name="축소"
                                     Click="OnZoomOutClick"
                                     Content="−"
-                                    FontFamily="Segoe UI"
-                                    FontWeight="Bold"
                                     ToolTip="축소"
-                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                                    Style="{StaticResource ZoomIconButtonStyle}" />
                             <TextBlock x:Name="ZoomText"
-                                       Width="48"
+                                       Width="42"
                                        VerticalAlignment="Center"
                                        TextAlignment="Center"
                                        FontSize="12"
@@ -465,10 +474,8 @@
                                     AutomationProperties.Name="확대"
                                     Click="OnZoomInClick"
                                     Content="+"
-                                    FontFamily="Segoe UI"
-                                    FontWeight="Bold"
                                     ToolTip="확대"
-                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                                    Style="{StaticResource ZoomIconButtonStyle}" />
                             <Button AutomationProperties.AutomationId="ViewerRefreshButton"
                                     AutomationProperties.Name="새로고침"
                                     Click="OnRefreshClick"
@@ -860,6 +867,7 @@
                               CanContentScroll="False"
                               HorizontalScrollBarVisibility="Auto"
                               PreviewMouseWheel="OnImagePreviewMouseWheel"
+                              ScrollChanged="OnImageScrollChanged"
                               SizeChanged="OnImageStageSizeChanged"
                               VerticalScrollBarVisibility="Auto">
                     <Grid MinWidth="{Binding ActualWidth, ElementName=ImageScrollViewer}"
@@ -925,6 +933,20 @@
                                    Foreground="{StaticResource ViewerMutedTextBrush}"
                                    Text="-" />
                     </Border>
+                    <Slider x:Name="StatusZoomSlider"
+                            Width="128"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            AutomationProperties.AutomationId="ViewerStatusZoomSlider"
+                            AutomationProperties.Name="확대/축소"
+                            IsSnapToTickEnabled="False"
+                            Minimum="10"
+                            Maximum="800"
+                            SmallChange="5"
+                            LargeChange="25"
+                            TickFrequency="25"
+                            ToolTip="확대/축소"
+                            ValueChanged="OnStatusZoomSliderChanged" />
                 </StackPanel>
             </DockPanel>
         </StatusBar>

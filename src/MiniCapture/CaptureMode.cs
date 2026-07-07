@@ -4,7 +4,8 @@ public enum CaptureMode
 {
     Drag,
     Window,
-    FullScreen
+    FullScreen,
+    Timer
 }
 
 public static class CaptureModeInfo
@@ -15,6 +16,7 @@ public static class CaptureModeInfo
         {
             "Window" => CaptureMode.Window,
             "FullScreen" => CaptureMode.FullScreen,
+            "Timer" => CaptureMode.Timer,
             _ => CaptureMode.Drag
         };
     }
@@ -25,6 +27,7 @@ public static class CaptureModeInfo
         {
             CaptureMode.Window => "창 지정",
             CaptureMode.FullScreen => "전체",
+            CaptureMode.Timer => "타이머",
             _ => "드래그"
         };
     }
@@ -35,6 +38,7 @@ public static class CaptureModeInfo
         {
             CaptureMode.Window => "WIN",
             CaptureMode.FullScreen => "ALL",
+            CaptureMode.Timer => "TMR",
             _ => "DRG"
         };
     }
@@ -45,6 +49,7 @@ public static class CaptureModeInfo
         {
             CaptureMode.Window => "창 지정 모드 선택됨. 대상 창을 클릭하면 PNG로 저장합니다.",
             CaptureMode.FullScreen => "전체 모드 선택됨. 전체 화면을 PNG로 저장합니다.",
+            CaptureMode.Timer => "타이머 모드 선택됨. 설정된 지연 후 전체 화면을 PNG로 저장합니다.",
             _ => "드래그 모드 선택됨. 저장할 영역을 드래그하세요."
         };
     }

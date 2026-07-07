@@ -8,6 +8,7 @@ internal static class NativeWindowApi
 {
     private const int DwmwaExtendedFrameBounds = 9;
     private const int DwmwaCloaked = 14;
+    private const uint WdaNone = 0x00000000;
     private const uint WdaExcludeFromCapture = 0x00000011;
 
     public static IReadOnlyList<IntPtr> EnumerateTopLevelWindows()
@@ -87,6 +88,11 @@ internal static class NativeWindowApi
 
     public static bool TryExcludeFromCapture(IntPtr hwnd)
     {
+        return TrySetCaptureExclusion(hwnd, exclude: true);
+    }
+
+    public static bool TrySetCaptureExclusion(IntPtr hwnd, bool exclude)
+    {
         if (hwnd == IntPtr.Zero)
         {
             return false;
@@ -94,7 +100,7 @@ internal static class NativeWindowApi
 
         try
         {
-            return SetWindowDisplayAffinity(hwnd, WdaExcludeFromCapture);
+            return SetWindowDisplayAffinity(hwnd, exclude ? WdaExcludeFromCapture : WdaNone);
         }
         catch (EntryPointNotFoundException)
         {

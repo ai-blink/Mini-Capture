@@ -54,7 +54,9 @@ public partial class WindowPickerOverlay : Window
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
-        NativeWindowApi.TryExcludeFromCapture(new WindowInteropHelper(this).Handle);
+        NativeWindowApi.TrySetCaptureExclusion(
+            new WindowInteropHelper(this).Handle,
+            MiniCaptureSettingsStore.Load().CaptureUiExcludedFromCapture);
     }
 
     private void OnClosed(object? sender, EventArgs e)

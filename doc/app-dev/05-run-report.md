@@ -712,3 +712,64 @@ Viewer layout persistence is complete: the internal image viewer restores its pr
 
 - Viewer layout state reuses the existing Mini Capture local app data `settings.json` instead of adding a second persistence file.
 - This slice does not add a general file-manager layout system, registry/default-app changes, or new viewer/editor features.
+
+## Viewer Image View State Persistence
+
+### Finish Line
+
+Viewer image view state persistence is complete: the internal image viewer has a smaller zoom in/out UI, and each opened image restores its previous zoom/fit mode and scroll position after reopen or app restart.
+
+### Changes
+
+- Added compact zoom button styling for the viewer toolbar while keeping existing automation IDs and handlers.
+- Extended `settings.json` storage with recent per-image view states capped at 200 entries.
+- Saved zoom, fit mode, and scroll offsets after zoom controls, Ctrl+wheel, scrollbar movement, hand-tool panning, image changes, and viewer close.
+- Restored saved image view state after the image surface layout is ready, so scroll offsets apply to the current zoomed surface.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-build\`: passed with 0 warnings and 0 errors after stale WPF build intermediates were cleared.
+- `git diff --check`: passed with CRLF conversion warnings only.
+
+### Decisions
+
+- Image view state reuses the existing Mini Capture local app data `settings.json`; no new database or cache file was added.
+- The saved state is scoped to image preview position only and does not persist editable annotations or create a broader viewer session format.
+
+## Viewer Bottom Zoom Slider
+
+### Finish Line
+
+Viewer bottom zoom slider is complete: the status bar now exposes a compact zoom slider that stays synchronized with toolbar buttons, Ctrl+wheel zoom, fit restore, and per-image zoom persistence.
+
+### Changes
+
+- Added a bottom status-bar zoom slider with the same 10% to 800% range as the viewer zoom engine.
+- Synchronized the slider from `ApplyZoom` so toolbar zoom, fit mode, restored image state, and keyboard/mouse zoom update the bottom control.
+- Routed slider changes through `SetZoom`, preserving the existing per-image zoom and scroll-position save behavior.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-build\`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+
+## Capture UI Exclusion Toggle
+
+### Finish Line
+
+The floating capture UI exclusion is now configurable, and the main quick button, its child mode popups, timer/status/result popups, right-click context menu, and selection overlays all use the same setting.
+
+### Changes
+
+- Added `CaptureUiExcludedFromCapture` to the persisted settings, defaulting to enabled.
+- Added a capture settings checkbox for excluding the quick icon, child buttons, and right-click menu from captures.
+- Changed the Win32 display-affinity helper to set either `WDA_EXCLUDEFROMCAPTURE` or `WDA_NONE`.
+- Applied the setting to the main floating window and to WPF `Popup`/`ContextMenu` HWNDs when they open.
+- Reused the same setting for region and window picker overlay exclusion.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-build\`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- Static check found the setting and handlers in `MainWindow`, `SettingsWindow`, `NativeWindowApi`, `RegionCaptureOverlay`, and `WindowPickerOverlay`.
+- UI Automation `--settings` smoke did not find the settings window in this harness; the launched process exposed only the main `Mini Capture` window. Treat manual settings-window validation as a follow-up if needed.

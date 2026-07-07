@@ -35,6 +35,7 @@ internal sealed class CaptureHotkeyManager : IDisposable
         RegisterGroup(ref id, CaptureMode.Window, settings.GetHotkeySlots(CaptureHotkeyKind.Window), "창 선택", failures);
         RegisterGroup(ref id, CaptureMode.Drag, settings.GetHotkeySlots(CaptureHotkeyKind.Region), "영역 선택", failures);
         RegisterGroup(ref id, CaptureMode.FullScreen, settings.GetHotkeySlots(CaptureHotkeyKind.FullScreen), "전체 화면", failures);
+        RegisterGroup(ref id, CaptureMode.Timer, settings.GetHotkeySlots(CaptureHotkeyKind.Timer), "타이머", failures);
 
         return failures.Count == 0
             ? "단축키가 등록되었습니다."
@@ -45,6 +46,11 @@ internal sealed class CaptureHotkeyManager : IDisposable
     {
         UnregisterAll();
         _source.RemoveHook(OnWindowMessage);
+    }
+
+    public void Suspend()
+    {
+        UnregisterAll();
     }
 
     private void RegisterGroup(ref int nextId, CaptureMode mode, IReadOnlyList<string> hotkeys, string label, List<string> failures)
