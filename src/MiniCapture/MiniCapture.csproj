@@ -10,4 +10,8 @@
     <StartupObject>MiniCapture.Program</StartupObject>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Resource Include="Assets\Toolbar\*.png" />
+  </ItemGroup>
+
 </Project>

@@ -2,7 +2,7 @@
 
 ## Resume Point
 
-P0-P4, viewer/browser reinforcement, overlay-free selection, TabPaint-inspired editor workflow, toolbar UI polish, Dark Screenshot Markup Shell, first package checks, and V1 viewer performance/file-entry cleanup are complete. The next slice is manual hardware validation or installer/default-app packaging if distribution needs it.
+P0-P4, viewer/browser reinforcement, overlay-free selection, TabPaint-inspired editor workflow, toolbar UI polish, Dark Screenshot Markup Shell, first package checks, V1 viewer performance/file-entry cleanup, extension settings, and editable viewer markup are complete. The next slice is manual hardware validation or installer/default-app packaging if distribution needs it.
 
 Recent commits:
 
@@ -22,6 +22,7 @@ Latest polish:
 - P4 checks confirmed Per-Monitor DPI awareness, repeated PNG capture, drag/window/full/timer smoke coverage, viewer action availability, close-to-tray behavior, and a launchable framework-dependent `win-x64` publish folder.
 - ViewerWindow now resolves latest images without sorting the full index, loads folder contents asynchronously in UI batches, decodes thumbnails in the background with limited concurrency, and accepts PNG/JPG/JPEG file paths as startup arguments.
 - Windows PNG/JPG/JPEG default-app association is intentionally deferred to an installer/registry slice; V1 code now supports the required quoted `%1`-style file path argument but does not mutate system associations.
+- Viewer editor annotations are selectable before save: newly added rectangle, ellipse, pen, arrow, and text markup can be moved/resized/deleted, and text markup is edited through regular WPF text boxes. Save/copy image still exports a flattened bitmap.
 
 ## Active Design
 

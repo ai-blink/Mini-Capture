@@ -514,3 +514,177 @@ SettingsWindow extension association UI now has a V1-complete image extension se
 
 - FOLLOW_UP: implement proper installer/default-app registration only if V1 distribution requires Mini Capture to appear directly in Windows default-app choices.
 - FOLLOW_UP: run true multi-monitor hardware validation separately when hardware is available.
+
+## Editable Viewer Markup
+
+### Finish Line
+
+Viewer editor annotations are editable before save: new rectangle, ellipse, pen, arrow, and text markup remain selectable on the image surface, can be moved/resized/deleted, and text uses a regular WPF text box editing flow.
+
+### Changes
+
+- Added a lightweight selectable annotation model inside `ViewerWindow`.
+- Changed new rectangle, ellipse, pen, arrow, and text tools to create overlay annotations instead of immediately burning them into the bitmap.
+- Added selection frame, resize handle, delete action, and `Delete` key handling for selected annotations.
+- Changed save and copy-image actions to export a flattened bitmap composed from the base image plus pending annotations.
+- Kept mosaic and rotation as immediate bitmap operations; they first flatten pending annotations to avoid mixed edit states.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- UI Automation launched `MiniCapture.exe <png path>` and verified save, copy image, select tool, text tool, delete selected annotation, text input, and stroke controls.
+- `git diff --check`: passed with CRLF conversion warnings only.
+
+### Decisions
+
+- This is not a layer editor or project format. Pending annotations are editable only during the current viewer session before save/reload.
+- Saved and copied output remains a flattened image, preserving the simple PNG-oriented Mini Capture V1 behavior.
+
+## Capture Settings Persistence
+
+### Finish Line
+
+Settings now cover persistent capture hotkeys for window, region, and full-screen capture; persistent timer delay; and persistent transparent quick-button visibility and moved position.
+
+### Changes
+
+- Added `settings.json` storage under the existing Mini Capture local app data directory.
+- Added a Capture Settings section to `SettingsWindow` with hotkey fields, timer seconds, quick-button visibility, save, and reset controls.
+- Added global `RegisterHotKey` handling for window, region, and full-screen capture.
+- Restored timer delay, quick-button position, and quick-button visibility on app startup.
+- Saved quick-button position after drag movement and kept tray/settings access available when the quick button is hidden.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-build\`: passed with 0 warnings and 0 errors.
+- Default `dotnet build MiniCapture.slnx` was blocked by a running `MiniCapture.exe` process locking `bin\Debug\net8.0-windows\MiniCapture.exe`; the app was not force-closed, and the alternate output build verified compilation.
+
+### Follow-ups
+
+- FOLLOW_UP: add a richer key-capture control if text-form hotkey input proves awkward in manual use.
+- FOLLOW_UP: run manual hardware validation for global hotkeys and multi-monitor quick-button placement.
+
+## Capture Hotkey Detection UI
+
+### Finish Line
+
+Capture hotkey settings now use a three-row list for window, region, and full-screen capture, with a per-row key detection button that accepts a shortcut pressed within 5 seconds.
+
+### Changes
+
+- Replaced the three free-form hotkey text boxes with a `ListBox` showing action, current shortcut, status, and key-detect button.
+- Added a 5-second WPF key detection flow that records Ctrl/Alt/Shift/Win plus a non-modifier key into the selected row.
+- Kept Save as the apply point, so detected shortcuts can be reviewed before being persisted and globally registered.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-build\`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- Default `dotnet build MiniCapture.slnx` was blocked by a running `MiniCapture.exe` process locking `bin\Debug\net8.0-windows\MiniCapture.exe`; the app was not force-closed, and the alternate output build verified compilation.
+
+## Per-Key Shortcut Combos
+
+### Finish Line
+
+Each shortcut slot now uses one combo box per key part instead of storing the whole shortcut combination in one combo box.
+
+### Changes
+
+- Changed every shortcut slot from one editable combo containing values like `Ctrl+Alt+W` to three combo boxes: modifier 1, modifier 2, and main key.
+- Kept the compact one-row layout and narrow key-detect button.
+- Key detection now fills the three combo boxes instead of writing one combined string into a single combo box.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-build\`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- Default `dotnet build MiniCapture.slnx` was blocked by a running `MiniCapture.exe` process locking `bin\Debug\net8.0-windows\MiniCapture.exe`; the app was not force-closed, and the alternate output build verified compilation.
+
+## Compact Shortcut Combo Row
+
+### Finish Line
+
+Shortcut settings now stay compact on one row per capture mode, with three editable combo boxes and narrow key-detect buttons.
+
+### Changes
+
+- Removed the large per-slot card layout.
+- Changed each slot to a horizontal `ComboBox + 감지` pair.
+- Kept `+` separators between shortcut slots and moved active countdown feedback to the settings status text.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-build\`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- Default `dotnet build MiniCapture.slnx` was blocked by a running `MiniCapture.exe` process locking `bin\Debug\net8.0-windows\MiniCapture.exe`; the app was not force-closed, and the alternate output build verified compilation.
+
+## Shortcut Combo Boxes
+
+### Finish Line
+
+Each shortcut slot is now a combo box with its own key-detect button, arranged as three combo boxes per capture mode row.
+
+### Changes
+
+- Replaced shortcut slot list boxes with editable combo boxes.
+- Kept the inline layout: mode label, combo 1 + detect, plus combo 2 + detect, plus combo 3 + detect.
+- Added common shortcut presets while still allowing key detection to write custom combinations into the combo box text.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-build\`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- Default `dotnet build MiniCapture.slnx` was blocked by a running `MiniCapture.exe` process locking `bin\Debug\net8.0-windows\MiniCapture.exe`; the app was not force-closed, and the alternate output build verified compilation.
+
+## Three Shortcut Slots Per Capture Mode
+
+### Finish Line
+
+Each capture mode now supports three shortcut combinations. Every shortcut combination has its own single-item shortcut list box and its own key-detect button, for nine list-box/button pairs total.
+
+### Changes
+
+- Expanded settings storage from one shortcut per mode to three shortcut slots per mode while keeping the old single-shortcut fields as compatibility fallbacks.
+- Updated global hotkey registration to register all non-empty shortcut slots for window, region, and full-screen capture.
+- Updated the capture settings UI to render three shortcut-list/key-detect pairs under each capture mode.
+- Kept empty optional slots valid, while requiring at least one shortcut per capture mode and preventing duplicate shortcut combinations.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-build\`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- Default `dotnet build MiniCapture.slnx` was blocked by a running `MiniCapture.exe` process locking `bin\Debug\net8.0-windows\MiniCapture.exe`; the app was not force-closed, and the alternate output build verified compilation.
+
+## Inline Shortcut Slot Layout
+
+### Finish Line
+
+Shortcut slots are now displayed inline per capture mode, so each row reads as mode label plus shortcut 1, plus shortcut 2, plus shortcut 3.
+
+### Changes
+
+- Changed the capture hotkey UI from vertically stacked shortcut slots to one row per capture mode.
+- Added visible `+` separators between the three shortcut slots.
+- Kept one list box and one key-detect button inside each shortcut slot.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+
+## Separate Capture Hotkey Lists
+
+### Finish Line
+
+Each capture shortcut now has its own shortcut list box and matching key-detect button: one pair for window capture, one for region capture, and one for full-screen capture.
+
+### Changes
+
+- Split the previous single three-row hotkey list into `WindowHotkeyList`, `RegionHotkeyList`, and `FullScreenHotkeyList`.
+- Kept one key-detect button next to each shortcut list box.
+- Kept the existing 5-second key detection and explicit Save behavior.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-build\`: passed with 0 warnings and 0 errors.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- Default `dotnet build MiniCapture.slnx` was blocked by a running `MiniCapture.exe` process locking `bin\Debug\net8.0-windows\MiniCapture.exe`; the app was not force-closed, and the alternate output build verified compilation.

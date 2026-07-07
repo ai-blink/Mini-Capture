@@ -11,7 +11,8 @@
         ShowInTaskbar="True"
         UseLayoutRounding="True"
         WindowStartupLocation="CenterOwner"
-        Loaded="OnLoaded">
+        Loaded="OnLoaded"
+        PreviewKeyDown="OnPreviewKeyDown">
     <Window.Resources>
         <SolidColorBrush x:Key="SettingsBackgroundBrush" Color="#121414" />
         <SolidColorBrush x:Key="SettingsPanelBrush" Color="#181B1C" />
@@ -127,11 +128,197 @@
                                  Tag="ExtensionDefaults">
                         <TextBlock Text="확장자 연결" />
                     </ListBoxItem>
+                    <ListBoxItem AutomationProperties.AutomationId="CaptureSettingsSection"
+                                 Tag="CaptureSettings">
+                        <TextBlock Text="캡처 설정" />
+                    </ListBoxItem>
                 </ListBox>
             </Border>
 
             <Grid Grid.Column="1"
                   Margin="22">
+                <ScrollViewer x:Name="CaptureSettingsPanel"
+                              AutomationProperties.AutomationId="CaptureSettingsPanel"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource SettingsTextBrush}"
+                                   Text="캡처 설정" />
+                        <TextBlock Margin="0,5,0,18"
+                                   FontSize="12"
+                                   Foreground="{StaticResource SettingsMutedTextBrush}"
+                                   Text="단축키, 타이머, 투명 퀵 아이콘 표시 상태를 저장합니다." />
+
+                        <Border Padding="14"
+                                Background="{StaticResource SettingsPanelBrush}"
+                                BorderBrush="{StaticResource SettingsBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <StackPanel>
+                                <ItemsControl ItemsSource="{Binding HotkeyGroups}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,14">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="112" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0"
+                                                           Margin="0,0,14,0"
+                                                           VerticalAlignment="Center"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource SettingsTextBrush}"
+                                                           Text="{Binding Label}" />
+
+                                                <ItemsControl Grid.Column="1"
+                                                              ItemsSource="{Binding Slots}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <UniformGrid Columns="3" />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,0,8,0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="54" />
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <ComboBox Grid.Column="0"
+                                                                          MinHeight="32"
+                                                                          AutomationProperties.AutomationId="{Binding FirstKeyAutomationId}"
+                                                                          AutomationProperties.Name="{Binding FirstKeyAutomationName}"
+                                                                          ItemsSource="{Binding ModifierOptions}"
+                                                                          SelectedItem="{Binding FirstKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                          ToolTip="{Binding StatusText}" />
+                                                                <TextBlock Grid.Column="1"
+                                                                           Margin="4,0"
+                                                                           VerticalAlignment="Center"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="{StaticResource SettingsMutedTextBrush}"
+                                                                           Text="+" />
+                                                                <ComboBox Grid.Column="2"
+                                                                          MinHeight="32"
+                                                                          AutomationProperties.AutomationId="{Binding SecondKeyAutomationId}"
+                                                                          AutomationProperties.Name="{Binding SecondKeyAutomationName}"
+                                                                          ItemsSource="{Binding ModifierOptions}"
+                                                                          SelectedItem="{Binding SecondKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                          ToolTip="{Binding StatusText}" />
+                                                                <TextBlock Grid.Column="3"
+                                                                           Margin="4,0"
+                                                                           VerticalAlignment="Center"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="{StaticResource SettingsMutedTextBrush}"
+                                                                           Text="+" />
+                                                                <ComboBox Grid.Column="4"
+                                                                          MinHeight="32"
+                                                                          Margin="0,0,6,0"
+                                                                          AutomationProperties.AutomationId="{Binding MainKeyAutomationId}"
+                                                                          AutomationProperties.Name="{Binding MainKeyAutomationName}"
+                                                                          IsEditable="True"
+                                                                          ItemsSource="{Binding MainKeyOptions}"
+                                                                          Text="{Binding MainKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                          ToolTip="{Binding StatusText}" />
+                                                                <Button Grid.Column="5"
+                                                                        Width="48"
+                                                                        MinWidth="48"
+                                                                        Padding="0"
+                                                                        AutomationProperties.AutomationId="{Binding DetectAutomationId}"
+                                                                        AutomationProperties.Name="{Binding DetectAutomationName}"
+                                                                        Click="OnDetectHotkeyClick"
+                                                                        Content="감지"
+                                                                        Style="{StaticResource SettingsButtonStyle}"
+                                                                        Tag="{Binding}"
+                                                                        ToolTip="{Binding SlotLabel}" />
+
+                                                                <TextBlock Grid.Column="6"
+                                                                           Margin="8,0,0,0"
+                                                                           VerticalAlignment="Center"
+                                                                           FontSize="18"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="{StaticResource SettingsMutedTextBrush}"
+                                                                           Text="{Binding PlusText}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBlock Margin="0,8,0,0"
+                                           FontSize="12"
+                                           Foreground="{StaticResource SettingsMutedTextBrush}"
+                                           Text="키 감지를 누른 뒤 5초 안에 Ctrl/Alt/Shift와 함께 원하는 키를 누르세요." />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Margin="0,12,0,0"
+                                Padding="14"
+                                Background="{StaticResource SettingsPanelBrush}"
+                                BorderBrush="{StaticResource SettingsBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="158" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="0"
+                                           Margin="0,0,12,10"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource SettingsMutedTextBrush}"
+                                           Text="타이머 시간(초)" />
+                                <TextBox x:Name="TimerDelayBox"
+                                         Grid.Row="0"
+                                         Grid.Column="1"
+                                         Margin="0,0,0,10"
+                                         AutomationProperties.AutomationId="TimerDelaySecondsBox"
+                                         MinHeight="32" />
+
+                                <CheckBox x:Name="QuickButtonVisibleCheck"
+                                          Grid.Row="1"
+                                          Grid.Column="1"
+                                          AutomationProperties.AutomationId="QuickButtonVisibleCheck"
+                                          Content="투명 퀵 아이콘을 바탕화면에 표시"
+                                          Foreground="{StaticResource SettingsTextBrush}" />
+                            </Grid>
+                        </Border>
+
+                        <WrapPanel Margin="0,14,0,0">
+                            <Button AutomationProperties.AutomationId="SaveCaptureSettingsButton"
+                                    Click="OnSaveCaptureSettingsClick"
+                                    Content="저장"
+                                    Margin="0,0,10,10"
+                                    MinWidth="96"
+                                    Style="{StaticResource SettingsButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ResetCaptureSettingsButton"
+                                    Click="OnResetCaptureSettingsClick"
+                                    Content="기본값"
+                                    Margin="0,0,10,10"
+                                    MinWidth="96"
+                                    Style="{StaticResource SettingsButtonStyle}" />
+                        </WrapPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
                 <Grid x:Name="ExtensionDefaultsPanel"
                       AutomationProperties.AutomationId="ExtensionDefaultsPanel">
                     <Grid.RowDefinitions>

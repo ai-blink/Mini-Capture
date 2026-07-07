@@ -22,10 +22,11 @@
 - 2026-07-05: Viewer performance and file-argument entry slice completed with async folder loading, background thumbnail decode, optimized latest-image lookup, and PNG/JPG/JPEG command-line image opening.
 - 2026-07-05: A separate SettingsWindow was added with an extension-association section for PNG/JPG/JPEG, plus floating-button/tray `설정` entry points and a `--settings` startup path; Windows Default Apps settings remain one button inside that settings UI without direct registry mutation.
 - 2026-07-05: SettingsWindow extension association UI was expanded into category-based image extension status/request controls for PNG/JPG/JPEG/BMP/GIF/WEBP/TIF/TIFF, with read-only current association checks, separate request candidate checks, select/clear/refresh actions, 10-second refresh, and Activated refresh.
+- 2026-07-05: Viewer editor markup now stays selectable before save: new rectangle/ellipse/pen/arrow/text annotations can be selected, moved, resized, deleted, and exported through save/copy image composition; text annotations use normal WPF text boxes for direct editing.
 
 ## Current Work
 
-- Category-based settings UI for image extension association status/request handling is complete. Next implementation slice is manual hardware validation or installer/default-app registration, if V1 distribution requires Mini Capture to appear directly in Windows default-app choices.
+- Editable viewer markup is complete within the current V1 scope. Next implementation slice is manual hardware validation or installer/default-app registration, if V1 distribution requires Mini Capture to appear directly in Windows default-app choices.
 
 ## Next Actions
 
@@ -88,3 +89,4 @@
 - Viewer perf/file-arg static context check: `MainWindow.xaml` keeps `OpenImageViewerMenuItem` only in the capture button context menu while the left-click radial menu exposes only `ModeDragButton`, `ModeWindowButton`, `ModeFullScreenButton`, and `ModeTimerButton`.
 - Settings UI build/smoke: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `MiniCapture.exe --settings` opened the settings UI and UI Automation found the section list, extension section, Windows default-apps button, executable path copy button, executable path text, and status text.
 - Extension association settings V1 build/smoke: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `git diff --check` passed with CRLF conversion warnings only; UI Automation verified `MiniCapture.exe --settings`, category labels `기본 이미지`/`추가 이미지`, extensions `.png/.jpg/.jpeg/.bmp/.gif/.webp/.tif/.tiff`, separate `현재 연결` and `요청 선택` checks, select/clear/refresh/default-app/copy-path buttons, 10-second automatic refresh status, four radial capture buttons, and close-to-tray behavior.
+- Editable viewer markup build/smoke: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; UI Automation launched `MiniCapture.exe <png path>` and found save/copy-image/select/text/delete/text-input/stroke controls; `git diff --check` passed with CRLF conversion warnings only.

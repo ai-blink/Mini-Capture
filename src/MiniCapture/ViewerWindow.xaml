@@ -491,18 +491,28 @@
                                     AutomationProperties.AutomationId="ViewerPanToolButton"
                                     AutomationProperties.Name="핸드툴"
                                     Click="OnToolButtonClick"
-                                    Content="↔"
                                     ToolTip="핸드툴"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
-                                    Tag="Pan" />
+                                    Tag="Pan">
+                                <Image Width="22"
+                                       Height="22"
+                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                       Source="pack://application:,,,/Assets/Toolbar/pan-tool.png"
+                                       Stretch="Uniform" />
+                            </Button>
                             <Button x:Name="SelectToolButton"
                                     AutomationProperties.AutomationId="ViewerSelectToolButton"
                                     AutomationProperties.Name="선택"
                                     Click="OnToolButtonClick"
-                                    Content="▣"
                                     ToolTip="선택"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
-                                    Tag="Select" />
+                                    Tag="Select">
+                                <Image Width="22"
+                                       Height="22"
+                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                       Source="pack://application:,,,/Assets/Toolbar/select-tool.png"
+                                       Stretch="Uniform" />
+                            </Button>
                             <Button x:Name="PenToolButton"
                                     AutomationProperties.AutomationId="ViewerPenToolButton"
                                     AutomationProperties.Name="펜"
@@ -551,6 +561,13 @@
                                     ToolTip="모자이크"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
                                     Tag="Mosaic" />
+                            <Button x:Name="DeleteAnnotationButton"
+                                    AutomationProperties.AutomationId="ViewerDeleteAnnotationButton"
+                                    AutomationProperties.Name="선택 항목 삭제"
+                                    Click="OnDeleteAnnotationClick"
+                                    Content="&#xE74D;"
+                                    ToolTip="선택 항목 삭제"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
                             <Button x:Name="UndoButton"
                                     AutomationProperties.AutomationId="ViewerUndoButton"
                                     AutomationProperties.Name="되돌리기"
@@ -674,7 +691,7 @@
                                        Foreground="{StaticResource ViewerMutedTextBrush}"
                                        Text="4px" />
                             <TextBox x:Name="AnnotationTextBox"
-                                     Width="112"
+                                     Width="152"
                                      Height="30"
                                      Margin="6,0,0,0"
                                      Padding="8,0"
@@ -723,12 +740,28 @@
                               ItemsSource="{Binding}"
                               Padding="7,0,7,10"
                               SelectedItemChanged="OnFolderTreeSelectedItemChanged">
+                        <TreeView.Resources>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#17324A" />
+                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#17324A" />
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#E2E2E2" />
+                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#E2E2E2" />
+                        </TreeView.Resources>
                         <TreeView.ItemContainerStyle>
                             <Style TargetType="{x:Type TreeViewItem}">
                                 <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
                                 <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
                                 <Setter Property="Foreground" Value="{StaticResource ViewerTextBrush}" />
+                                <Setter Property="Background" Value="Transparent" />
                                 <Setter Property="Padding" Value="4" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#242B31" />
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource ViewerAccentMutedBrush}" />
+                                        <Setter Property="Foreground" Value="{StaticResource ViewerTextBrush}" />
+                                    </Trigger>
+                                </Style.Triggers>
                             </Style>
                         </TreeView.ItemContainerStyle>
                     </TreeView>

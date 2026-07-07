@@ -27,10 +27,15 @@ public partial class MainWindow : Window
     private ViewerWindow? _viewerWindow;
     private CaptureMode _selectedMode = CaptureMode.Drag;
     private int _captureDelaySeconds;
+    private MiniCaptureSettings _settings;
+    private CaptureHotkeyManager? _hotkeyManager;
 
     public MainWindow()
     {
         InitializeComponent();
+        _settings = MiniCaptureSettingsStore.Load();
+        _captureDelaySeconds = _settings.TimerDelaySeconds;
+        MiniCaptureSettingsStore.SettingsChanged += OnSettingsChanged;
 
         _statusTimer = new DispatcherTimer
         {
@@ -45,14 +50,27 @@ public partial class MainWindow : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        PlaceNearWorkAreaCorner();
+        ApplyStoredPosition();
+        ApplyTimerButtonText();
         UpdatePopupPlacement();
         SelectMode(_selectedMode, showStatus: false);
+        ApplyQuickButtonVisibility();
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
-        NativeWindowApi.TryExcludeFromCapture(new WindowInteropHelper(this).Handle);
+        var helper = new WindowInteropHelper(this);
+        NativeWindowApi.TryExcludeFromCapture(helper.Handle);
+
+        if (HwndSource.FromHwnd(helper.Handle) is { } source)
+        {
+            _hotkeyManager = new CaptureHotkeyManager(source, mode => Dispatcher.Invoke(() => ExecuteModeFromHotkey(mode)));
+            var hotkeyStatus = _hotkeyManager.Register(_settings);
+            if (hotkeyStatus.StartsWith("등록 실패", StringComparison.Ordinal))
+            {
+                ShowStatus(hotkeyStatus);
+            }
+        }
     }
 
     private void OnCaptureButtonClick(object sender, RoutedEventArgs e)
@@ -108,8 +126,9 @@ public partial class MainWindow : Window
         }
 
         _captureDelaySeconds = seconds;
-        ModeTimerButton.Content = $"{seconds}초";
-        AutomationProperties.SetName(ModeTimerButton, $"Timer delay {seconds} seconds");
+        _settings.TimerDelaySeconds = seconds;
+        MiniCaptureSettingsStore.Save(_settings);
+        ApplyTimerButtonText();
         TimerPopup.IsOpen = false;
         ShowStatus($"{seconds}초 지연이 설정되었습니다. 영역, 창, 전체 캡처에 적용됩니다.");
     }
@@ -135,6 +154,13 @@ public partial class MainWindow : Window
         }
 
         base.OnClosing(e);
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        MiniCaptureSettingsStore.SettingsChanged -= OnSettingsChanged;
+        _hotkeyManager?.Dispose();
+        base.OnClosed(e);
     }
 
     public void ShowFromTray()
@@ -218,6 +244,7 @@ public partial class MainWindow : Window
         {
             _isDraggingButton = false;
             UpdatePopupPlacement();
+            SaveQuickButtonPosition();
             e.Handled = true;
             return;
         }
@@ -237,6 +264,54 @@ public partial class MainWindow : Window
         var workArea = SystemParameters.WorkArea;
         Left = Math.Clamp(left, workArea.Left, workArea.Right - Width);
         Top = Math.Clamp(top, workArea.Top, workArea.Bottom - Height);
+    }
+
+    private void ApplyStoredPosition()
+    {
+        if (_settings.QuickButtonLeft is double left && _settings.QuickButtonTop is double top)
+        {
+            MoveWithinWorkArea(left, top);
+            return;
+        }
+
+        PlaceNearWorkAreaCorner();
+        SaveQuickButtonPosition();
+    }
+
+    private void SaveQuickButtonPosition()
+    {
+        _settings.QuickButtonLeft = Left;
+        _settings.QuickButtonTop = Top;
+        MiniCaptureSettingsStore.Save(_settings);
+    }
+
+    private void ApplyQuickButtonVisibility()
+    {
+        if (_settings.QuickButtonVisible)
+        {
+            if (!IsVisible)
+            {
+                Show();
+            }
+
+            return;
+        }
+
+        ClosePopups();
+        if (_settingsWindow is not null)
+        {
+            _settingsWindow.Owner = null;
+        }
+
+        Hide();
+    }
+
+    private void ApplyTimerButtonText()
+    {
+        ModeTimerButton.Content = _captureDelaySeconds > 0 ? $"{_captureDelaySeconds}초" : "타이머";
+        AutomationProperties.SetName(ModeTimerButton, _captureDelaySeconds > 0
+            ? $"Timer delay {_captureDelaySeconds} seconds"
+            : "Timer delay off");
     }
 
     private void ToggleModePopup()
@@ -336,9 +411,39 @@ public partial class MainWindow : Window
         }
         finally
         {
-            Show();
-            Activate();
+            if (_settings.QuickButtonVisible)
+            {
+                Show();
+                Activate();
+            }
+            else
+            {
+                Hide();
+            }
+
             _captureInProgress = false;
+        }
+    }
+
+    private async void ExecuteModeFromHotkey(CaptureMode mode)
+    {
+        SelectMode(mode, showStatus: true);
+        ClosePopups();
+        await ExecuteModeAsync(mode);
+    }
+
+    private void OnSettingsChanged(object? sender, MiniCaptureSettings settings)
+    {
+        _settings = settings.Clone();
+        _captureDelaySeconds = Math.Clamp(_settings.TimerDelaySeconds, 0, 60);
+        ApplyTimerButtonText();
+        ApplyStoredPosition();
+        UpdatePopupPlacement();
+        ApplyQuickButtonVisibility();
+
+        if (_hotkeyManager is not null)
+        {
+            ShowStatus(_hotkeyManager.Register(_settings));
         }
     }
 

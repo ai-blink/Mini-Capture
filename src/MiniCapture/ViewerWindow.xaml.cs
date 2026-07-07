@@ -39,6 +39,15 @@ internal enum ViewerEditTool
     Arrow
 }
 
+internal enum ViewerAnnotationKind
+{
+    Rectangle,
+    Ellipse,
+    Text,
+    Pen,
+    Arrow
+}
+
 public partial class ViewerWindow : Window
 {
     private const double MinZoom = 0.1;
@@ -52,7 +61,25 @@ public partial class ViewerWindow : Window
         string? TargetPath,
         string TargetFolder);
 
+    private sealed class EditableAnnotation
+    {
+        public ViewerAnnotationKind Kind { get; init; }
+
+        public WpfColor Color { get; init; }
+
+        public double StrokeThickness { get; init; }
+
+        public WpfRect PixelBounds { get; set; }
+
+        public List<WpfPoint> PixelPoints { get; } = new();
+
+        public string Text { get; set; } = string.Empty;
+
+        public FrameworkElement? Element { get; set; }
+    }
+
     private readonly ObservableCollection<CaptureImageFile> _files = new();
+    private readonly List<EditableAnnotation> _annotations = new();
     private readonly List<WpfPoint> _penPoints = new();
     private readonly Stack<BitmapSource> _redoImages = new();
     private readonly Stack<BitmapSource> _undoImages = new();
@@ -60,6 +87,9 @@ public partial class ViewerWindow : Window
     private ObservableCollection<FolderTreeNode> _folderNodes = new();
     private BitmapSource? _editableImage;
     private WpfShape? _previewShape;
+    private WpfRectangle? _resizeHandle;
+    private WpfRectangle? _selectionFrame;
+    private EditableAnnotation? _selectedAnnotation;
     private string? _pendingPath;
     private string? _currentFolderPath;
     private string? _lastSavedPath;
@@ -71,7 +101,12 @@ public partial class ViewerWindow : Window
     private bool _isLoadingSelection;
     private bool _isSelectingFolder;
     private bool _isPanning;
+    private bool _isResizingAnnotation;
+    private bool _isMovingAnnotation;
     private bool _spacePanActive;
+    private WpfPoint _annotationDragStartPoint;
+    private WpfRect _annotationStartBounds;
+    private List<WpfPoint> _annotationStartPoints = new();
     private WpfPoint _drawStartPoint;
     private WpfPoint _panStartPoint;
     private double _panStartHorizontalOffset;
@@ -327,6 +362,7 @@ public partial class ViewerWindow : Window
             _currentFile = file;
             _lastSavedPath = file.Path;
             _editableImage = image;
+            ClearAnnotations();
             ClearEditHistory();
             _isDirty = false;
             PreviewImage.Source = _editableImage;
@@ -357,6 +393,7 @@ public partial class ViewerWindow : Window
         _currentFile = null;
         _lastSavedPath = null;
         _editableImage = null;
+        ClearAnnotations();
         ClearEditHistory();
         _isDirty = false;
         PreviewImage.Source = null;
@@ -482,7 +519,7 @@ public partial class ViewerWindow : Window
 
         try
         {
-            SavePng(_editableImage, targetPath);
+            SavePng(ComposeImageForExport(), targetPath);
             _lastSavedPath = targetPath;
             _isDirty = false;
             UpdateDirtyIndicator();
@@ -552,7 +589,7 @@ public partial class ViewerWindow : Window
 
         try
         {
-            WpfClipboard.SetImage(_editableImage);
+            WpfClipboard.SetImage(ComposeImageForExport());
             SetViewerStatus("이미지를 클립보드에 복사했습니다.");
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
@@ -569,6 +606,11 @@ public partial class ViewerWindow : Window
     private void OnRedoClick(object sender, RoutedEventArgs e)
     {
         RedoEdit();
+    }
+
+    private void OnDeleteAnnotationClick(object sender, RoutedEventArgs e)
+    {
+        DeleteSelectedAnnotation();
     }
 
     private void OnRotateLeftClick(object sender, RoutedEventArgs e)
@@ -650,6 +692,7 @@ public partial class ViewerWindow : Window
 
         if (_editTool == ViewerEditTool.Select)
         {
+            SelectAnnotation(null);
             e.Handled = true;
             return;
         }
@@ -668,7 +711,7 @@ public partial class ViewerWindow : Window
 
         if (_editTool == ViewerEditTool.Text)
         {
-            ApplyText(position);
+            AddTextAnnotation(position);
             e.Handled = true;
             return;
         }
@@ -689,6 +732,13 @@ public partial class ViewerWindow : Window
             var current = e.GetPosition(ImageScrollViewer);
             ImageScrollViewer.ScrollToHorizontalOffset(_panStartHorizontalOffset - (current.X - _panStartPoint.X));
             ImageScrollViewer.ScrollToVerticalOffset(_panStartVerticalOffset - (current.Y - _panStartPoint.Y));
+            e.Handled = true;
+            return;
+        }
+
+        if (_isMovingAnnotation || _isResizingAnnotation)
+        {
+            UpdateSelectedAnnotationDrag(ClampToSurface(e.GetPosition(AnnotationOverlay)));
             e.Handled = true;
             return;
         }
@@ -723,6 +773,16 @@ public partial class ViewerWindow : Window
             return;
         }
 
+        if (_isMovingAnnotation || _isResizingAnnotation)
+        {
+            _isMovingAnnotation = false;
+            _isResizingAnnotation = false;
+            AnnotationOverlay.ReleaseMouseCapture();
+            MarkAnnotationChanged("선택 항목을 수정했습니다.");
+            e.Handled = true;
+            return;
+        }
+
         if (!_isDrawing)
         {
             return;
@@ -733,7 +793,7 @@ public partial class ViewerWindow : Window
         {
             _penPoints.Add(endPoint);
             RemovePreviewShape();
-            ApplyPen(_penPoints);
+            AddPenAnnotation(_penPoints);
             _penPoints.Clear();
             _isDrawing = false;
             AnnotationOverlay.ReleaseMouseCapture();
@@ -752,11 +812,11 @@ public partial class ViewerWindow : Window
             }
             else if (_editTool == ViewerEditTool.Arrow)
             {
-                ApplyArrow(_drawStartPoint, endPoint);
+                AddArrowAnnotation(_drawStartPoint, endPoint);
             }
             else
             {
-                ApplyShape(rect, _editTool == ViewerEditTool.Ellipse);
+                AddShapeAnnotation(rect, _editTool == ViewerEditTool.Ellipse);
             }
         }
 
@@ -906,6 +966,7 @@ public partial class ViewerWindow : Window
             return;
         }
 
+        CommitAnnotationsToBitmap("회전 전 주석을 이미지에 적용했습니다.", pushUndo: true);
         PushUndoSnapshot();
         var source = ConvertToPbgra32(_editableImage);
         var transformed = new TransformedBitmap(source, new RotateTransform(angle));
@@ -983,6 +1044,521 @@ public partial class ViewerWindow : Window
         }
     }
 
+    private void AddShapeAnnotation(Int32Rect pixelRect, bool ellipse)
+    {
+        var annotation = new EditableAnnotation
+        {
+            Kind = ellipse ? ViewerAnnotationKind.Ellipse : ViewerAnnotationKind.Rectangle,
+            Color = _selectedColor,
+            StrokeThickness = GetPixelStrokeThickness(),
+            PixelBounds = new WpfRect(pixelRect.X, pixelRect.Y, pixelRect.Width, pixelRect.Height)
+        };
+
+        AddAnnotation(annotation, ellipse ? "동그라미를 추가했습니다." : "네모를 추가했습니다.");
+    }
+
+    private void AddTextAnnotation(WpfPoint displayPoint)
+    {
+        if (_editableImage is null)
+        {
+            return;
+        }
+
+        var pixelPoint = DisplayToPixel(displayPoint);
+        var text = string.IsNullOrWhiteSpace(AnnotationTextBox.Text)
+            ? "Text"
+            : AnnotationTextBox.Text.Trim();
+        var annotation = new EditableAnnotation
+        {
+            Kind = ViewerAnnotationKind.Text,
+            Color = _selectedColor,
+            StrokeThickness = GetPixelStrokeThickness(),
+            PixelBounds = new WpfRect(
+                pixelPoint.X,
+                pixelPoint.Y,
+                Math.Min(320, Math.Max(120, _editableImage.PixelWidth - pixelPoint.X)),
+                56),
+            Text = text
+        };
+
+        AddAnnotation(annotation, "텍스트 상자를 추가했습니다.");
+        if (annotation.Element is System.Windows.Controls.TextBox textBox)
+        {
+            textBox.Focus();
+            textBox.SelectAll();
+        }
+    }
+
+    private void AddPenAnnotation(IReadOnlyList<WpfPoint> displayPoints)
+    {
+        if (_editableImage is null || displayPoints.Count < 2)
+        {
+            return;
+        }
+
+        var annotation = new EditableAnnotation
+        {
+            Kind = ViewerAnnotationKind.Pen,
+            Color = _selectedColor,
+            StrokeThickness = GetPixelStrokeThickness()
+        };
+        foreach (var point in displayPoints)
+        {
+            annotation.PixelPoints.Add(DisplayToPixel(point));
+        }
+
+        annotation.PixelBounds = GetPixelPointsBounds(annotation.PixelPoints);
+        AddAnnotation(annotation, "펜 선을 추가했습니다.");
+    }
+
+    private void AddArrowAnnotation(WpfPoint displayStart, WpfPoint displayEnd)
+    {
+        var annotation = new EditableAnnotation
+        {
+            Kind = ViewerAnnotationKind.Arrow,
+            Color = _selectedColor,
+            StrokeThickness = GetPixelStrokeThickness()
+        };
+        annotation.PixelPoints.Add(DisplayToPixel(displayStart));
+        annotation.PixelPoints.Add(DisplayToPixel(displayEnd));
+        annotation.PixelBounds = GetPixelPointsBounds(annotation.PixelPoints);
+        AddAnnotation(annotation, "화살표를 추가했습니다.");
+    }
+
+    private void AddAnnotation(EditableAnnotation annotation, string status)
+    {
+        _annotations.Add(annotation);
+        RenderAnnotation(annotation);
+        SelectAnnotation(annotation);
+        MarkAnnotationChanged(status);
+    }
+
+    private void RenderAnnotations()
+    {
+        AnnotationOverlay.Children.Clear();
+        foreach (var annotation in _annotations)
+        {
+            RenderAnnotation(annotation);
+        }
+
+        RenderSelectionFrame();
+    }
+
+    private void RenderAnnotation(EditableAnnotation annotation)
+    {
+        var element = CreateAnnotationElement(annotation);
+        annotation.Element = element;
+        element.Tag = annotation;
+        element.PreviewMouseLeftButtonDown += OnAnnotationElementMouseLeftButtonDown;
+        element.PreviewMouseMove += OnAnnotationElementMouseMove;
+        element.PreviewMouseLeftButtonUp += OnAnnotationElementMouseLeftButtonUp;
+        AnnotationOverlay.Children.Add(element);
+        PositionAnnotationElement(annotation);
+    }
+
+    private FrameworkElement CreateAnnotationElement(EditableAnnotation annotation)
+    {
+        var brush = new SolidColorBrush(annotation.Color);
+        return annotation.Kind switch
+        {
+            ViewerAnnotationKind.Ellipse => new WpfEllipse
+            {
+                Stroke = brush,
+                StrokeThickness = Math.Max(1, annotation.StrokeThickness * _zoom),
+                Fill = WpfBrushes.Transparent
+            },
+            ViewerAnnotationKind.Text => CreateAnnotationTextBox(annotation, brush),
+            ViewerAnnotationKind.Pen => new WpfPath
+            {
+                Stroke = brush,
+                StrokeThickness = Math.Max(1, annotation.StrokeThickness * _zoom),
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                StrokeLineJoin = PenLineJoin.Round,
+                Fill = WpfBrushes.Transparent,
+                Data = CreateDisplayPenGeometry(annotation)
+            },
+            ViewerAnnotationKind.Arrow => new WpfPath
+            {
+                Stroke = brush,
+                StrokeThickness = Math.Max(1, annotation.StrokeThickness * _zoom),
+                Fill = brush,
+                Data = CreateDisplayArrowGeometry(annotation)
+            },
+            _ => new WpfRectangle
+            {
+                Stroke = brush,
+                StrokeThickness = Math.Max(1, annotation.StrokeThickness * _zoom),
+                Fill = WpfBrushes.Transparent
+            }
+        };
+    }
+
+    private System.Windows.Controls.TextBox CreateAnnotationTextBox(EditableAnnotation annotation, System.Windows.Media.Brush brush)
+    {
+        var textBox = new System.Windows.Controls.TextBox
+        {
+            AcceptsReturn = true,
+            Background = new SolidColorBrush(WpfColor.FromArgb(42, 0, 0, 0)),
+            BorderBrush = brush,
+            BorderThickness = new Thickness(1),
+            Foreground = brush,
+            FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
+            FontSize = Math.Clamp(annotation.StrokeThickness * 5 * _zoom, 12, 96),
+            MinWidth = 48,
+            MinHeight = 28,
+            Padding = new Thickness(6, 3, 6, 3),
+            Text = annotation.Text,
+            TextWrapping = TextWrapping.Wrap
+        };
+        AutomationProperties.SetAutomationId(textBox, "ViewerEditableTextBox");
+        textBox.TextChanged += (_, _) =>
+        {
+            annotation.Text = textBox.Text;
+            MarkAnnotationChanged("텍스트를 수정했습니다.");
+        };
+        textBox.GotKeyboardFocus += (_, _) => SelectAnnotation(annotation);
+        return textBox;
+    }
+
+    private void PositionAnnotationElement(EditableAnnotation annotation)
+    {
+        if (annotation.Element is null)
+        {
+            return;
+        }
+
+        if (annotation.Kind is ViewerAnnotationKind.Pen or ViewerAnnotationKind.Arrow)
+        {
+            Canvas.SetLeft(annotation.Element, 0);
+            Canvas.SetTop(annotation.Element, 0);
+            annotation.Element.Width = AnnotationOverlay.Width;
+            annotation.Element.Height = AnnotationOverlay.Height;
+            return;
+        }
+
+        var rect = PixelToDisplayRect(annotation.PixelBounds);
+        Canvas.SetLeft(annotation.Element, rect.Left);
+        Canvas.SetTop(annotation.Element, rect.Top);
+        annotation.Element.Width = Math.Max(1, rect.Width);
+        annotation.Element.Height = Math.Max(1, rect.Height);
+    }
+
+    private void SelectAnnotation(EditableAnnotation? annotation)
+    {
+        _selectedAnnotation = annotation;
+        RenderSelectionFrame();
+        UpdateEditButtons();
+    }
+
+    private void RenderSelectionFrame()
+    {
+        if (_selectionFrame is not null)
+        {
+            AnnotationOverlay.Children.Remove(_selectionFrame);
+            _selectionFrame = null;
+        }
+
+        if (_resizeHandle is not null)
+        {
+            AnnotationOverlay.Children.Remove(_resizeHandle);
+            _resizeHandle = null;
+        }
+
+        if (_selectedAnnotation is null)
+        {
+            return;
+        }
+
+        var rect = PixelToDisplayRect(GetAnnotationBounds(_selectedAnnotation));
+        _selectionFrame = new WpfRectangle
+        {
+            Stroke = new SolidColorBrush(WpfColor.FromRgb(0, 120, 212)),
+            StrokeThickness = 1.5,
+            StrokeDashArray = new DoubleCollection { 4, 3 },
+            Fill = WpfBrushes.Transparent,
+            IsHitTestVisible = false,
+            Width = Math.Max(1, rect.Width),
+            Height = Math.Max(1, rect.Height)
+        };
+        Canvas.SetLeft(_selectionFrame, rect.Left);
+        Canvas.SetTop(_selectionFrame, rect.Top);
+        AnnotationOverlay.Children.Add(_selectionFrame);
+
+        _resizeHandle = new WpfRectangle
+        {
+            Width = 12,
+            Height = 12,
+            Fill = new SolidColorBrush(WpfColor.FromRgb(0, 120, 212)),
+            Stroke = WpfBrushes.White,
+            StrokeThickness = 1,
+            Cursor = WpfCursors.SizeNWSE
+        };
+        _resizeHandle.PreviewMouseLeftButtonDown += OnResizeHandleMouseLeftButtonDown;
+        Canvas.SetLeft(_resizeHandle, rect.Right - 6);
+        Canvas.SetTop(_resizeHandle, rect.Bottom - 6);
+        AnnotationOverlay.Children.Add(_resizeHandle);
+    }
+
+    private void OnAnnotationElementMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: EditableAnnotation annotation })
+        {
+            return;
+        }
+
+        SelectAnnotation(annotation);
+        if (_editTool != ViewerEditTool.Select || Keyboard.FocusedElement is System.Windows.Controls.TextBox)
+        {
+            return;
+        }
+
+        _isMovingAnnotation = true;
+        _annotationDragStartPoint = ClampToSurface(e.GetPosition(AnnotationOverlay));
+        _annotationStartBounds = GetAnnotationBounds(annotation);
+        _annotationStartPoints = annotation.PixelPoints.ToList();
+        AnnotationOverlay.CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void OnAnnotationElementMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (!_isMovingAnnotation && !_isResizingAnnotation)
+        {
+            return;
+        }
+
+        UpdateSelectedAnnotationDrag(ClampToSurface(e.GetPosition(AnnotationOverlay)));
+        e.Handled = true;
+    }
+
+    private void OnAnnotationElementMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_isMovingAnnotation && !_isResizingAnnotation)
+        {
+            return;
+        }
+
+        _isMovingAnnotation = false;
+        _isResizingAnnotation = false;
+        AnnotationOverlay.ReleaseMouseCapture();
+        MarkAnnotationChanged("선택 항목을 수정했습니다.");
+        e.Handled = true;
+    }
+
+    private void OnResizeHandleMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (_selectedAnnotation is null)
+        {
+            return;
+        }
+
+        _isResizingAnnotation = true;
+        _annotationDragStartPoint = ClampToSurface(e.GetPosition(AnnotationOverlay));
+        _annotationStartBounds = GetAnnotationBounds(_selectedAnnotation);
+        _annotationStartPoints = _selectedAnnotation.PixelPoints.ToList();
+        AnnotationOverlay.CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void UpdateSelectedAnnotationDrag(WpfPoint displayPoint)
+    {
+        if (_selectedAnnotation is null || _editableImage is null)
+        {
+            return;
+        }
+
+        var startPixel = DisplayToPixel(_annotationDragStartPoint);
+        var currentPixel = DisplayToPixel(displayPoint);
+        var delta = currentPixel - startPixel;
+
+        if (_isResizingAnnotation)
+        {
+            var newWidth = Math.Max(8, _annotationStartBounds.Width + delta.X);
+            var newHeight = Math.Max(8, _annotationStartBounds.Height + delta.Y);
+            _selectedAnnotation.PixelBounds = ClampPixelRect(new WpfRect(_annotationStartBounds.X, _annotationStartBounds.Y, newWidth, newHeight));
+            ResizeAnnotationPoints(_selectedAnnotation, newWidth, newHeight);
+        }
+        else if (_isMovingAnnotation)
+        {
+            MoveAnnotation(_selectedAnnotation, delta);
+        }
+
+        RefreshAnnotationVisual(_selectedAnnotation);
+        RenderSelectionFrame();
+    }
+
+    private void MoveAnnotation(EditableAnnotation annotation, Vector delta)
+    {
+        annotation.PixelBounds = ClampPixelRect(new WpfRect(
+            _annotationStartBounds.X + delta.X,
+            _annotationStartBounds.Y + delta.Y,
+            _annotationStartBounds.Width,
+            _annotationStartBounds.Height));
+
+        if (annotation.Kind is ViewerAnnotationKind.Pen or ViewerAnnotationKind.Arrow)
+        {
+            for (var i = 0; i < annotation.PixelPoints.Count; i++)
+            {
+                var startPoint = i < _annotationStartPoints.Count ? _annotationStartPoints[i] : annotation.PixelPoints[i];
+                annotation.PixelPoints[i] = new WpfPoint(
+                    Math.Clamp(startPoint.X + delta.X, 0, _editableImage?.PixelWidth ?? 1),
+                    Math.Clamp(startPoint.Y + delta.Y, 0, _editableImage?.PixelHeight ?? 1));
+            }
+        }
+    }
+
+    private void ResizeAnnotationPoints(EditableAnnotation annotation, double newWidth, double newHeight)
+    {
+        if (annotation.Kind is not (ViewerAnnotationKind.Pen or ViewerAnnotationKind.Arrow) || _annotationStartPoints.Count == 0)
+        {
+            return;
+        }
+
+        var scaleX = newWidth / Math.Max(1, _annotationStartBounds.Width);
+        var scaleY = newHeight / Math.Max(1, _annotationStartBounds.Height);
+        annotation.PixelPoints.Clear();
+        foreach (var point in _annotationStartPoints)
+        {
+            annotation.PixelPoints.Add(new WpfPoint(
+                _annotationStartBounds.X + ((point.X - _annotationStartBounds.X) * scaleX),
+                _annotationStartBounds.Y + ((point.Y - _annotationStartBounds.Y) * scaleY)));
+        }
+
+        annotation.PixelBounds = GetPixelPointsBounds(annotation.PixelPoints);
+    }
+
+    private void RefreshAnnotationVisual(EditableAnnotation annotation)
+    {
+        if (annotation.Element is WpfPath path)
+        {
+            path.Data = annotation.Kind == ViewerAnnotationKind.Arrow
+                ? CreateDisplayArrowGeometry(annotation)
+                : CreateDisplayPenGeometry(annotation);
+        }
+
+        PositionAnnotationElement(annotation);
+    }
+
+    private void DeleteSelectedAnnotation()
+    {
+        if (_selectedAnnotation is null)
+        {
+            return;
+        }
+
+        if (_selectedAnnotation.Element is not null)
+        {
+            AnnotationOverlay.Children.Remove(_selectedAnnotation.Element);
+        }
+
+        _annotations.Remove(_selectedAnnotation);
+        SelectAnnotation(null);
+        MarkAnnotationChanged("선택 항목을 삭제했습니다.");
+    }
+
+    private void ClearAnnotations()
+    {
+        _annotations.Clear();
+        SelectAnnotation(null);
+        AnnotationOverlay.Children.Clear();
+    }
+
+    private void MarkAnnotationChanged(string status)
+    {
+        _isDirty = true;
+        UpdateDirtyIndicator();
+        UpdateEditButtons();
+        SetViewerStatus(status);
+    }
+
+    private void CommitAnnotationsToBitmap(string status, bool pushUndo)
+    {
+        if (_editableImage is null || _annotations.Count == 0)
+        {
+            return;
+        }
+
+        if (pushUndo)
+        {
+            PushUndoSnapshot();
+        }
+
+        SetEditableImage(ComposeImageForExport(), status);
+        ClearAnnotations();
+    }
+
+    private BitmapSource ComposeImageForExport()
+    {
+        if (_editableImage is null)
+        {
+            throw new InvalidOperationException("No image is loaded.");
+        }
+
+        var source = ConvertToPbgra32(_editableImage);
+        if (_annotations.Count == 0)
+        {
+            return source;
+        }
+
+        var visual = new DrawingVisual();
+        using (var drawing = visual.RenderOpen())
+        {
+            drawing.DrawImage(source, new WpfRect(0, 0, source.PixelWidth, source.PixelHeight));
+            foreach (var annotation in _annotations)
+            {
+                DrawAnnotation(drawing, annotation);
+            }
+        }
+
+        return RenderBitmap(visual, source.PixelWidth, source.PixelHeight);
+    }
+
+    private void DrawAnnotation(DrawingContext drawing, EditableAnnotation annotation)
+    {
+        var brush = new SolidColorBrush(annotation.Color);
+        var pen = new WpfPen(brush, Math.Max(1, annotation.StrokeThickness))
+        {
+            StartLineCap = PenLineCap.Round,
+            EndLineCap = PenLineCap.Round,
+            LineJoin = PenLineJoin.Round
+        };
+
+        switch (annotation.Kind)
+        {
+            case ViewerAnnotationKind.Ellipse:
+                drawing.DrawEllipse(null, pen, new WpfPoint(annotation.PixelBounds.X + annotation.PixelBounds.Width / 2, annotation.PixelBounds.Y + annotation.PixelBounds.Height / 2), annotation.PixelBounds.Width / 2, annotation.PixelBounds.Height / 2);
+                break;
+            case ViewerAnnotationKind.Text:
+                var formatted = new FormattedText(
+                    annotation.Text,
+                    CultureInfo.CurrentCulture,
+                    WpfFlowDirection.LeftToRight,
+                    new Typeface("Segoe UI"),
+                    Math.Clamp(annotation.StrokeThickness * 5, 12, 96),
+                    brush,
+                    VisualTreeHelper.GetDpi(this).PixelsPerDip)
+                {
+                    MaxTextWidth = Math.Max(1, annotation.PixelBounds.Width)
+                };
+                drawing.DrawText(formatted, annotation.PixelBounds.TopLeft);
+                break;
+            case ViewerAnnotationKind.Pen:
+                drawing.DrawGeometry(null, pen, CreatePixelPenGeometry(annotation));
+                break;
+            case ViewerAnnotationKind.Arrow:
+                if (annotation.PixelPoints.Count >= 2)
+                {
+                    drawing.DrawLine(pen, annotation.PixelPoints[0], annotation.PixelPoints[1]);
+                    DrawArrowHead(drawing, annotation.PixelPoints[0], annotation.PixelPoints[1], brush, annotation.StrokeThickness);
+                }
+                break;
+            default:
+                drawing.DrawRectangle(null, pen, annotation.PixelBounds);
+                break;
+        }
+    }
+
     private void ApplyShape(Int32Rect pixelRect, bool ellipse)
     {
         if (_editableImage is null)
@@ -1055,6 +1631,7 @@ public partial class ViewerWindow : Window
             return;
         }
 
+        CommitAnnotationsToBitmap("모자이크 전 주석을 이미지에 적용했습니다.", pushUndo: true);
         PushUndoSnapshot();
         var source = ConvertToBgra32(_editableImage);
         var width = source.PixelWidth;
@@ -1140,6 +1717,11 @@ public partial class ViewerWindow : Window
 
     private void DrawArrowHead(DrawingContext drawing, WpfPoint start, WpfPoint end, System.Windows.Media.Brush brush)
     {
+        DrawArrowHead(drawing, start, end, brush, GetPixelStrokeThickness());
+    }
+
+    private static void DrawArrowHead(DrawingContext drawing, WpfPoint start, WpfPoint end, System.Windows.Media.Brush brush, double strokeThickness)
+    {
         var vector = start - end;
         if (vector.Length < 1)
         {
@@ -1147,8 +1729,8 @@ public partial class ViewerWindow : Window
         }
 
         vector.Normalize();
-        var headLength = Math.Max(10, GetPixelStrokeThickness() * 4.5);
-        var headWidth = Math.Max(7, GetPixelStrokeThickness() * 2.8);
+        var headLength = Math.Max(10, strokeThickness * 4.5);
+        var headWidth = Math.Max(7, strokeThickness * 2.8);
         var perpendicular = new Vector(-vector.Y, vector.X);
         var p1 = end + (vector * headLength) + (perpendicular * headWidth);
         var p2 = end + (vector * headLength) - (perpendicular * headWidth);
@@ -1393,6 +1975,58 @@ public partial class ViewerWindow : Window
         return group;
     }
 
+    private Geometry CreateDisplayArrowGeometry(EditableAnnotation annotation)
+    {
+        if (annotation.PixelPoints.Count < 2)
+        {
+            return Geometry.Empty;
+        }
+
+        return CreateArrowPreviewGeometry(PixelToDisplayPoint(annotation.PixelPoints[0]), PixelToDisplayPoint(annotation.PixelPoints[1]));
+    }
+
+    private Geometry CreateDisplayPenGeometry(EditableAnnotation annotation)
+    {
+        var geometry = new StreamGeometry();
+        if (annotation.PixelPoints.Count < 2)
+        {
+            return geometry;
+        }
+
+        using (var context = geometry.Open())
+        {
+            context.BeginFigure(PixelToDisplayPoint(annotation.PixelPoints[0]), isFilled: false, isClosed: false);
+            for (var i = 1; i < annotation.PixelPoints.Count; i++)
+            {
+                context.LineTo(PixelToDisplayPoint(annotation.PixelPoints[i]), isStroked: true, isSmoothJoin: true);
+            }
+        }
+
+        geometry.Freeze();
+        return geometry;
+    }
+
+    private static Geometry CreatePixelPenGeometry(EditableAnnotation annotation)
+    {
+        var geometry = new StreamGeometry();
+        if (annotation.PixelPoints.Count < 2)
+        {
+            return geometry;
+        }
+
+        using (var context = geometry.Open())
+        {
+            context.BeginFigure(annotation.PixelPoints[0], isFilled: false, isClosed: false);
+            for (var i = 1; i < annotation.PixelPoints.Count; i++)
+            {
+                context.LineTo(annotation.PixelPoints[i], isStroked: true, isSmoothJoin: true);
+            }
+        }
+
+        geometry.Freeze();
+        return geometry;
+    }
+
     private void RemovePreviewShape()
     {
         if (_previewShape is not null)
@@ -1407,6 +2041,27 @@ public partial class ViewerWindow : Window
         var width = Math.Max(1, AnnotationOverlay.ActualWidth);
         var height = Math.Max(1, AnnotationOverlay.ActualHeight);
         return new WpfPoint(Math.Clamp(point.X, 0, width), Math.Clamp(point.Y, 0, height));
+    }
+
+    private WpfPoint PixelToDisplayPoint(WpfPoint point)
+    {
+        if (_editableImage is null)
+        {
+            return new WpfPoint();
+        }
+
+        var displayWidth = Math.Max(1, AnnotationOverlay.ActualWidth);
+        var displayHeight = Math.Max(1, AnnotationOverlay.ActualHeight);
+        return new WpfPoint(
+            point.X / Math.Max(1, _editableImage.PixelWidth) * displayWidth,
+            point.Y / Math.Max(1, _editableImage.PixelHeight) * displayHeight);
+    }
+
+    private WpfRect PixelToDisplayRect(WpfRect rect)
+    {
+        var topLeft = PixelToDisplayPoint(rect.TopLeft);
+        var bottomRight = PixelToDisplayPoint(rect.BottomRight);
+        return new WpfRect(topLeft, bottomRight);
     }
 
     private WpfPoint DisplayToPixel(WpfPoint point)
@@ -1447,6 +2102,41 @@ public partial class ViewerWindow : Window
         width = Math.Clamp(width, 1, _editableImage.PixelWidth - x);
         height = Math.Clamp(height, 1, _editableImage.PixelHeight - y);
         return new Int32Rect(x, y, width, height);
+    }
+
+    private WpfRect ClampPixelRect(WpfRect rect)
+    {
+        if (_editableImage is null)
+        {
+            return rect;
+        }
+
+        var x = Math.Clamp(rect.X, 0, Math.Max(0, _editableImage.PixelWidth - 1));
+        var y = Math.Clamp(rect.Y, 0, Math.Max(0, _editableImage.PixelHeight - 1));
+        var width = Math.Clamp(rect.Width, 1, Math.Max(1, _editableImage.PixelWidth - x));
+        var height = Math.Clamp(rect.Height, 1, Math.Max(1, _editableImage.PixelHeight - y));
+        return new WpfRect(x, y, width, height);
+    }
+
+    private static WpfRect GetPixelPointsBounds(IReadOnlyList<WpfPoint> points)
+    {
+        if (points.Count == 0)
+        {
+            return WpfRect.Empty;
+        }
+
+        var left = points.Min(point => point.X);
+        var top = points.Min(point => point.Y);
+        var right = points.Max(point => point.X);
+        var bottom = points.Max(point => point.Y);
+        return new WpfRect(left, top, Math.Max(1, right - left), Math.Max(1, bottom - top));
+    }
+
+    private static WpfRect GetAnnotationBounds(EditableAnnotation annotation)
+    {
+        return annotation.Kind is ViewerAnnotationKind.Pen or ViewerAnnotationKind.Arrow
+            ? GetPixelPointsBounds(annotation.PixelPoints)
+            : annotation.PixelBounds;
     }
 
     private void SetZoom(double zoom)
@@ -1505,6 +2195,7 @@ public partial class ViewerWindow : Window
         PreviewImage.Height = height;
         AnnotationOverlay.Width = width;
         AnnotationOverlay.Height = height;
+        RenderAnnotations();
         var zoomText = $"{_zoom * 100:0}%";
         ZoomText.Text = zoomText;
         StatusZoomText.Text = zoomText;
@@ -1606,6 +2297,10 @@ public partial class ViewerWindow : Window
                 UpdateToolButtons();
                 e.Handled = true;
                 break;
+            case Key.Delete:
+                DeleteSelectedAnnotation();
+                e.Handled = true;
+                break;
         }
     }
 
@@ -1685,6 +2380,11 @@ public partial class ViewerWindow : Window
         if (RedoButton is not null)
         {
             RedoButton.IsEnabled = _redoImages.Count > 0;
+        }
+
+        if (DeleteAnnotationButton is not null)
+        {
+            DeleteAnnotationButton.IsEnabled = _selectedAnnotation is not null;
         }
     }
 
