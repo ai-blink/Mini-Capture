@@ -27,6 +27,22 @@ public sealed class MiniCaptureSettings
 
     public List<string> FullScreenCaptureHotkeys { get; set; } = ["Ctrl+Alt+F", "", ""];
 
+    public double? ViewerLeft { get; set; }
+
+    public double? ViewerTop { get; set; }
+
+    public double? ViewerWidth { get; set; }
+
+    public double? ViewerHeight { get; set; }
+
+    public string? ViewerWindowState { get; set; }
+
+    public ExplorerViewMode? ViewerExplorerViewMode { get; set; }
+
+    public double? ViewerFolderTreeWidth { get; set; }
+
+    public double? ViewerFileListWidth { get; set; }
+
     public MiniCaptureSettings Clone() =>
         new()
         {
@@ -39,7 +55,15 @@ public sealed class MiniCaptureSettings
             FullScreenCaptureHotkey = FullScreenCaptureHotkey,
             WindowCaptureHotkeys = NormalizeHotkeySlots(WindowCaptureHotkeys, WindowCaptureHotkey).ToList(),
             RegionCaptureHotkeys = NormalizeHotkeySlots(RegionCaptureHotkeys, RegionCaptureHotkey).ToList(),
-            FullScreenCaptureHotkeys = NormalizeHotkeySlots(FullScreenCaptureHotkeys, FullScreenCaptureHotkey).ToList()
+            FullScreenCaptureHotkeys = NormalizeHotkeySlots(FullScreenCaptureHotkeys, FullScreenCaptureHotkey).ToList(),
+            ViewerLeft = ViewerLeft,
+            ViewerTop = ViewerTop,
+            ViewerWidth = ViewerWidth,
+            ViewerHeight = ViewerHeight,
+            ViewerWindowState = ViewerWindowState,
+            ViewerExplorerViewMode = ViewerExplorerViewMode,
+            ViewerFolderTreeWidth = ViewerFolderTreeWidth,
+            ViewerFileListWidth = ViewerFileListWidth
         };
 
     public IReadOnlyList<string> GetHotkeySlots(CaptureHotkeyKind kind) =>

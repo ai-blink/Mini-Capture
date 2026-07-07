@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -55,6 +56,9 @@ public partial class ViewerWindow : Window
     private const double ZoomStep = 1.25;
     private const int MaxUndoSnapshots = 20;
     private const int FilePopulateBatchSize = 160;
+    private const double MinStoredViewerWidth = 980;
+    private const double MinStoredViewerHeight = 580;
+    private const double MaxStoredPanelWidth = 1200;
 
     private sealed record ViewerIndexSnapshot(
         ObservableCollection<FolderTreeNode> FolderNodes,
@@ -121,6 +125,7 @@ public partial class ViewerWindow : Window
         InitializeComponent();
         _pendingPath = imagePath;
         FileList.ItemsSource = _files;
+        ApplyStoredViewerLayout();
         UpdateToolButtons();
         UpdateColorSwatches();
     }
@@ -134,8 +139,13 @@ public partial class ViewerWindow : Window
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
-        SetViewMode(ExplorerViewMode.Details);
         await RefreshIndexAsync();
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        SaveViewerLayout();
+        base.OnClosing(e);
     }
 
     protected override void OnClosed(EventArgs e)
@@ -852,6 +862,101 @@ public partial class ViewerWindow : Window
 
         FileList.SelectedItem = selected;
         UpdateViewButtons();
+    }
+
+    private void ApplyStoredViewerLayout()
+    {
+        var settings = MiniCaptureSettingsStore.Load();
+        ApplyStoredWindowBounds(settings);
+        ApplyStoredExplorerLayout(settings);
+        var viewMode = settings.ViewerExplorerViewMode;
+        SetViewMode(IsDefinedViewMode(viewMode)
+            ? viewMode.GetValueOrDefault()
+            : ExplorerViewMode.Details);
+    }
+
+    private void ApplyStoredWindowBounds(MiniCaptureSettings settings)
+    {
+        if (settings.ViewerWidth is not { } width ||
+            settings.ViewerHeight is not { } height ||
+            settings.ViewerLeft is not { } left ||
+            settings.ViewerTop is not { } top)
+        {
+            return;
+        }
+
+        width = Math.Max(MinStoredViewerWidth, width);
+        height = Math.Max(MinStoredViewerHeight, height);
+        var bounds = new WpfRect(left, top, width, height);
+        if (!IntersectsVirtualScreen(bounds))
+        {
+            return;
+        }
+
+        WindowStartupLocation = WindowStartupLocation.Manual;
+        Left = left;
+        Top = top;
+        Width = width;
+        Height = height;
+
+        if (string.Equals(settings.ViewerWindowState, nameof(WindowState.Maximized), StringComparison.Ordinal))
+        {
+            WindowState = WindowState.Maximized;
+        }
+    }
+
+    private void ApplyStoredExplorerLayout(MiniCaptureSettings settings)
+    {
+        if (settings.ViewerFolderTreeWidth is { } folderWidth)
+        {
+            FolderTreeColumn.Width = new GridLength(ClampPanelWidth(folderWidth, FolderTreeColumn.MinWidth));
+        }
+
+        if (settings.ViewerFileListWidth is { } fileListWidth)
+        {
+            FileListColumn.Width = new GridLength(ClampPanelWidth(fileListWidth, FileListColumn.MinWidth));
+        }
+    }
+
+    private void SaveViewerLayout()
+    {
+        var settings = MiniCaptureSettingsStore.Load();
+        var bounds = WindowState == WindowState.Normal ? new WpfRect(Left, Top, Width, Height) : RestoreBounds;
+        if (bounds.Width >= MinStoredViewerWidth && bounds.Height >= MinStoredViewerHeight)
+        {
+            settings.ViewerLeft = bounds.Left;
+            settings.ViewerTop = bounds.Top;
+            settings.ViewerWidth = bounds.Width;
+            settings.ViewerHeight = bounds.Height;
+        }
+
+        settings.ViewerWindowState = WindowState == WindowState.Maximized
+            ? nameof(WindowState.Maximized)
+            : nameof(WindowState.Normal);
+        settings.ViewerExplorerViewMode = _viewMode;
+        settings.ViewerFolderTreeWidth = FolderTreeColumn.ActualWidth > 0
+            ? FolderTreeColumn.ActualWidth
+            : FolderTreeColumn.Width.Value;
+        settings.ViewerFileListWidth = FileListColumn.ActualWidth > 0
+            ? FileListColumn.ActualWidth
+            : FileListColumn.Width.Value;
+        MiniCaptureSettingsStore.Save(settings);
+    }
+
+    private static bool IsDefinedViewMode(ExplorerViewMode? mode) =>
+        mode is { } value && Enum.IsDefined(value);
+
+    private static double ClampPanelWidth(double width, double minWidth) =>
+        Math.Clamp(width, minWidth, MaxStoredPanelWidth);
+
+    private static bool IntersectsVirtualScreen(WpfRect bounds)
+    {
+        var virtualScreen = new WpfRect(
+            SystemParameters.VirtualScreenLeft,
+            SystemParameters.VirtualScreenTop,
+            SystemParameters.VirtualScreenWidth,
+            SystemParameters.VirtualScreenHeight);
+        return virtualScreen.IntersectsWith(bounds);
     }
 
     private static GridView CreateDetailsView()
