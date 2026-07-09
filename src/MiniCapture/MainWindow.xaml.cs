@@ -301,7 +301,7 @@ public partial class MainWindow : Window
     {
         _settings.QuickButtonLeft = Left;
         _settings.QuickButtonTop = Top;
-        MiniCaptureSettingsStore.Save(_settings);
+        MiniCaptureSettingsStore.Save(_settings, notify: false);
     }
 
     private void ApplyQuickButtonVisibility()
