@@ -53,6 +53,37 @@
             </DrawingBrush.Drawing>
         </DrawingBrush>
 
+        <DataTemplate x:Key="ToolbarIconWithLabelTemplate">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <ContentPresenter HorizontalAlignment="Center"
+                                  Content="{Binding}" />
+                <TextBlock Margin="0,1,0,0"
+                           HorizontalAlignment="Center"
+                           FontFamily="Segoe UI"
+                           FontSize="9"
+                           Foreground="{StaticResource ViewerMutedTextBrush}"
+                           Text="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=(AutomationProperties.Name)}"
+                           TextAlignment="Center"
+                           TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ColorSwatchWithLabelTemplate">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <ContentPresenter HorizontalAlignment="Center"
+                                  Content="{Binding}" />
+                <TextBlock Margin="0,2,0,0"
+                           HorizontalAlignment="Center"
+                           FontSize="9"
+                           Foreground="{StaticResource ViewerMutedTextBrush}"
+                           Text="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=(AutomationProperties.Name)}"
+                           TextAlignment="Center"
+                           TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
         <Style x:Key="ToolbarButtonStyle" TargetType="Button">
             <Setter Property="MinHeight" Value="30" />
             <Setter Property="MinWidth" Value="34" />
@@ -90,24 +121,41 @@
             <Setter Property="Foreground" Value="#FFFFFF" />
         </Style>
 
+        <Style x:Key="HeaderActionButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
+            <Setter Property="Height" Value="26" />
+            <Setter Property="MinHeight" Value="26" />
+            <Setter Property="MinWidth" Value="46" />
+            <Setter Property="Margin" Value="0,0,5,0" />
+            <Setter Property="Padding" Value="8,1" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="HeaderPrimaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource HeaderActionButtonStyle}">
+            <Setter Property="Background" Value="{StaticResource ViewerAccentBrush}" />
+            <Setter Property="BorderBrush" Value="#5EAFFF" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
         <Style x:Key="ToolbarIconButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
-            <Setter Property="Width" Value="32" />
-            <Setter Property="MinWidth" Value="32" />
-            <Setter Property="Height" Value="32" />
-            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Width" Value="52" />
+            <Setter Property="MinWidth" Value="52" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="MinHeight" Value="48" />
             <Setter Property="Margin" Value="0,0,4,0" />
-            <Setter Property="Padding" Value="0" />
+            <Setter Property="Padding" Value="2,3" />
             <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
             <Setter Property="FontSize" Value="14" />
+            <Setter Property="ContentTemplate" Value="{StaticResource ToolbarIconWithLabelTemplate}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
         </Style>
 
         <Style x:Key="ZoomIconButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarIconButtonStyle}">
-            <Setter Property="Width" Value="26" />
-            <Setter Property="MinWidth" Value="26" />
-            <Setter Property="Height" Value="26" />
-            <Setter Property="MinHeight" Value="26" />
+            <Setter Property="Width" Value="44" />
+            <Setter Property="MinWidth" Value="44" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="MinHeight" Value="48" />
             <Setter Property="Margin" Value="0,0,3,0" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
@@ -115,10 +163,10 @@
         </Style>
 
         <Style x:Key="ToolGlyphButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarIconButtonStyle}">
-            <Setter Property="Width" Value="36" />
-            <Setter Property="MinWidth" Value="36" />
-            <Setter Property="Height" Value="36" />
-            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Width" Value="50" />
+            <Setter Property="MinWidth" Value="50" />
+            <Setter Property="Height" Value="50" />
+            <Setter Property="MinHeight" Value="50" />
             <Setter Property="FontFamily" Value="Segoe UI Symbol" />
             <Setter Property="FontSize" Value="17" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -144,13 +192,14 @@
         </Style>
 
         <Style x:Key="ColorSwatchButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="24" />
-            <Setter Property="Height" Value="24" />
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="44" />
             <Setter Property="Margin" Value="0,0,5,0" />
             <Setter Property="Padding" Value="2" />
             <Setter Property="Background" Value="#24282A" />
             <Setter Property="BorderBrush" Value="{StaticResource ViewerMutedBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="ContentTemplate" Value="{StaticResource ColorSwatchWithLabelTemplate}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -162,7 +211,15 @@
             <Setter Property="Height" Value="16" />
             <Setter Property="BorderBrush" Value="#0C0F0F" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+
+        <Style x:Key="ToolbarPropertyLabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="8,0,5,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource ViewerDimTextBrush}" />
         </Style>
 
         <Style x:Key="ViewButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
@@ -321,7 +378,7 @@
     <Grid Background="{StaticResource ViewerWindowBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="34" />
-            <RowDefinition Height="104" />
+            <RowDefinition Height="184" />
             <RowDefinition Height="*" />
             <RowDefinition Height="28" />
         </Grid.RowDefinitions>
@@ -352,28 +409,26 @@
                            Foreground="{StaticResource ViewerTextBrush}"
                            TextTrimming="CharacterEllipsis" />
                 <StackPanel Grid.Column="2"
+                            VerticalAlignment="Center"
                             Orientation="Horizontal">
-                    <TextBlock Margin="16,0,0,0"
-                               VerticalAlignment="Center"
-                               FontSize="12"
-                               Foreground="{StaticResource ViewerDimTextBrush}"
-                               Text="File" />
-                    <TextBlock Margin="16,0,0,0"
-                               VerticalAlignment="Center"
-                               FontSize="12"
-                               Foreground="{StaticResource ViewerMutedTextBrush}"
-                               Text="View" />
-                    <TextBlock Margin="16,0,0,0"
-                               VerticalAlignment="Center"
-                               FontSize="12"
-                               FontWeight="SemiBold"
-                               Foreground="{StaticResource ViewerAccentBrush}"
-                               Text="Markup" />
-                    <TextBlock Margin="16,0,0,0"
-                               VerticalAlignment="Center"
-                               FontSize="12"
-                               Foreground="{StaticResource ViewerMutedTextBrush}"
-                               Text="Properties" />
+                    <Button AutomationProperties.AutomationId="ViewerHeaderSaveButton"
+                            AutomationProperties.Name="저장"
+                            Click="OnSaveClick"
+                            Content="저장"
+                            ToolTip="저장 (Ctrl+S)"
+                            Style="{StaticResource HeaderPrimaryActionButtonStyle}" />
+                    <Button AutomationProperties.AutomationId="ViewerHeaderCopyImageButton"
+                            AutomationProperties.Name="이미지 복사"
+                            Click="OnCopyImageClick"
+                            Content="이미지 복사"
+                            ToolTip="이미지 복사 (Ctrl+C)"
+                            Style="{StaticResource HeaderActionButtonStyle}" />
+                    <Button AutomationProperties.AutomationId="ViewerHeaderCopyPathButton"
+                            AutomationProperties.Name="파일 경로 복사"
+                            Click="OnCopyPathClick"
+                            Content="경로 복사"
+                            ToolTip="파일 경로 복사 (Ctrl+Shift+C)"
+                            Style="{StaticResource HeaderActionButtonStyle}" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -384,8 +439,9 @@
                 BorderThickness="0,0,0,1">
             <Grid Margin="8,4">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="44" />
-                    <RowDefinition Height="52" />
+                    <RowDefinition Height="58" />
+                    <RowDefinition Height="62" />
+                    <RowDefinition Height="56" />
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0"
@@ -409,19 +465,19 @@
                             <Button AutomationProperties.AutomationId="ViewerOpenFolderButton"
                                     AutomationProperties.Name="폴더 열기"
                                     Click="OnOpenFolderClick"
-                                    Content="폴더"
+                                    Content="폴더 열기"
                                     ToolTip="폴더 열기"
                                     Style="{StaticResource RibbonTextButtonStyle}" />
                             <Button AutomationProperties.AutomationId="ViewerCopyImageButton"
                                     AutomationProperties.Name="이미지 복사"
                                     Click="OnCopyImageClick"
-                                    Content="이미지"
-                                    ToolTip="이미지 복사"
+                                    Content="이미지 복사"
+                                    ToolTip="마크업 포함 이미지 복사"
                                     Style="{StaticResource RibbonTextButtonStyle}" />
                             <Button AutomationProperties.AutomationId="ViewerCopyPathButton"
                                     AutomationProperties.Name="파일 경로 복사"
                                     Click="OnCopyPathClick"
-                                    Content="경로"
+                                    Content="경로 복사"
                                     ToolTip="파일 경로 복사"
                                     Style="{StaticResource RibbonTextButtonStyle}" />
                         </StackPanel>
@@ -433,26 +489,26 @@
                                        Text="보기" />
                             <Button x:Name="PreviousButton"
                                     AutomationProperties.AutomationId="ViewerPreviousButton"
-                                    AutomationProperties.Name="이전 이미지"
+                                    AutomationProperties.Name="이전"
                                     Click="OnPreviousClick"
                                     Content="&#xE76B;"
                                     ToolTip="이전 이미지"
                                     Style="{StaticResource ToolbarIconButtonStyle}" />
                             <Button x:Name="NextButton"
                                     AutomationProperties.AutomationId="ViewerNextButton"
-                                    AutomationProperties.Name="다음 이미지"
+                                    AutomationProperties.Name="다음"
                                     Click="OnNextClick"
                                     Content="&#xE76C;"
                                     ToolTip="다음 이미지"
                                     Style="{StaticResource ToolbarIconButtonStyle}" />
                             <Button AutomationProperties.AutomationId="ViewerFitButton"
-                                    AutomationProperties.Name="창에 맞춤"
+                                    AutomationProperties.Name="맞춤"
                                     Click="OnFitClick"
                                     Content="&#xE9A6;"
                                     ToolTip="창에 맞춤"
                                     Style="{StaticResource ToolbarIconButtonStyle}" />
                             <Button AutomationProperties.AutomationId="ViewerActualSizeButton"
-                                    AutomationProperties.Name="원본 크기"
+                                    AutomationProperties.Name="원본"
                                     Click="OnActualSizeClick"
                                     Content="1:1"
                                     FontFamily="Segoe UI"
@@ -497,7 +553,7 @@
                                        Text="마크업" />
                             <Button x:Name="PanToolButton"
                                     AutomationProperties.AutomationId="ViewerPanToolButton"
-                                    AutomationProperties.Name="핸드툴"
+                                    AutomationProperties.Name="핸드"
                                     Click="OnToolButtonClick"
                                     ToolTip="핸드툴"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
@@ -539,7 +595,7 @@
                                     Tag="Arrow" />
                             <Button x:Name="RectangleToolButton"
                                     AutomationProperties.AutomationId="ViewerRectangleToolButton"
-                                    AutomationProperties.Name="네모 그리기"
+                                    AutomationProperties.Name="네모"
                                     Click="OnToolButtonClick"
                                     Content="□"
                                     ToolTip="네모 그리기"
@@ -547,7 +603,7 @@
                                     Tag="Rectangle" />
                             <Button x:Name="EllipseToolButton"
                                     AutomationProperties.AutomationId="ViewerEllipseToolButton"
-                                    AutomationProperties.Name="동그라미 그리기"
+                                    AutomationProperties.Name="원"
                                     Click="OnToolButtonClick"
                                     Content="○"
                                     ToolTip="동그라미 그리기"
@@ -571,7 +627,7 @@
                                     Tag="Mosaic" />
                             <Button x:Name="DeleteAnnotationButton"
                                     AutomationProperties.AutomationId="ViewerDeleteAnnotationButton"
-                                    AutomationProperties.Name="선택 항목 삭제"
+                                    AutomationProperties.Name="삭제"
                                     Click="OnDeleteAnnotationClick"
                                     Content="&#xE74D;"
                                     ToolTip="선택 항목 삭제"
@@ -585,20 +641,20 @@
                                     Style="{StaticResource ToolbarIconButtonStyle}" />
                             <Button x:Name="RedoButton"
                                     AutomationProperties.AutomationId="ViewerRedoButton"
-                                    AutomationProperties.Name="다시 적용"
+                                    AutomationProperties.Name="다시"
                                     Click="OnRedoClick"
                                     Content="&#xE7A6;"
                                     ToolTip="다시 적용"
                                     Style="{StaticResource ToolbarIconButtonStyle}" />
                             <Button AutomationProperties.AutomationId="ViewerRotateLeftButton"
-                                    AutomationProperties.Name="왼쪽 회전"
+                                    AutomationProperties.Name="좌회전"
                                     Click="OnRotateLeftClick"
                                     Content="⟲"
                                     FontFamily="Segoe UI Symbol"
                                     ToolTip="왼쪽 회전"
                                     Style="{StaticResource ToolbarIconButtonStyle}" />
                             <Button AutomationProperties.AutomationId="ViewerRotateRightButton"
-                                    AutomationProperties.Name="오른쪽 회전"
+                                    AutomationProperties.Name="우회전"
                                     Click="OnRotateRightClick"
                                     Content="⟳"
                                     FontFamily="Segoe UI Symbol"
@@ -606,12 +662,18 @@
                                     Style="{StaticResource ToolbarIconButtonStyle}" />
                         </StackPanel>
                     </Border>
+                </StackPanel>
 
+                <StackPanel Grid.Row="2"
+                            Margin="0,4,0,0"
+                            Orientation="Horizontal">
                     <Border Style="{StaticResource RibbonGroupStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource RibbonGroupLabelStyle}"
                                        Text="속성" />
-                            <ContentControl Height="32"
+                            <TextBlock Style="{StaticResource ToolbarPropertyLabelStyle}"
+                                       Text="색상" />
+                            <ContentControl Height="46"
                                             VerticalAlignment="Center"
                                             Focusable="False">
                                 <StackPanel x:Name="ColorSwatches"
@@ -675,17 +737,14 @@
                                     </Button>
                                 </StackPanel>
                             </ContentControl>
-                            <TextBlock Margin="6,0,5,0"
-                                       VerticalAlignment="Center"
-                                       FontFamily="Segoe MDL2 Assets"
-                                       FontSize="13"
-                                       Foreground="{StaticResource ViewerDimTextBrush}"
-                                       Text="&#xE762;" />
+                            <TextBlock Style="{StaticResource ToolbarPropertyLabelStyle}"
+                                       Text="두께" />
                             <Slider x:Name="StrokeSlider"
                                     Width="86"
                                     Margin="0,0,5,0"
                                     VerticalAlignment="Center"
                                     AutomationProperties.AutomationId="ViewerStrokeSlider"
+                                    AutomationProperties.Name="두께"
                                     Minimum="1"
                                     Maximum="18"
                                     TickFrequency="1"
@@ -698,12 +757,15 @@
                                        FontSize="12"
                                        Foreground="{StaticResource ViewerMutedTextBrush}"
                                        Text="4px" />
+                            <TextBlock Style="{StaticResource ToolbarPropertyLabelStyle}"
+                                       Text="텍스트" />
                             <TextBox x:Name="AnnotationTextBox"
                                      Width="152"
                                      Height="30"
-                                     Margin="6,0,0,0"
+                                     Margin="0"
                                      Padding="8,0"
                                      AutomationProperties.AutomationId="ViewerTextInput"
+                                     AutomationProperties.Name="텍스트"
                                      Background="#121414"
                                      BorderBrush="{StaticResource ViewerMutedBorderBrush}"
                                      Foreground="{StaticResource ViewerTextBrush}"
