@@ -63,12 +63,6 @@
             </Setter>
         </Style>
 
-        <Style x:Key="ExtensionCheckBoxStyle" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource SettingsTextBrush}" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Margin" Value="0" />
-        </Style>
-
         <Style x:Key="SettingsNavItemStyle" TargetType="ListBoxItem">
             <Setter Property="MinHeight" Value="40" />
             <Setter Property="Margin" Value="8,4" />
@@ -404,16 +398,26 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0">
-                        <TextBlock FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource SettingsTextBrush}"
-                                   Text="확장자 연결" />
-                        <TextBlock Margin="0,5,0,0"
-                                   FontSize="12"
-                                   Foreground="{StaticResource SettingsMutedTextBrush}"
-                                   Text="이미지 파일을 Mini Capture Viewer로 열기 위한 현재 상태 확인과 Windows 기본 앱 연결 안내" />
-                    </StackPanel>
+                    <DockPanel Grid.Row="0"
+                               LastChildFill="True">
+                        <Button AutomationProperties.AutomationId="ShowExtensionAssociationHelpButton"
+                                Click="OnShowExtensionHelpClick"
+                                Content="설명 보기"
+                                DockPanel.Dock="Right"
+                                Margin="12,0,0,0"
+                                MinWidth="96"
+                                Style="{StaticResource SettingsButtonStyle}" />
+                        <StackPanel>
+                            <TextBlock FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource SettingsTextBrush}"
+                                       Text="확장자 연결" />
+                            <TextBlock Margin="0,5,0,0"
+                                       FontSize="12"
+                                       Foreground="{StaticResource SettingsMutedTextBrush}"
+                                       Text="Mini Capture는 선택 가능한 앱으로 자동 등록됩니다. Windows 설정에서 PNG, JPG, JPEG 기본 앱만 선택하세요." />
+                        </StackPanel>
+                    </DockPanel>
 
                     <Border Grid.Row="1"
                             Margin="0,18,0,12"
@@ -436,14 +440,14 @@
                                        Grid.Column="0"
                                        FontWeight="SemiBold"
                                        Foreground="{StaticResource SettingsTextBrush}"
-                                       Text="연결 상태" />
+                                       Text="기본 앱 선택 상태" />
                             <TextBlock Grid.Row="1"
                                        Grid.Column="0"
                                        Margin="0,6,20,0"
                                        FontSize="12"
                                        Foreground="{StaticResource SettingsMutedTextBrush}"
                                        TextWrapping="Wrap"
-                                       Text="왼쪽 체크는 현재 Windows 연결 상태 표시, 오른쪽 체크는 Windows 기본 앱 화면에서 바꿀 후보 선택입니다. 앱은 기본 연결을 직접 강제 변경하지 않습니다." />
+                                       Text="앱은 PNG/JPG/JPEG 선택 목록에 자동으로 들어갑니다. 기본 앱 변경은 Windows 설정에서 사용자가 직접 선택해야 합니다." />
                             <TextBlock Grid.Row="0"
                                        Grid.RowSpan="2"
                                        Grid.Column="1"
@@ -467,92 +471,78 @@
                         <ScrollViewer Grid.Row="0"
                                       VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
-                            <ItemsControl x:Name="ExtensionGroupsList"
-                                          AutomationProperties.AutomationId="ExtensionGroupsList"
-                                          ItemsSource="{Binding ExtensionGroups}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Margin="0,0,0,12"
-                                                Padding="14"
-                                                Background="{StaticResource SettingsPanelBrush}"
-                                                BorderBrush="{StaticResource SettingsBorderBrush}"
-                                                BorderThickness="1"
-                                                CornerRadius="6">
-                                            <StackPanel>
-                                                <DockPanel LastChildFill="True">
-                                                    <TextBlock DockPanel.Dock="Left"
-                                                               FontSize="15"
-                                                               FontWeight="SemiBold"
-                                                               Foreground="{StaticResource SettingsTextBrush}"
-                                                               Text="{Binding Name}" />
-                                                    <TextBlock Margin="10,2,0,0"
-                                                               FontSize="12"
-                                                               Foreground="{StaticResource SettingsMutedTextBrush}"
-                                                               Text="{Binding Description}" />
-                                                </DockPanel>
+                            <Border Padding="14"
+                                    Background="{StaticResource SettingsPanelBrush}"
+                                    BorderBrush="{StaticResource SettingsBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <StackPanel>
+                                    <TextBlock FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource SettingsTextBrush}"
+                                               Text="이미지 확장자" />
+                                    <TextBlock Margin="0,4,0,12"
+                                               FontSize="12"
+                                               Foreground="{StaticResource SettingsMutedTextBrush}"
+                                               Text="Mini Capture가 지원하는 확장자입니다. 수정이나 해제는 Windows 기본 앱 설정에서 처리합니다." />
 
-                                                <Grid Margin="0,12,0,5">
+                                    <Grid Margin="0,0,0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="86" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="190" />
+                                            <ColumnDefinition Width="92" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="확장자" />
+                                        <TextBlock Grid.Column="1" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="형식" />
+                                        <TextBlock Grid.Column="2" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="현재 기본 앱" />
+                                        <TextBlock Grid.Column="3" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="수정" />
+                                    </Grid>
+
+                                    <ItemsControl x:Name="ExtensionItemsList"
+                                                  AutomationProperties.AutomationId="ExtensionItemsList"
+                                                  ItemsSource="{Binding ExtensionItems}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid MinHeight="38">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="86" />
                                                         <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="108" />
-                                                        <ColumnDefinition Width="108" />
-                                                        <ColumnDefinition Width="140" />
+                                                        <ColumnDefinition Width="190" />
+                                                        <ColumnDefinition Width="92" />
                                                     </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="확장자" />
-                                                    <TextBlock Grid.Column="1" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="형식" />
-                                                    <TextBlock Grid.Column="2" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="현재 연결" />
-                                                    <TextBlock Grid.Column="3" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="요청 선택" />
-                                                    <TextBlock Grid.Column="4" FontSize="11" Foreground="{StaticResource SettingsMutedTextBrush}" Text="Windows 상태" />
+                                                    <TextBlock Grid.Column="0"
+                                                               VerticalAlignment="Center"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{StaticResource SettingsTextBrush}"
+                                                               Text="{Binding Extension}" />
+                                                    <TextBlock Grid.Column="1"
+                                                               Margin="0,0,12,0"
+                                                               VerticalAlignment="Center"
+                                                               Foreground="{StaticResource SettingsMutedTextBrush}"
+                                                               Text="{Binding DisplayName}"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="2"
+                                                               VerticalAlignment="Center"
+                                                               FontSize="12"
+                                                               Foreground="{Binding StatusBrush}"
+                                                               Text="{Binding StatusText}"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               ToolTip="{Binding StatusDetail}" />
+                                                    <Button Grid.Column="3"
+                                                            Width="72"
+                                                            Margin="0,2,0,2"
+                                                            HorizontalAlignment="Left"
+                                                            AutomationProperties.Name="{Binding ChangeAutomationName}"
+                                                            Click="OnOpenDefaultAppsClick"
+                                                            Content="변경"
+                                                            Style="{StaticResource SettingsButtonStyle}" />
                                                 </Grid>
-
-                                                <ItemsControl ItemsSource="{Binding Extensions}">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <Grid MinHeight="34">
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="86" />
-                                                                    <ColumnDefinition Width="*" />
-                                                                    <ColumnDefinition Width="108" />
-                                                                    <ColumnDefinition Width="108" />
-                                                                    <ColumnDefinition Width="140" />
-                                                                </Grid.ColumnDefinitions>
-                                                                <TextBlock Grid.Column="0"
-                                                                           VerticalAlignment="Center"
-                                                                           FontWeight="SemiBold"
-                                                                           Foreground="{StaticResource SettingsTextBrush}"
-                                                                           Text="{Binding Extension}" />
-                                                                <TextBlock Grid.Column="1"
-                                                                           Margin="0,0,12,0"
-                                                                           VerticalAlignment="Center"
-                                                                           Foreground="{StaticResource SettingsMutedTextBrush}"
-                                                                           Text="{Binding DisplayName}"
-                                                                           TextTrimming="CharacterEllipsis" />
-                                                                <CheckBox Grid.Column="2"
-                                                                          AutomationProperties.Name="{Binding CurrentStateAutomationName}"
-                                                                          IsChecked="{Binding IsAssociated, Mode=OneWay}"
-                                                                          IsEnabled="False"
-                                                                          Style="{StaticResource ExtensionCheckBoxStyle}" />
-                                                                <CheckBox Grid.Column="3"
-                                                                          AutomationProperties.Name="{Binding CandidateAutomationName}"
-                                                                          IsChecked="{Binding IsSelected}"
-                                                                          Style="{StaticResource ExtensionCheckBoxStyle}" />
-                                                                <TextBlock Grid.Column="4"
-                                                                           VerticalAlignment="Center"
-                                                                           FontSize="12"
-                                                                           Foreground="{Binding StatusBrush}"
-                                                                           Text="{Binding StatusText}"
-                                                                           TextTrimming="CharacterEllipsis"
-                                                                           ToolTip="{Binding StatusDetail}" />
-                                                            </Grid>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
                         </ScrollViewer>
 
                         <Border Grid.Row="1"
@@ -562,29 +552,29 @@
                                 BorderBrush="{StaticResource SettingsBorderBrush}"
                                 BorderThickness="0,1,0,0">
                             <WrapPanel>
-                                <Button AutomationProperties.AutomationId="SelectAllExtensionCandidatesButton"
-                                        Click="OnSelectAllClick"
-                                        Content="전체 선택"
+                                <Button AutomationProperties.AutomationId="OpenWindowsDefaultAppsButton"
+                                        Click="OnOpenDefaultAppsClick"
+                                        Content="Windows 기본 앱에서 선택하기"
+                                        Margin="0,0,10,10"
+                                        MinWidth="220"
+                                        Style="{StaticResource SettingsButtonStyle}" />
+                                <Button AutomationProperties.AutomationId="ShowExtensionAssociationHelpFooterButton"
+                                        Click="OnShowExtensionHelpClick"
+                                        Content="설명 보기"
                                         Margin="0,0,10,10"
                                         MinWidth="96"
                                         Style="{StaticResource SettingsButtonStyle}" />
-                                <Button AutomationProperties.AutomationId="ClearExtensionCandidatesButton"
-                                        Click="OnClearSelectionClick"
-                                        Content="선택 안 함"
+                                <Button AutomationProperties.AutomationId="RegisterExtensionCandidatesButton"
+                                        Click="OnRegisterAssociationCandidatesClick"
+                                        Content="선택 목록 복구"
                                         Margin="0,0,10,10"
-                                        MinWidth="106"
+                                        MinWidth="128"
                                         Style="{StaticResource SettingsButtonStyle}" />
                                 <Button AutomationProperties.AutomationId="RefreshExtensionAssociationsButton"
                                         Click="OnRefreshAssociationsClick"
                                         Content="새로고침"
                                         Margin="0,0,10,10"
                                         MinWidth="96"
-                                        Style="{StaticResource SettingsButtonStyle}" />
-                                <Button AutomationProperties.AutomationId="OpenWindowsDefaultAppsButton"
-                                        Click="OnOpenDefaultAppsClick"
-                                        Content="Windows 기본 앱 열기"
-                                        Margin="0,0,10,10"
-                                        MinWidth="178"
                                         Style="{StaticResource SettingsButtonStyle}" />
                                 <Button AutomationProperties.AutomationId="CopyExecutablePathButton"
                                         Click="OnCopyExecutablePathClick"
@@ -628,7 +618,7 @@
             <TextBlock VerticalAlignment="Center"
                        FontSize="12"
                        Foreground="{StaticResource SettingsMutedTextBrush}"
-                       Text="기본 앱 선택은 Windows가 관리합니다." />
+                       Text="기본 앱 변경은 Windows 설정에서 사용자가 직접 선택해야 합니다." />
         </Border>
     </Grid>
 </Window>

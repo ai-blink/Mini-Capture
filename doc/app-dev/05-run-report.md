@@ -880,3 +880,85 @@ Window capture selection now prefers the frontmost selectable window under the c
 ### Follow-ups
 
 - FOLLOW_UP: manually validate frontmost window picking against the specific app/window that previously would not highlight, plus a maximized-window-over-smaller-window setup.
+
+## Default-App Candidate Registration
+
+### Finish Line
+
+Mini Capture registers itself as a Windows default-app candidate for PNG/JPG/JPEG without forcing the user's current defaults.
+
+### Changes
+
+- Added user-scoped file association registration under HKCU for `MiniCapture.Viewer`, PNG/JPG/JPEG ProgIDs, `Applications\MiniCapture.exe`, `Capabilities\FileAssociations`, `RegisteredApplications`, and Open With ProgIDs.
+- Added automatic PNG/JPG/JPEG candidate registration on app startup using the current executable path.
+- Simplified the Settings extension tab to one PNG/JPG/JPEG list with current default app text, per-row `변경`, `Windows 기본 앱에서 선택하기`, a `설명 보기` modal, and `선택 목록 복구` as a repair path.
+- Removed the previous extra-image section and registration checkboxes because they looked editable while Windows owns the actual default-app change.
+- Sent a shell association-changed notification after successful registration.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-association-registration\`: passed with 0 warnings and 0 errors.
+- `dotnet build MiniCapture.slnx -p:BaseOutputPath=artifacts\verify-extension-help-ux\ -p:UseAppHost=false`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-association-registration -p:UseAppHost=false`: passed 4 regression cases.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-extension-help-ux -p:UseAppHost=false`: passed 4 regression cases.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- Default `dotnet build MiniCapture.slnx` was blocked by running `MiniCapture.exe` processes locking `bin\Debug\net8.0-windows\MiniCapture.exe`; alternate output build verified compilation without closing the user's running app.
+
+### Decisions
+
+- This slice registers Mini Capture as a candidate only; it does not write `UserChoice` or force default apps.
+- Installer/self-contained packaging remains separate from the in-app user-scoped registration path.
+
+## Viewer Save/Copy And Thumbnail Refresh
+
+### Finish Line
+
+Viewer markup can be completed inside the image viewer through visible save/copy actions, and the file browser thumbnail/metadata updates immediately after saving an edited image.
+
+### Acceptance Checks
+
+- Header-level viewer actions expose save, image copy, and path copy without relying on the wider ribbon being visible.
+- `Ctrl+S`, `Ctrl+C`, and `Ctrl+Shift+C` work in the viewer for save, image copy, and path copy when a text box is not focused.
+- Saving a marked-up image refreshes the current file entry thumbnail cache, size, modified time, selection, and sorted position.
+
+### Scope Limit
+
+- Changed only the viewer action surface, save-state synchronization, and capture-file thumbnail invalidation.
+- Did not add new markup tools, installer behavior, default-app mutation, or broader file-manager actions.
+
+### Review Budget
+
+- One implementation/review loop.
+
+### Stop Rule
+
+- Stop after isolated build, existing regression tests, and diff hygiene pass.
+
+### Changes
+
+- Replaced the decorative viewer header labels with direct `저장`, `이미지 복사`, and `경로` actions.
+- Added viewer shortcuts for image copy and path copy while preserving normal text-box copy behavior.
+- Made `CaptureImageFile` refreshable so saved files can update their metadata and invalidate stale thumbnails.
+- Updated viewer save flow to refresh or insert the saved file entry, keep selection coherent, and preserve list sorting by newest modified time.
+
+### Verification
+
+- `dotnet build src\MiniCapture\MiniCapture.csproj -p:OutputPath="%TEMP%\mini-capture-build-output\"`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj -p:OutputPath="%TEMP%\mini-capture-tests-output\"`: passed 4 regression cases.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- Default `dotnet build MiniCapture.slnx` was blocked by the currently running `MiniCapture.exe` locking `bin\Debug\net8.0-windows\MiniCapture.exe`; alternate output build verified compilation without closing the user's running app.
+
+## V0.1.0 Portable Release
+
+### Changes
+
+- Rewrote `README.md` in Korean with portable setup, capture/viewer usage, shortcuts, default-app guidance, privacy, build, and V1 scope.
+- Set application, assembly, file, and informational versions to `0.1.0`.
+- Published a self-contained, single-file `win-x64` portable executable and packaged it as `MiniCapture-v0.1.0-win-x64-portable.zip`.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors after closing the locking Debug app process.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj`: passed 4 regression cases.
+- Portable `MiniCapture.exe --settings` launch: passed; process was responsive and reported product version `0.1.0`.
+- ZIP SHA-256: `229220E1BC009224905A0424E767D6A3CA9937B30A4CD47C665DD445AC178DE5`.

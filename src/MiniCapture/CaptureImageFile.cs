@@ -14,30 +14,27 @@ public sealed class CaptureImageFile : INotifyPropertyChanged
     private readonly Dictionary<int, ImageSource?> _thumbnails = new();
     private readonly HashSet<int> _loadingThumbnailSizes = new();
     private readonly object _thumbnailLock = new();
+    private int _thumbnailVersion;
 
     public CaptureImageFile(FileInfo file)
     {
         Path = file.FullName;
-        FileName = file.Name;
-        FolderPath = file.DirectoryName ?? string.Empty;
-        Extension = file.Extension.TrimStart('.').ToUpperInvariant();
-        Length = file.Length;
-        LastWriteTime = file.LastWriteTime;
+        RefreshFromFileInfo(file, raiseChanges: false);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public string Path { get; }
 
-    public string FileName { get; }
+    public string FileName { get; private set; } = string.Empty;
 
-    public string FolderPath { get; }
+    public string FolderPath { get; private set; } = string.Empty;
 
-    public string Extension { get; }
+    public string Extension { get; private set; } = string.Empty;
 
-    public long Length { get; }
+    public long Length { get; private set; }
 
-    public DateTime LastWriteTime { get; }
+    public DateTime LastWriteTime { get; private set; }
 
     public string SizeText => FormatSize(Length);
 
@@ -49,8 +46,51 @@ public sealed class CaptureImageFile : INotifyPropertyChanged
 
     public ImageSource? LargeThumbnail => GetOrQueueThumbnail(168, nameof(LargeThumbnail));
 
+    public bool RefreshFromDisk()
+    {
+        try
+        {
+            var file = new FileInfo(Path);
+            if (!file.Exists)
+            {
+                return false;
+            }
+
+            RefreshFromFileInfo(file, raiseChanges: true);
+            InvalidateThumbnails();
+            return true;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            return false;
+        }
+    }
+
+    public void InvalidateThumbnails()
+    {
+        lock (_thumbnailLock)
+        {
+            _thumbnailVersion++;
+            _thumbnails.Clear();
+            _loadingThumbnailSizes.Clear();
+        }
+
+        RaisePropertyChanged(nameof(SmallThumbnail));
+        RaisePropertyChanged(nameof(MediumThumbnail));
+        RaisePropertyChanged(nameof(LargeThumbnail));
+    }
+
     private ImageSource? GetOrQueueThumbnail(int pixelSize, string propertyName)
     {
+        int thumbnailVersion;
         lock (_thumbnailLock)
         {
             if (_thumbnails.TryGetValue(pixelSize, out var thumbnail))
@@ -62,13 +102,15 @@ public sealed class CaptureImageFile : INotifyPropertyChanged
             {
                 return null;
             }
+
+            thumbnailVersion = _thumbnailVersion;
         }
 
-        _ = LoadThumbnailAsync(pixelSize, propertyName);
+        _ = LoadThumbnailAsync(pixelSize, propertyName, thumbnailVersion);
         return null;
     }
 
-    private async Task LoadThumbnailAsync(int pixelSize, string propertyName)
+    private async Task LoadThumbnailAsync(int pixelSize, string propertyName, int thumbnailVersion)
     {
         ImageSource? thumbnail = null;
         try
@@ -85,14 +127,45 @@ public sealed class CaptureImageFile : INotifyPropertyChanged
         }
         finally
         {
+            var shouldNotify = false;
             lock (_thumbnailLock)
             {
-                _thumbnails[pixelSize] = thumbnail;
+                if (thumbnailVersion == _thumbnailVersion)
+                {
+                    _thumbnails[pixelSize] = thumbnail;
+                    shouldNotify = true;
+                }
+
                 _loadingThumbnailSizes.Remove(pixelSize);
             }
 
-            RaisePropertyChanged(propertyName);
+            if (shouldNotify)
+            {
+                RaisePropertyChanged(propertyName);
+            }
         }
+    }
+
+    private void RefreshFromFileInfo(FileInfo file, bool raiseChanges)
+    {
+        FileName = file.Name;
+        FolderPath = file.DirectoryName ?? string.Empty;
+        Extension = file.Extension.TrimStart('.').ToUpperInvariant();
+        Length = file.Length;
+        LastWriteTime = file.LastWriteTime;
+
+        if (!raiseChanges)
+        {
+            return;
+        }
+
+        RaisePropertyChanged(nameof(FileName));
+        RaisePropertyChanged(nameof(FolderPath));
+        RaisePropertyChanged(nameof(Extension));
+        RaisePropertyChanged(nameof(Length));
+        RaisePropertyChanged(nameof(LastWriteTime));
+        RaisePropertyChanged(nameof(SizeText));
+        RaisePropertyChanged(nameof(ModifiedText));
     }
 
     private ImageSource? LoadThumbnail(int pixelSize)

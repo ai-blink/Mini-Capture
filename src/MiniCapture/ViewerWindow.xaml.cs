@@ -349,6 +349,51 @@ public partial class ViewerWindow : Window
         return _files.FirstOrDefault(file => string.Equals(file.Path, path, StringComparison.OrdinalIgnoreCase));
     }
 
+    private bool IsCurrentFolder(string folderPath)
+    {
+        return !string.IsNullOrWhiteSpace(_currentFolderPath) &&
+            string.Equals(_currentFolderPath, folderPath, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void MoveFileToSortedPosition(CaptureImageFile file)
+    {
+        var oldIndex = _files.IndexOf(file);
+        if (oldIndex < 0)
+        {
+            return;
+        }
+
+        _files.RemoveAt(oldIndex);
+        _files.Insert(GetSortedFileInsertIndex(file), file);
+    }
+
+    private int GetSortedFileInsertIndex(CaptureImageFile file)
+    {
+        for (var index = 0; index < _files.Count; index++)
+        {
+            var current = _files[index];
+            if (file.LastWriteTime > current.LastWriteTime)
+            {
+                return index;
+            }
+
+            if (file.LastWriteTime == current.LastWriteTime &&
+                string.Compare(file.FileName, current.FileName, StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return index;
+            }
+        }
+
+        return _files.Count;
+    }
+
+    private static bool PathsEqual(string? left, string? right)
+    {
+        return !string.IsNullOrWhiteSpace(left) &&
+            !string.IsNullOrWhiteSpace(right) &&
+            string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
+    }
+
     private void SelectFile(CaptureImageFile? file)
     {
         _isLoadingSelection = true;
@@ -551,8 +596,9 @@ public partial class ViewerWindow : Window
 
         try
         {
-            SavePng(ComposeImageForExport(), targetPath);
-            _lastSavedPath = targetPath;
+            var exportedImage = ComposeImageForExport();
+            SavePng(exportedImage, targetPath);
+            ApplySavedFileState(targetPath);
             _isDirty = false;
             UpdateDirtyIndicator();
             UpdateNavigationButtons();
@@ -562,6 +608,52 @@ public partial class ViewerWindow : Window
         {
             SetViewerStatus($"저장 실패: {ex.Message}");
         }
+    }
+
+    private void ApplySavedFileState(string targetPath)
+    {
+        if (!CaptureFileIndex.TryCreateImageFile(targetPath, out var savedFile) || savedFile is null)
+        {
+            return;
+        }
+
+        var fileToSelect = FindFile(savedFile.Path);
+        var matchesCurrentFile = PathsEqual(_currentFile?.Path, savedFile.Path);
+
+        if (fileToSelect is not null)
+        {
+            fileToSelect.RefreshFromDisk();
+            _isLoadingSelection = true;
+            MoveFileToSortedPosition(fileToSelect);
+            FileList.SelectedItem = fileToSelect;
+            FileList.ScrollIntoView(fileToSelect);
+            _isLoadingSelection = false;
+            _currentFile = fileToSelect;
+        }
+        else if (IsCurrentFolder(savedFile.FolderPath))
+        {
+            fileToSelect = savedFile;
+            _isLoadingSelection = true;
+            _files.Insert(GetSortedFileInsertIndex(fileToSelect), fileToSelect);
+            FileList.SelectedItem = fileToSelect;
+            FileList.ScrollIntoView(fileToSelect);
+            _isLoadingSelection = false;
+            _currentFile = fileToSelect;
+            FileCountText.Text = $"{_files.Count:0}개";
+        }
+        else if (matchesCurrentFile && _currentFile is not null)
+        {
+            _currentFile.RefreshFromDisk();
+        }
+        else
+        {
+            _isLoadingSelection = true;
+            FileList.SelectedItem = null;
+            _isLoadingSelection = false;
+            _currentFile = savedFile;
+        }
+
+        _lastSavedPath = savedFile.Path;
     }
 
     private void OnOpenClick(object sender, RoutedEventArgs e)
@@ -2377,6 +2469,62 @@ public partial class ViewerWindow : Window
         ScheduleCurrentImageViewStateSave();
     }
 
+    private void OnZoomTextGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        ZoomText.SelectAll();
+    }
+
+    private void OnZoomTextLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        ApplyZoomTextInput();
+    }
+
+    private void OnZoomTextPreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        if (key == Key.Enter)
+        {
+            ApplyZoomTextInput();
+            ImageScrollViewer.Focus();
+            e.Handled = true;
+        }
+        else if (key == Key.Escape)
+        {
+            RestoreZoomText();
+            ImageScrollViewer.Focus();
+            e.Handled = true;
+        }
+    }
+
+    private bool ApplyZoomTextInput()
+    {
+        if (_editableImage is null)
+        {
+            ZoomText.Text = "-";
+            return false;
+        }
+
+        var valueText = ZoomText.Text.Trim().TrimEnd('%').Trim();
+        var parsed = double.TryParse(valueText, NumberStyles.Float, CultureInfo.CurrentCulture, out var percent) ||
+            double.TryParse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture, out percent);
+        if (!parsed || !double.IsFinite(percent))
+        {
+            RestoreZoomText();
+            SetViewerStatus("확대/축소 값은 10%~800% 사이의 숫자로 입력하세요.");
+            return false;
+        }
+
+        SetZoom(percent / 100.0);
+        return true;
+    }
+
+    private void RestoreZoomText()
+    {
+        ZoomText.Text = _editableImage is null
+            ? "-"
+            : $"{_zoom * 100:0}%";
+    }
+
     private void FitToStage()
     {
         if (_editableImage is not BitmapSource bitmap)
@@ -2497,6 +2645,7 @@ public partial class ViewerWindow : Window
     {
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
         var control = (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
+        var shift = (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift;
 
         if (IsTextInputFocused())
         {
@@ -2515,6 +2664,18 @@ public partial class ViewerWindow : Window
             {
                 case Key.S:
                     OnSaveClick(sender, new RoutedEventArgs());
+                    e.Handled = true;
+                    return;
+                case Key.C:
+                    if (shift)
+                    {
+                        OnCopyPathClick(sender, new RoutedEventArgs());
+                    }
+                    else
+                    {
+                        OnCopyImageClick(sender, new RoutedEventArgs());
+                    }
+
                     e.Handled = true;
                     return;
                 case Key.Z:
@@ -2679,12 +2840,44 @@ public partial class ViewerWindow : Window
         SetViewButtonState(TextToolButton, _editTool == ViewerEditTool.Text);
         SetViewButtonState(PenToolButton, _editTool == ViewerEditTool.Pen);
         SetViewButtonState(ArrowToolButton, _editTool == ViewerEditTool.Arrow);
+        UpdateToolContext();
         AnnotationOverlay.Cursor = _editTool switch
         {
             ViewerEditTool.Pan => WpfCursors.SizeAll,
             ViewerEditTool.Select when !_spacePanActive => WpfCursors.Arrow,
             _ when _spacePanActive => WpfCursors.SizeAll,
             _ => WpfCursors.Cross
+        };
+    }
+
+    private void UpdateToolContext()
+    {
+        var showsStroke = _editTool is ViewerEditTool.Pen or
+            ViewerEditTool.Arrow or
+            ViewerEditTool.Rectangle or
+            ViewerEditTool.Ellipse;
+        var showsText = _editTool == ViewerEditTool.Text;
+
+        ContextToolbar.Visibility = showsStroke || showsText
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        ColorContextGroup.Visibility = showsStroke || showsText
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        StrokeContextGroup.Visibility = showsStroke
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        TextContextGroup.Visibility = showsText
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        ContextToolName.Text = _editTool switch
+        {
+            ViewerEditTool.Pen => "펜 설정",
+            ViewerEditTool.Arrow => "화살표 설정",
+            ViewerEditTool.Rectangle => "네모 설정",
+            ViewerEditTool.Ellipse => "원 설정",
+            ViewerEditTool.Text => "텍스트 설정",
+            _ => string.Empty
         };
     }
 
@@ -2701,8 +2894,8 @@ public partial class ViewerWindow : Window
                 System.Windows.Media.ColorConverter.ConvertFromString(colorText) is WpfColor color &&
                 color.Equals(_selectedColor);
             child.BorderBrush = selected
-                ? new SolidColorBrush(WpfColor.FromRgb(0, 120, 212))
-                : new SolidColorBrush(WpfColor.FromRgb(64, 71, 82));
+                ? new SolidColorBrush(WpfColor.FromRgb(25, 127, 120))
+                : new SolidColorBrush(WpfColor.FromRgb(185, 196, 197));
             child.BorderThickness = selected ? new Thickness(2) : new Thickness(1);
             child.Padding = selected ? new Thickness(1) : new Thickness(2);
         }
@@ -2717,13 +2910,15 @@ public partial class ViewerWindow : Window
     private static void SetViewButtonState(System.Windows.Controls.Button button, bool selected)
     {
         button.Background = selected
-            ? new SolidColorBrush(WpfColor.FromRgb(0, 120, 212))
-            : new SolidColorBrush(WpfColor.FromRgb(36, 40, 42));
-        button.Foreground = selected ? WpfBrushes.White : new SolidColorBrush(WpfColor.FromRgb(226, 226, 226));
+            ? new SolidColorBrush(WpfColor.FromRgb(216, 238, 235))
+            : WpfBrushes.Transparent;
+        button.Foreground = selected
+            ? new SolidColorBrush(WpfColor.FromRgb(25, 127, 120))
+            : new SolidColorBrush(WpfColor.FromRgb(89, 104, 106));
         button.BorderBrush = selected
-            ? new SolidColorBrush(WpfColor.FromRgb(94, 175, 255))
-            : new SolidColorBrush(WpfColor.FromRgb(64, 71, 82));
-        button.BorderThickness = selected ? new Thickness(2) : new Thickness(1);
+            ? new SolidColorBrush(WpfColor.FromRgb(25, 127, 120))
+            : WpfBrushes.Transparent;
+        button.BorderThickness = selected ? new Thickness(1, 1, 1, 2) : new Thickness(1);
     }
 
     private void SelectFolderPath(string folderPath)

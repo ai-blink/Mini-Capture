@@ -18,6 +18,8 @@
 | done | P4 packaging and release checks | `dotnet build MiniCapture.slnx`, repeated capture smoke, DPI check, framework-dependent `win-x64` publish launch |
 | done | V1 viewer performance and file entry | async folder loading, background thumbnails, PNG/JPG/JPEG file argument opening, 420-file smoke, extension association deferred to installer/registry |
 | done | Extension settings UI | separate settings window with extension-association section, floating-button/tray `설정` entries, `--settings` smoke, no direct registry mutation |
-| done | Extension settings V1 reinforcement | category-based image extension status/request UI, 10-second and Activated refresh, default-app/copy-path guidance, UIA smoke |
+| done | Extension settings V1 reinforcement | app-start PNG/JPG/JPEG default-app candidate registration, simplified extension list, Windows default-app selection UI, explanation modal, repair/refresh actions, isolated `dotnet build` |
 | done | Viewer layout persistence | viewer window bounds/state, Explorer view mode, and browser pane widths persist through existing `settings.json`; `dotnet build MiniCapture.slnx` |
 | done | Window picker frontmost selection fix | Z-order first matching window selection, large-front-window overlap regression, isolated artifacts build/test |
+| done | Viewer save/copy and thumbnail refresh | header save/image/path actions, `Ctrl+S`/`Ctrl+C`/`Ctrl+Shift+C`, save-time thumbnail/metadata invalidation, isolated build/test |
+| done | V0.1.0 portable release | Korean README, self-contained single-file `win-x64` ZIP, portable launch smoke, GitHub release |

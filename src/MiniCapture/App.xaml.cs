@@ -32,6 +32,7 @@ public partial class App : System.Windows.Application
 
         EnsureWindowsDirectoryEnvironment();
         SettingsPathHelper.EnsureAppDataDirectory();
+        TryRegisterDefaultAppCandidates();
         CreateTrayIcon();
 
         var window = new MainWindow();
@@ -149,6 +150,22 @@ public partial class App : System.Windows.Application
         if (!string.IsNullOrWhiteSpace(windowsDirectory))
         {
             Environment.SetEnvironmentVariable("windir", windowsDirectory);
+        }
+    }
+
+    private static void TryRegisterDefaultAppCandidates()
+    {
+        try
+        {
+            var executablePath = Environment.ProcessPath ??
+                System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ??
+                Path.Combine(AppContext.BaseDirectory, "MiniCapture.exe");
+            FileAssociationRegistrar.RegisterViewerCandidates(
+                executablePath,
+                FileAssociationRegistrar.SupportedExtensions);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or ArgumentException)
+        {
         }
     }
 }

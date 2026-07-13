@@ -1,55 +1,120 @@
 # Mini Capture
 
-Mini Capture is a lightweight Windows screenshot utility for fast daily capture work. It keeps a compact always-on-top capture button on screen, saves screenshots automatically, and opens captures in a focused viewer with a small Windows Explorer-style browser.
+Mini Capture는 Windows에서 빠르게 화면을 캡처하고 바로 확인·표시·저장할 수 있는 가벼운 캡처 도구입니다. 화면 가장자리에 작은 캡처 버튼을 띄워 두고 영역, 창, 전체 화면, 타이머 캡처를 실행할 수 있습니다.
 
-## Features
+## 포터블 버전 다운로드
 
-- Floating transparent capture button with quick capture modes.
-- Four capture modes: region drag, target window, full screen, and timer capture.
-- Automatic PNG saving under the user's Pictures MiniCapture folder.
-- Result actions for opening the saved image, opening its folder, or viewing it in the app.
-- Internal image viewer with zoom, fit, 100%, navigation, and light markup tools.
-- Capture library browser with a left folder tree and details/small/medium/large image views.
-- Optional capture UI exclusion for the floating button, popups, and selection overlays where Windows supports it.
+1. [최신 릴리스](https://github.com/ai-blink/Mini-Capture/releases/latest)에서 `MiniCapture-v0.1.0-win-x64-portable.zip`을 내려받습니다.
+2. ZIP 파일을 원하는 폴더에 압축 해제합니다.
+3. `MiniCapture.exe`를 실행합니다.
 
-## Tech Stack
+설치 과정과 별도의 .NET 설치가 필요하지 않습니다. Windows SmartScreen이 처음 실행을 확인하면 파일 출처를 확인한 뒤 **추가 정보 → 실행**을 선택하세요.
 
-- C# / .NET 8
-- WPF and Windows Forms tray integration
-- Win32 interop for hotkeys, overlays, window picking, and capture UI exclusion
-- GDI screen capture through `CopyFromScreen`
+> 포터블 폴더를 이동하면 이미지 기본 앱 후보 경로도 달라집니다. 이동한 폴더에서 `MiniCapture.exe`를 한 번 다시 실행하면 현재 경로가 등록됩니다.
 
-## Build
+## 주요 기능
 
-```powershell
-dotnet build MiniCapture.slnx
-```
+- 항상 위에 표시되는 작은 캡처 버튼
+- 영역 드래그, 창 선택, 전체 화면, 타이머의 네 가지 캡처 방식
+- 캡처 결과를 PNG로 자동 저장
+- PNG, JPG, JPEG 이미지를 열 수 있는 내장 뷰어
+- 캡처 폴더를 탐색하는 Windows 탐색기형 미니 파일 브라우저
+- 자세히, 작게, 중간, 크게의 네 가지 파일 보기
+- 맞춤, 원본 크기, 확대/축소와 퍼센트 직접 입력
+- 펜, 화살표, 네모, 원, 텍스트, 모자이크 마크업
+- 마크업 선택·이동·크기 조절·삭제와 실행 취소/다시 실행
+- 이미지 복사, 파일 경로 복사, 저장 및 폴더 열기
+- 창 위치, 파일 보기 방식, 탐색기 패널 너비 유지
 
-The Debug build output is written to:
+## 사용 방법
+
+### 캡처하기
+
+화면 가장자리의 Mini Capture 버튼을 클릭한 뒤 원하는 방식을 선택합니다.
+
+- **영역**: 마우스로 원하는 영역을 드래그합니다.
+- **창**: 캡처할 창 위로 이동한 뒤 선택합니다.
+- **전체**: 전체 화면을 즉시 캡처합니다.
+- **타이머**: 지정한 시간이 지난 뒤 선택한 화면을 캡처합니다.
+
+캡처 파일은 기본적으로 다음 폴더에 날짜별로 저장됩니다.
 
 ```text
-src/MiniCapture/bin/Debug/net8.0-windows/
+C:\Users\<사용자 이름>\Pictures\MiniCapture\연도\월\일
 ```
 
-## Run
+### 이미지 확인 및 편집
+
+캡처 결과에서 뷰어를 열거나 PNG/JPG/JPEG 파일을 `MiniCapture.exe`로 열 수 있습니다. 뷰어 상단에서 파일 이동, 맞춤, 원본 크기, 확대/축소, 회전과 마크업 도구를 사용할 수 있습니다.
+
+확대/축소 퍼센트 입력란에는 `125` 또는 `125%`처럼 입력할 수 있으며 지원 범위는 10%~800%입니다. 최하단 상태바의 슬라이더로도 배율을 조절할 수 있습니다.
+
+### 자주 쓰는 단축키
+
+| 단축키 | 동작 |
+| --- | --- |
+| `Ctrl+S` | 현재 이미지 저장 |
+| `Ctrl+C` | 마크업을 포함한 이미지 복사 |
+| `Ctrl+Shift+C` | 파일 경로 복사 |
+| `Ctrl+Z` / `Ctrl+Y` | 실행 취소 / 다시 실행 |
+| `←` / `→` | 이전 / 다음 이미지 |
+| `+` / `-` | 확대 / 축소 |
+| `1` | 원본 크기 |
+| `F` | 창에 맞춤 |
+| `Delete` | 선택한 마크업 삭제 |
+| `Space` | 누르는 동안 핸드 도구 사용 |
+
+### PNG/JPG/JPEG 기본 앱으로 선택하기
+
+Mini Capture는 실행 시 현재 사용자 계정에 PNG/JPG/JPEG를 열 수 있는 앱 후보로 등록됩니다. Windows 정책상 기존 기본 앱을 강제로 바꾸지는 않습니다.
+
+1. Mini Capture의 **설정 → 확장자 연결**을 엽니다.
+2. **Windows 기본 앱에서 선택하기**를 누릅니다.
+3. `.png`, `.jpg`, `.jpeg`의 기본 앱을 **Mini Capture Viewer**로 선택합니다.
+
+## 시스템 요구 사항
+
+- Windows 10 또는 Windows 11
+- 64비트 Windows (`win-x64`)
+- 캡처와 저장을 위한 사용자 Pictures 폴더 접근 권한
+
+## 개인정보 및 네트워크
+
+Mini Capture는 캡처 이미지를 사용자 PC에만 저장합니다. V1에는 계정, 클라우드 업로드, 원격 공유, 사용 분석 기능이 없습니다.
+
+## 소스에서 빌드하기
+
+.NET 8 SDK가 필요합니다.
 
 ```powershell
-dotnet run --project src/MiniCapture/MiniCapture.csproj
+dotnet build .\MiniCapture.slnx
+dotnet run --project .\src\MiniCapture\MiniCapture.csproj
 ```
 
-You can also open an image directly in the viewer:
+이미지 파일을 뷰어로 바로 열려면 파일 경로를 인자로 전달합니다.
 
 ```powershell
-dotnet run --project src/MiniCapture/MiniCapture.csproj -- "C:\path\to\image.png"
+dotnet run --project .\src\MiniCapture\MiniCapture.csproj -- "C:\path\to\image.png"
 ```
 
-## Publish
+## 포터블 패키지 만들기
 
 ```powershell
-dotnet publish src/MiniCapture/MiniCapture.csproj -c Release -r win-x64 --self-contained false -o artifacts/publish/MiniCapture-win-x64-framework-dependent
+dotnet publish .\src\MiniCapture\MiniCapture.csproj `
+  -c Release `
+  -r win-x64 `
+  --self-contained true `
+  -p:PublishSingleFile=true `
+  -p:IncludeNativeLibrariesForSelfExtract=true `
+  -p:EnableCompressionInSingleFile=true `
+  -p:DebugType=None `
+  -o .\artifacts\publish\MiniCapture-v0.1.0-win-x64-portable
 ```
 
-## V1 Scope
+## V1 범위
 
-Mini Capture is intentionally smaller than PicPick or ShareX. V1 focuses on reliable screenshot capture, automatic saving, fast review, and capture-folder browsing. OCR, upload/cloud sharing, scrolling capture, video/GIF recording, and general-purpose file management are out of scope.
+V1은 안정적인 화면 캡처, 자동 저장, 빠른 확인, 간단한 표시와 캡처 폴더 탐색에 집중합니다. OCR, 클라우드 업로드, 스크롤 캡처, 동영상/GIF 녹화, 무거운 이미지 편집과 범용 파일 관리는 포함하지 않습니다.
 
+## 버전
+
+- 최초 포터블 공개 버전: `v0.1.0`

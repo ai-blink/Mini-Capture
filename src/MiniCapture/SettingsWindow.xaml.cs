@@ -24,26 +24,11 @@ public partial class SettingsWindow : Window
     private readonly DispatcherTimer _associationRefreshTimer;
     private MiniCaptureSettings _captureSettings;
 
-    public ObservableCollection<ExtensionCategory> ExtensionGroups { get; } =
+    public ObservableCollection<ExtensionAssociationItem> ExtensionItems { get; } =
     [
-        new(
-            "기본 이미지",
-            "V1에서 파일 인자 진입을 검증한 기본 대상",
-            [
-                new ExtensionAssociationItem(".png", "Portable Network Graphics"),
-                new ExtensionAssociationItem(".jpg", "JPEG Image"),
-                new ExtensionAssociationItem(".jpeg", "JPEG Image")
-            ]),
-        new(
-            "추가 이미지",
-            "Windows 기본 앱 화면에서 함께 확인할 이미지 포맷",
-            [
-                new ExtensionAssociationItem(".bmp", "Bitmap Image"),
-                new ExtensionAssociationItem(".gif", "Graphics Interchange Format"),
-                new ExtensionAssociationItem(".webp", "WebP Image"),
-                new ExtensionAssociationItem(".tif", "TIFF Image"),
-                new ExtensionAssociationItem(".tiff", "TIFF Image")
-            ])
+        new(".png", "Portable Network Graphics"),
+        new(".jpg", "JPEG Image"),
+        new(".jpeg", "JPEG Image")
     ];
 
     public ObservableCollection<CaptureHotkeyGroup> HotkeyGroups { get; }
@@ -116,6 +101,22 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private void OnShowExtensionHelpClick(object sender, RoutedEventArgs e)
+    {
+        System.Windows.MessageBox.Show(
+            this,
+            "Mini Capture는 PNG, JPG, JPEG 파일을 열 수 있는 앱으로 자동 등록됩니다.\n\n" +
+            "Windows 보안 정책 때문에 앱이 기존 기본 앱을 몰래 바꿀 수는 없습니다. " +
+            "마지막 선택은 Windows 설정에서 사용자가 직접 해야 합니다.\n\n" +
+            "1. Windows 기본 앱에서 선택하기를 누릅니다.\n" +
+            "2. .png, .jpg, .jpeg를 각각 검색합니다.\n" +
+            "3. 현재 앱을 Mini Capture Viewer로 바꿉니다.\n\n" +
+            "목록에 Mini Capture Viewer가 보이지 않으면 선택 목록 복구를 누른 뒤 다시 시도하세요.",
+            "확장자 연결 설명",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+    }
+
     private void OnCopyExecutablePathClick(object sender, RoutedEventArgs e)
     {
         try
@@ -134,29 +135,25 @@ public partial class SettingsWindow : Window
         Close();
     }
 
-    private void OnSelectAllClick(object sender, RoutedEventArgs e)
-    {
-        foreach (var item in GetExtensionItems())
-        {
-            item.IsSelected = true;
-        }
-
-        SetStatus("모든 확장자를 연결 요청 후보로 선택했습니다.");
-    }
-
-    private void OnClearSelectionClick(object sender, RoutedEventArgs e)
-    {
-        foreach (var item in GetExtensionItems())
-        {
-            item.IsSelected = false;
-        }
-
-        SetStatus("연결 요청 후보 선택을 비웠습니다.");
-    }
-
     private void OnRefreshAssociationsClick(object sender, RoutedEventArgs e)
     {
         RefreshAssociationStates("수동 새로고침");
+    }
+
+    private void OnRegisterAssociationCandidatesClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            FileAssociationRegistrar.RegisterViewerCandidates(
+                GetExecutablePath(),
+                FileAssociationRegistrar.SupportedExtensions);
+            RefreshAssociationStates("선택 목록 복구 완료");
+            SetStatus("PNG/JPG/JPEG 선택 목록을 복구했습니다. Windows 기본 앱에서 Mini Capture Viewer를 선택하세요.");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or ArgumentException)
+        {
+            SetStatus($"선택 목록 복구 실패: {ex.Message}");
+        }
     }
 
     private void ShowSection(SettingsSection section)
@@ -369,35 +366,27 @@ public partial class SettingsWindow : Window
 
         foreach (var item in GetExtensionItems())
         {
-            totalCount++;
             var state = FileAssociationReader.Read(item.Extension, executablePath);
             item.ApplyState(state);
-
+            totalCount++;
             if (item.IsAssociated)
             {
                 associatedCount++;
             }
         }
 
-        AssociationSummaryText.Text = $"{associatedCount}/{totalCount}개 연결됨";
+        AssociationSummaryText.Text = $"PNG/JPG/JPEG {associatedCount}/{totalCount}개 연결됨";
         SetStatus($"{reason}: 전체 확장자 연결 상태를 갱신했습니다. {DateTime.Now:HH:mm:ss}");
     }
 
     private string BuildWindowsSettingsStatus(string prefix)
     {
-        var selected = GetExtensionItems()
-            .Where(item => item.IsSelected)
-            .Select(item => item.Extension)
-            .ToArray();
-
-        return selected.Length == 0
-            ? $"{prefix} 연결할 확장자를 선택한 뒤 MiniCapture.exe를 기본 앱/Open With 대상으로 지정하세요."
-            : $"{prefix} 선택 후보: {string.Join(", ", selected)}. MiniCapture.exe 경로를 기본 앱/Open With 대상에 사용하세요.";
+        return $"{prefix} .png, .jpg, .jpeg의 현재 앱을 Mini Capture Viewer로 바꾸세요.";
     }
 
     private IEnumerable<ExtensionAssociationItem> GetExtensionItems()
     {
-        return ExtensionGroups.SelectMany(group => group.Extensions);
+        return ExtensionItems;
     }
 
     private static string GetExecutablePath()
@@ -406,18 +395,6 @@ public partial class SettingsWindow : Window
             Process.GetCurrentProcess().MainModule?.FileName ??
             Path.Combine(AppContext.BaseDirectory, "MiniCapture.exe");
     }
-}
-
-public sealed class ExtensionCategory(
-    string name,
-    string description,
-    IEnumerable<ExtensionAssociationItem> extensions)
-{
-    public string Name { get; } = name;
-
-    public string Description { get; } = description;
-
-    public ObservableCollection<ExtensionAssociationItem> Extensions { get; } = new(extensions);
 }
 
 public enum CaptureHotkeyKind
@@ -678,10 +655,11 @@ public sealed class CaptureHotkeySettingItem(
     }
 }
 
-public sealed class ExtensionAssociationItem(string extension, string displayName) : INotifyPropertyChanged
+public sealed class ExtensionAssociationItem(
+    string extension,
+    string displayName) : INotifyPropertyChanged
 {
     private bool _isAssociated;
-    private bool _isSelected;
     private string _statusText = "확인 대기";
     private string _statusDetail = string.Empty;
     private WpfBrush _statusBrush = WpfBrushes.LightGray;
@@ -692,20 +670,12 @@ public sealed class ExtensionAssociationItem(string extension, string displayNam
 
     public string DisplayName { get; } = displayName;
 
-    public string CurrentStateAutomationName => $"{Extension} 현재 Mini Capture 연결 상태";
-
-    public string CandidateAutomationName => $"{Extension} 연결 요청 후보";
+    public string ChangeAutomationName => $"{Extension} Windows 기본 앱 변경";
 
     public bool IsAssociated
     {
         get => _isAssociated;
         private set => SetField(ref _isAssociated, value, nameof(IsAssociated));
-    }
-
-    public bool IsSelected
-    {
-        get => _isSelected;
-        set => SetField(ref _isSelected, value, nameof(IsSelected));
     }
 
     public string StatusText
