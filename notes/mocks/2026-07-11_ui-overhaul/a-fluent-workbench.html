@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mini Capture UI 개편안 A - Fluent Workbench</title>
+<style>
+:root {
+  --page: oklch(0.93 0.006 235);
+  --surface: oklch(0.985 0.004 235);
+  --surface-2: oklch(0.955 0.008 235);
+  --surface-3: oklch(0.91 0.012 235);
+  --ink: oklch(0.23 0.018 235);
+  --muted: oklch(0.5 0.018 235);
+  --line: oklch(0.84 0.012 235);
+  --accent: oklch(0.57 0.13 188);
+  --accent-strong: oklch(0.46 0.12 188);
+  --accent-soft: oklch(0.91 0.05 188);
+  --blue: oklch(0.56 0.16 253);
+  --yellow: oklch(0.82 0.15 88);
+  --red: oklch(0.62 0.2 28);
+  --canvas: oklch(0.2 0.012 235);
+  --canvas-dot: oklch(0.31 0.015 235);
+  --shadow: 0 18px 46px rgb(17 29 34 / 18%);
+  --font: "Segoe UI Variable", "Segoe UI", sans-serif;
+  --display: Bahnschrift, "Segoe UI", sans-serif;
+}
+[data-theme="dark"] {
+  --page: oklch(0.16 0.01 235);
+  --surface: oklch(0.205 0.012 235);
+  --surface-2: oklch(0.245 0.014 235);
+  --surface-3: oklch(0.3 0.018 235);
+  --ink: oklch(0.94 0.006 235);
+  --muted: oklch(0.7 0.014 235);
+  --line: oklch(0.36 0.016 235);
+  --accent: oklch(0.72 0.13 188);
+  --accent-strong: oklch(0.76 0.13 188);
+  --accent-soft: oklch(0.3 0.07 188);
+  --blue: oklch(0.69 0.14 253);
+  --yellow: oklch(0.81 0.14 88);
+  --red: oklch(0.7 0.18 28);
+  --canvas: oklch(0.13 0.008 235);
+  --canvas-dot: oklch(0.23 0.012 235);
+  --shadow: 0 18px 46px rgb(0 0 0 / 36%);
+}
+* { box-sizing: border-box; letter-spacing: 0; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+body { background: var(--page); color: var(--ink); font: 13px/1.45 var(--font); }
+button, input, select { color: inherit; font: inherit; }
+button { border: 0; cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.glyph { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 16px; line-height: 1; }
+.reviewbar { height: 44px; display: flex; align-items: center; gap: 16px; padding: 0 14px; color: #f5f7f7; background: #202728; border-bottom: 1px solid #313a3b; }
+.review-title { min-width: 210px; font: 600 14px/1 var(--display); }
+.review-title small { margin-left: 8px; color: #9fb0b1; font: 11px/1 var(--font); }
+.review-tabs { display: flex; align-items: center; gap: 2px; }
+.review-tab, .review-action { height: 30px; padding: 0 12px; border-radius: 4px; color: #cbd5d5; background: transparent; }
+.review-tab:hover, .review-action:hover { background: #30393a; }
+.review-tab.active { color: #fff; background: #3c4748; box-shadow: inset 0 -2px #4fd1c5; }
+.review-spacer { flex: 1; }
+.review-action { border: 1px solid #435051; }
+.stage { height: calc(100vh - 44px); padding: 14px; }
+.screen { display: none; width: 100%; height: 100%; }
+.screen.active { display: block; animation: enter 140ms ease-out; }
+@keyframes enter { from { opacity: .5; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+.window { width: 100%; height: 100%; min-height: 480px; display: grid; grid-template-rows: 46px 54px auto minmax(0, 1fr) 28px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); }
+.titlebar { min-width: 0; display: flex; align-items: center; gap: 10px; padding: 0 10px 0 14px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.app-mark { width: 24px; height: 24px; display: grid; place-items: center; color: #fff; background: var(--accent-strong); border-radius: 5px; font: 700 13px/1 var(--display); }
+.title-file { min-width: 0; flex: 1; }
+.title-file strong { display: block; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.title-file span { display: block; color: var(--muted); font-size: 10px; }
+.command { height: 32px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 10px; color: var(--ink); background: transparent; border-radius: 4px; }
+.command:hover { background: var(--surface-2); }
+.command.primary { min-width: 72px; color: #fff; background: var(--accent-strong); font-weight: 650; }
+.command.primary:hover { filter: brightness(1.06); }
+.command.icon { width: 32px; padding: 0; }
+.window-controls { display: flex; margin-left: 4px; }
+.window-controls button { width: 34px; height: 30px; color: var(--muted); background: transparent; }
+.window-controls button:hover { color: var(--ink); background: var(--surface-2); }
+.toolbar { display: flex; align-items: center; min-width: 0; padding: 6px 10px; overflow-x: auto; background: var(--surface-2); border-bottom: 1px solid var(--line); scrollbar-width: thin; }
+.tool-group { display: flex; align-items: center; flex: 0 0 auto; gap: 2px; padding: 0 9px; border-right: 1px solid var(--line); }
+.tool-group:first-child { padding-left: 0; }
+.tool-group:last-child { border-right: 0; }
+.tool { position: relative; min-width: 34px; height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 9px; color: var(--muted); background: transparent; border-radius: 4px; }
+.tool:hover { color: var(--ink); background: var(--surface); }
+.tool.active { color: var(--accent-strong); background: var(--accent-soft); box-shadow: inset 0 -2px var(--accent); }
+.tool .label { font-size: 12px; }
+.zoom-readout { min-width: 44px; color: var(--muted); text-align: center; }
+.context-toolbar { min-width: 0; height: 42px; display: flex; align-items: center; gap: 12px; padding: 5px 12px; overflow-x: auto; background: var(--surface); border-bottom: 1px solid var(--line); }
+.context-toolbar[hidden] { display: none; }
+.context-title { min-width: 72px; display: flex; align-items: center; gap: 7px; color: var(--accent-strong); font-size: 11px; font-weight: 700; }
+.context-group { display: flex; align-items: center; gap: 7px; padding-right: 12px; border-right: 1px solid var(--line); }
+.context-group:last-child { border-right: 0; }
+.context-group[hidden] { display: none; }
+.context-label { color: var(--muted); font-size: 10px; font-weight: 650; }
+.context-toolbar .swatches { gap: 5px; flex-wrap: nowrap; }
+.context-toolbar .swatch { width: 22px; height: 22px; padding: 3px; }
+.context-toolbar .swatch::after { width: 14px; height: 14px; }
+.context-toolbar .control-row { gap: 7px; margin: 0; }
+.context-toolbar .control-row input[type="range"] { width: 96px; }
+.context-toolbar .text-input { width: 190px; height: 28px; margin: 0; }
+.workspace { min-width: 0; min-height: 0; display: grid; grid-template-columns: 230px minmax(320px, 1fr); }
+.library { min-width: 0; overflow: auto; background: var(--surface); border-right: 1px solid var(--line); }
+.pane-head { height: 42px; display: flex; align-items: center; padding: 0 10px 0 14px; border-bottom: 1px solid var(--line); }
+.pane-head strong { flex: 1; font-size: 12px; }
+.pane-head button { width: 28px; height: 28px; color: var(--muted); background: transparent; border-radius: 4px; }
+.pane-head button:hover { background: var(--surface-2); }
+.tree { padding: 8px 8px 4px; border-bottom: 1px solid var(--line); }
+.tree-row { height: 28px; display: flex; align-items: center; gap: 7px; padding: 0 7px; color: var(--muted); border-radius: 4px; }
+.tree-row.active { color: var(--ink); background: var(--accent-soft); font-weight: 600; }
+.tree-row.indent { padding-left: 24px; }
+.search { margin: 9px 10px 6px; }
+.search input { width: 100%; height: 30px; padding: 0 10px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; }
+.file-list { display: grid; gap: 3px; padding: 4px 8px 12px; }
+.file-item { min-width: 0; height: 54px; display: grid; grid-template-columns: 44px minmax(0,1fr); gap: 9px; align-items: center; padding: 5px; text-align: left; color: var(--ink); background: transparent; border: 1px solid transparent; border-radius: 4px; }
+.file-item:hover { background: var(--surface-2); }
+.file-item.active { background: var(--accent-soft); border-color: color-mix(in oklch, var(--accent) 48%, var(--line)); }
+.thumb { width: 44px; height: 42px; position: relative; overflow: hidden; background: #dbe6e2; border: 1px solid var(--line); border-radius: 3px; }
+.thumb::before { content: ""; position: absolute; inset: 8px 6px 13px; background: var(--thumb, #3aa69f); }
+.thumb::after { content: ""; position: absolute; left: 6px; right: 13px; bottom: 7px; height: 3px; background: #546466; box-shadow: 0 -6px #fff; }
+.file-copy { min-width: 0; }
+.file-copy strong, .file-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-copy strong { font-size: 11px; }
+.file-copy span { margin-top: 2px; color: var(--muted); font-size: 10px; }
+.canvas { position: relative; min-width: 0; min-height: 0; display: grid; place-items: center; overflow: auto; padding: 34px; background-color: var(--canvas); background-image: radial-gradient(circle, var(--canvas-dot) 1px, transparent 1px); background-size: 18px 18px; }
+.shot { width: min(78%, 760px); min-width: 380px; aspect-ratio: 16/9; display: grid; grid-template-rows: 54px 1fr 46px; overflow: hidden; color: #253236; background: #f8fbfa; border: 1px solid #768487; box-shadow: 0 16px 34px rgb(0 0 0 / 32%); }
+.shot-head { display: flex; align-items: center; gap: 10px; padding: 0 20px; color: #fff; background: var(--shot-accent, #197f78); }
+.shot-head b { font: 700 19px/1 var(--display); }
+.shot-head span { margin-left: auto; font-size: 11px; opacity: .82; }
+.shot-body { display: grid; grid-template-columns: 1.05fr .95fr; gap: 22px; padding: 26px 28px; }
+.shot-copy { align-self: center; }
+.shot-kicker { margin-bottom: 7px; color: var(--shot-accent, #197f78); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.shot-copy h2 { margin: 0 0 10px; font: 700 30px/1.08 var(--display); }
+.shot-copy p { max-width: 36ch; margin: 0; color: #607074; font-size: 12px; }
+.shot-board { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; align-content: center; }
+.shot-block { min-height: 64px; padding: 11px; background: #e8efed; border-left: 4px solid var(--shot-accent, #197f78); }
+.shot-block:nth-child(2) { border-left-color: #e0a529; }
+.shot-block:nth-child(3) { grid-column: span 2; border-left-color: #536fbd; }
+.shot-block b { display: block; margin-bottom: 6px; font-size: 11px; }
+.shot-line { height: 5px; margin-top: 5px; background: #b9c7c4; }
+.shot-line.short { width: 62%; }
+.shot-foot { display: flex; align-items: center; padding: 0 20px; color: #5f6e71; background: #edf3f1; border-top: 1px solid #d6e0dd; font-size: 11px; }
+.shot-foot strong { margin-left: auto; color: var(--shot-accent, #197f78); }
+.swatches { display: flex; gap: 7px; flex-wrap: wrap; }
+.swatch { width: 24px; height: 24px; padding: 3px; background: transparent; border: 1px solid var(--line); border-radius: 4px; }
+.swatch::after { content: ""; display: block; width: 16px; height: 16px; background: var(--c); border: 1px solid rgb(0 0 0 / 18%); border-radius: 2px; }
+.swatch.active { border-color: var(--accent-strong); box-shadow: 0 0 0 1px var(--accent-strong); }
+.control-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.control-row label { width: 36px; color: var(--muted); font-size: 11px; }
+.control-row input[type="range"] { min-width: 0; flex: 1; accent-color: var(--accent-strong); }
+.value { width: 32px; color: var(--muted); font-size: 11px; text-align: right; }
+.text-input { width: 100%; height: 32px; margin-top: 11px; padding: 0 9px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; }
+.statusbar { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 0 10px; color: var(--muted); background: var(--surface-2); border-top: 1px solid var(--line); font-size: 10px; }
+.status-path { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.saved { display: inline-flex; align-items: center; gap: 4px; color: var(--accent-strong); }
+.saved::before { content: ""; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
+
+/* 퀵 캡처 */
+.desktop { position: relative; width: 100%; height: 100%; overflow: hidden; background: #c9d9d5; border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); }
+.desktop::before { content: ""; position: absolute; inset: 0; opacity: .18; background-image: linear-gradient(#607573 1px, transparent 1px), linear-gradient(90deg, #607573 1px, transparent 1px); background-size: 32px 32px; }
+.desk-window { position: absolute; overflow: hidden; background: #f8fbfa; border: 1px solid #98aaa7; box-shadow: 0 12px 28px rgb(39 58 57 / 18%); }
+.desk-window.one { top: 11%; left: 8%; width: 55%; height: 68%; }
+.desk-window.two { right: 7%; bottom: 9%; width: 34%; height: 49%; }
+.desk-title { height: 34px; display: flex; align-items: center; padding: 0 12px; color: #40504f; background: #e8efed; border-bottom: 1px solid #cbd8d5; font-weight: 600; }
+.desk-lines { padding: 18px; }
+.desk-lines i { display: block; width: 75%; height: 10px; margin-bottom: 12px; background: #dbe5e2; }
+.desk-lines i:nth-child(2) { width: 42%; background: #8ccac3; }
+.desk-lines i:nth-child(3) { width: 88%; }
+.quick-wrap { position: absolute; left: 64%; top: 22%; z-index: 4; }
+.quick-button { width: 58px; height: 58px; display: grid; place-items: center; touch-action: none; color: #fff; background: rgb(25 127 120 / 92%); border: 2px solid rgb(255 255 255 / 76%); border-radius: 50%; box-shadow: 0 9px 24px rgb(22 62 58 / 32%); font-size: 23px; cursor: grab; user-select: none; }
+.quick-button:active { cursor: grabbing; }
+.capture-menu { position: absolute; top: 68px; right: 0; width: 258px; display: none; padding: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); }
+.quick-wrap.open .capture-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; animation: enter 120ms ease-out; }
+.capture-mode { min-height: 70px; display: grid; grid-template-columns: 28px 1fr; gap: 7px; align-content: center; padding: 10px; text-align: left; color: var(--ink); background: var(--surface-2); border-radius: 4px; }
+.capture-mode:hover { background: var(--accent-soft); }
+.capture-mode .glyph { grid-row: span 2; align-self: center; color: var(--accent-strong); font-size: 19px; }
+.capture-mode b { font-size: 12px; }
+.capture-mode small { color: var(--muted); font-size: 10px; }
+.timer-strip { grid-column: span 2; display: flex; align-items: center; gap: 5px; padding: 5px; color: var(--muted); font-size: 10px; }
+.timer-strip button { min-width: 30px; height: 24px; color: var(--muted); background: var(--surface-2); border-radius: 3px; }
+.timer-strip button.active { color: #fff; background: var(--accent-strong); }
+
+/* 설정 */
+.settings-window { width: min(100%, 1020px); height: 100%; min-height: 480px; margin: 0 auto; display: grid; grid-template-rows: 54px minmax(0,1fr) 52px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); }
+.settings-head { display: flex; align-items: center; gap: 11px; padding: 0 18px; border-bottom: 1px solid var(--line); }
+.settings-head .app-mark { width: 28px; height: 28px; }
+.settings-head h1 { margin: 0; font: 650 16px/1 var(--display); }
+.settings-head span { color: var(--muted); font-size: 11px; }
+.settings-body { min-height: 0; display: grid; grid-template-columns: 190px minmax(0,1fr); }
+.settings-nav { padding: 12px 9px; background: var(--surface-2); border-right: 1px solid var(--line); }
+.settings-nav button { width: 100%; height: 38px; display: flex; align-items: center; gap: 9px; padding: 0 11px; text-align: left; color: var(--muted); background: transparent; border-radius: 4px; }
+.settings-nav button:hover { background: var(--surface); }
+.settings-nav button.active { color: var(--accent-strong); background: var(--accent-soft); font-weight: 650; }
+.settings-main { min-width: 0; overflow: auto; padding: 24px 30px; }
+.settings-panel { display: none; max-width: 720px; }
+.settings-panel.active { display: block; }
+.settings-panel h2 { margin: 0 0 4px; font: 650 21px/1.2 var(--display); }
+.settings-panel > p { margin: 0 0 24px; color: var(--muted); }
+.settings-section { padding: 18px 0; border-top: 1px solid var(--line); }
+.settings-section:first-of-type { border-top: 0; padding-top: 0; }
+.settings-section h3 { margin: 0 0 12px; font-size: 13px; }
+.hotkey-row { min-height: 48px; display: grid; grid-template-columns: 120px minmax(260px,1fr); gap: 16px; align-items: center; }
+.hotkey-row label { color: var(--muted); }
+.keyset { display: flex; align-items: center; gap: 5px; }
+.key { min-width: 70px; height: 32px; padding: 0 10px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; text-align: center; }
+.detect { height: 30px; padding: 0 9px; color: var(--accent-strong); background: transparent; border: 1px solid color-mix(in oklch, var(--accent) 50%, var(--line)); border-radius: 4px; }
+.form-row { min-height: 46px; display: grid; grid-template-columns: 190px 1fr; gap: 16px; align-items: center; }
+.form-row select { width: 120px; height: 32px; padding: 0 8px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; }
+.toggle-row { min-height: 46px; display: flex; align-items: center; gap: 10px; }
+.switch { width: 38px; height: 22px; position: relative; flex: 0 0 auto; padding: 0; background: var(--accent-strong); border-radius: 11px; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 19px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: left 120ms ease; }
+.switch.off { background: var(--surface-3); }
+.switch.off::after { left: 3px; }
+.association { min-height: 54px; display: grid; grid-template-columns: 64px 1fr 120px auto; gap: 12px; align-items: center; border-top: 1px solid var(--line); }
+.association:first-of-type { border-top: 0; }
+.association code { font: 650 12px/1 Consolas, monospace; }
+.association span { color: var(--muted); }
+.association b { color: var(--accent-strong); font-size: 11px; }
+.association button { height: 30px; padding: 0 10px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; }
+.settings-foot { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 0 18px; background: var(--surface-2); border-top: 1px solid var(--line); }
+.settings-foot button { height: 32px; min-width: 72px; padding: 0 12px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
+.settings-foot button.primary { color: #fff; background: var(--accent-strong); border-color: transparent; }
+.toast { position: fixed; right: 24px; bottom: 24px; z-index: 30; min-width: 250px; display: none; align-items: center; gap: 10px; padding: 11px 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 5px; box-shadow: var(--shadow); }
+.toast.show { display: flex; animation: enter 140ms ease-out; }
+.toast .glyph { color: var(--accent-strong); }
+.dev-note { position: fixed; right: 124px; top: 13px; z-index: 50; color: #bdcaca; font-size: 10px; }
+.dev-note summary { cursor: pointer; }
+.dev-note div { position: absolute; top: 28px; right: 0; width: 320px; padding: 12px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 5px; box-shadow: var(--shadow); }
+@media (max-width: 1080px) {
+  .workspace { grid-template-columns: 190px minmax(300px,1fr); }
+  .tool .label { display: none; }
+  .shot { width: 88%; }
+}
+@media (max-width: 820px) {
+  .stage { padding: 0; }
+  .window, .desktop, .settings-window { border: 0; border-radius: 0; }
+  .workspace { grid-template-columns: 164px minmax(300px,1fr); }
+  .review-title small, .review-action span { display: none; }
+  .review-title { min-width: auto; }
+  .settings-body { grid-template-columns: 150px minmax(0,1fr); }
+}
+</style>
+</head>
+<body>
+<header class="reviewbar">
+  <div class="review-title">A · Fluent Workbench <small>균형형</small></div>
+  <nav class="review-tabs" aria-label="미리 볼 화면">
+    <button class="review-tab active" data-screen="viewer">뷰어</button>
+    <button class="review-tab" data-screen="capture">퀵 캡처</button>
+    <button class="review-tab" data-screen="settings">설정</button>
+  </nav>
+  <div class="review-spacer"></div>
+  <button class="review-action" id="themeButton" title="밝기 전환"><span class="glyph">&#xE706;</span> <span>어둡게</span></button>
+</header>
+
+<main class="stage">
+  <section class="screen active" data-screen-panel="viewer">
+    <div class="window">
+      <header class="titlebar">
+        <div class="app-mark">M</div>
+        <div class="title-file"><strong id="currentFile">260710_163625_496.png</strong><span>Mini Capture Viewer</span></div>
+        <button class="command primary action-button" data-message="이미지를 저장했습니다"><span class="glyph">&#xE74E;</span>저장</button>
+        <button class="command action-button" data-message="이미지를 클립보드에 복사했습니다"><span class="glyph">&#xE8B0;</span>이미지 복사</button>
+        <button class="command icon action-button" data-message="파일 경로를 복사했습니다" title="경로 복사"><span class="glyph">&#xE8C8;</span></button>
+        <div class="window-controls"><button title="최소화">−</button><button title="최대화">□</button><button title="닫기">×</button></div>
+      </header>
+
+      <div class="toolbar" aria-label="이미지 도구">
+        <div class="tool-group">
+          <button class="tool" title="열기"><span class="glyph">&#xE8E5;</span><span class="label">열기</span></button>
+          <button class="tool" title="폴더 열기"><span class="glyph">&#xE8B7;</span><span class="label">폴더</span></button>
+        </div>
+        <div class="tool-group">
+          <button class="tool" title="이전 이미지"><span class="glyph">&#xE76B;</span></button>
+          <button class="tool" title="다음 이미지"><span class="glyph">&#xE76C;</span></button>
+          <button class="tool" title="창에 맞춤"><span class="glyph">&#xE9A6;</span><span class="label">맞춤</span></button>
+          <button class="tool" title="원본 크기"><span class="label">1:1</span></button>
+        </div>
+        <div class="tool-group" id="toolGroup">
+          <button class="tool active" data-tool="핸드" title="핸드"><span class="glyph">&#xE7C9;</span><span class="label">핸드</span></button>
+          <button class="tool" data-tool="선택" title="선택"><span class="glyph">&#xE7C8;</span><span class="label">선택</span></button>
+          <button class="tool" data-tool="펜" title="펜"><span class="glyph">&#xED63;</span><span class="label">펜</span></button>
+          <button class="tool" data-tool="화살표" title="화살표"><span class="glyph">&#xE72A;</span></button>
+          <button class="tool" data-tool="네모" title="네모"><span class="glyph">&#xE739;</span></button>
+          <button class="tool" data-tool="원" title="원"><span class="glyph">&#xEA3A;</span></button>
+          <button class="tool" data-tool="텍스트" title="텍스트"><span class="glyph">&#xE8D2;</span></button>
+          <button class="tool" data-tool="모자이크" title="모자이크"><span class="glyph">&#xE81E;</span></button>
+        </div>
+        <div class="tool-group">
+          <button class="tool" title="되돌리기"><span class="glyph">&#xE7A7;</span></button>
+          <button class="tool" title="다시 적용"><span class="glyph">&#xE7A6;</span></button>
+          <button class="tool" title="왼쪽 회전"><span class="glyph">&#xE7AD;</span></button>
+          <button class="tool" title="오른쪽 회전"><span class="glyph">&#xE7AA;</span></button>
+        </div>
+        <div class="tool-group">
+          <button class="tool zoom-button" data-step="-10" title="축소"><span class="glyph">&#xE71F;</span></button>
+          <span class="zoom-readout" id="zoomReadout">72%</span>
+          <button class="tool zoom-button" data-step="10" title="확대"><span class="glyph">&#xE8A3;</span></button>
+        </div>
+      </div>
+
+      <div class="context-toolbar" id="contextToolbar" aria-label="선택 도구 설정" hidden>
+        <div class="context-title"><span class="glyph">&#xE713;</span><span id="contextToolName">펜 설정</span></div>
+        <div class="context-group" data-context="color">
+          <span class="context-label">색상</span>
+          <div class="swatches" id="swatches">
+            <button class="swatch active" style="--c:#e5484d" title="빨강"></button><button class="swatch" style="--c:#e6b422" title="노랑"></button><button class="swatch" style="--c:#1f9d78" title="초록"></button><button class="swatch" style="--c:#356bd6" title="파랑"></button><button class="swatch" style="--c:#ffffff" title="흰색"></button><button class="swatch" style="--c:#172023" title="검정"></button>
+          </div>
+        </div>
+        <div class="context-group" data-context="stroke">
+          <span class="context-label">두께</span>
+          <div class="control-row"><input id="strokeRange" type="range" min="1" max="18" value="4" aria-label="선 두께"><span class="value" id="strokeValue">4px</span></div>
+        </div>
+        <div class="context-group" data-context="text" hidden>
+          <span class="context-label">문구</span><input class="text-input" value="텍스트" aria-label="주석 텍스트">
+        </div>
+      </div>
+
+      <div class="workspace">
+        <aside class="library">
+          <div class="pane-head"><strong>캡처 라이브러리</strong><button title="새로고침"><span class="glyph">&#xE72C;</span></button></div>
+          <div class="tree">
+            <div class="tree-row"><span class="glyph">&#xE8D7;</span>빠른 접근</div>
+            <div class="tree-row active"><span class="glyph">&#xE8B7;</span>MiniCapture</div>
+            <div class="tree-row indent"><span>⌄</span>2026</div>
+            <div class="tree-row indent"><span>⌄</span>07월 10일</div>
+          </div>
+          <div class="search"><input id="fileSearch" type="search" placeholder="파일 검색" aria-label="파일 검색"></div>
+          <div class="file-list" id="fileList">
+            <button class="file-item active" data-title="260710_163625_496.png" data-meta="1430 × 504 · 312KB" data-accent="#197f78">
+              <span class="thumb" style="--thumb:#197f78"></span><span class="file-copy"><strong>260710_163625_496.png</strong><span>16:36 · 312KB</span></span>
+            </button>
+            <button class="file-item" data-title="260710_161842_228.png" data-meta="1920 × 1080 · 684KB" data-accent="#536fbd">
+              <span class="thumb" style="--thumb:#536fbd"></span><span class="file-copy"><strong>260710_161842_228.png</strong><span>16:18 · 684KB</span></span>
+            </button>
+            <button class="file-item" data-title="260710_154012_071.png" data-meta="1280 × 800 · 426KB" data-accent="#c17143">
+              <span class="thumb" style="--thumb:#c17143"></span><span class="file-copy"><strong>260710_154012_071.png</strong><span>15:40 · 426KB</span></span>
+            </button>
+            <button class="file-item" data-title="260710_142908_512.png" data-meta="984 × 612 · 208KB" data-accent="#865da8">
+              <span class="thumb" style="--thumb:#865da8"></span><span class="file-copy"><strong>260710_142908_512.png</strong><span>14:29 · 208KB</span></span>
+            </button>
+          </div>
+        </aside>
+
+        <section class="canvas">
+          <article class="shot" id="shotPreview" style="--shot-accent:#197f78">
+            <header class="shot-head"><b>Mini Capture</b><span>DESIGN REVIEW · 2026.07</span></header>
+            <div class="shot-body">
+              <div class="shot-copy"><div class="shot-kicker">빠르게 캡처하고 바로 확인</div><h2 id="shotTitle">작업 흐름을<br>더 가볍게.</h2><p>캡처, 확인, 간단한 표시, 저장까지 한 화면에서 이어집니다.</p></div>
+              <div class="shot-board"><div class="shot-block"><b>01 CAPTURE</b><div class="shot-line"></div><div class="shot-line short"></div></div><div class="shot-block"><b>02 REVIEW</b><div class="shot-line"></div><div class="shot-line short"></div></div><div class="shot-block"><b>03 MARKUP &amp; SAVE</b><div class="shot-line"></div><div class="shot-line short"></div></div></div>
+            </div>
+            <footer class="shot-foot">mini-capture / interface study<strong>PNG · READY</strong></footer>
+          </article>
+        </section>
+
+      </div>
+      <footer class="statusbar"><span class="status-path">C:\Users\user\Pictures\MiniCapture\2026\07\10</span><span id="imageMeta">1430 × 504</span><span id="selectedToolStatus">핸드 도구</span><span class="saved">저장됨</span><span id="statusZoom">72%</span></footer>
+    </div>
+  </section>
+
+  <section class="screen" data-screen-panel="capture">
+    <div class="desktop">
+      <div class="desk-window one"><div class="desk-title">작업 문서</div><div class="desk-lines"><i></i><i></i><i></i><i></i></div></div>
+      <div class="desk-window two"><div class="desk-title">오늘의 캡처</div><div class="desk-lines"><i></i><i></i><i></i></div></div>
+      <div class="quick-wrap" id="quickWrap">
+        <button class="quick-button" id="quickButton" title="클릭해서 캡처 메뉴 열기. 드래그해서 이동"><span class="glyph">&#xE722;</span></button>
+        <div class="capture-menu">
+          <button class="capture-mode" data-mode="영역 캡처"><span class="glyph">&#xE7C8;</span><b>영역</b><small>드래그해서 선택</small></button>
+          <button class="capture-mode" data-mode="창 캡처"><span class="glyph">&#xE7C4;</span><b>창</b><small>화면에서 선택</small></button>
+          <button class="capture-mode" data-mode="전체 화면 캡처"><span class="glyph">&#xE740;</span><b>전체</b><small>모든 모니터</small></button>
+          <button class="capture-mode" data-mode="타이머 캡처"><span class="glyph">&#xE823;</span><b>타이머</b><small>잠시 뒤 캡처</small></button>
+          <div class="timer-strip">지연 <button class="active">3초</button><button>5초</button><button>7초</button><button>10초</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" data-screen-panel="settings">
+    <div class="settings-window">
+      <header class="settings-head"><div class="app-mark">M</div><div><h1>Mini Capture 설정</h1><span>캡처 동작과 Windows 연결</span></div></header>
+      <div class="settings-body">
+        <nav class="settings-nav"><button class="active" data-settings="capture"><span class="glyph">&#xE722;</span>캡처 설정</button><button data-settings="association"><span class="glyph">&#xE71B;</span>확장자 연결</button></nav>
+        <main class="settings-main">
+          <section class="settings-panel active" data-settings-panel="capture">
+            <h2>캡처 설정</h2><p>자주 쓰는 단축키와 캡처 동작을 정합니다.</p>
+            <div class="settings-section"><h3>전역 단축키</h3>
+              <div class="hotkey-row"><label>영역 캡처</label><div class="keyset"><input class="key" value="Ctrl"><span>+</span><input class="key" value="Alt"><span>+</span><input class="key" value="A"><button class="detect">감지</button></div></div>
+              <div class="hotkey-row"><label>창 캡처</label><div class="keyset"><input class="key" value="Ctrl"><span>+</span><input class="key" value="Alt"><span>+</span><input class="key" value="W"><button class="detect">감지</button></div></div>
+              <div class="hotkey-row"><label>전체 화면</label><div class="keyset"><input class="key" value="Ctrl"><span>+</span><input class="key" value="Alt"><span>+</span><input class="key" value="F"><button class="detect">감지</button></div></div>
+            </div>
+            <div class="settings-section"><h3>기본 동작</h3><div class="form-row"><label>전역 타이머</label><select><option>0초</option><option>3초</option><option>5초</option><option>7초</option><option>10초</option></select></div><div class="form-row"><label>타이머 단축키</label><select><option>3초</option><option>5초</option><option>7초</option><option>10초</option></select></div><div class="toggle-row"><button class="switch" aria-label="퀵 아이콘 표시"></button><span>투명 퀵 아이콘을 바탕화면에 표시</span></div><div class="toggle-row"><button class="switch" aria-label="캡처에서 앱 UI 제외"></button><span>퀵 아이콘과 메뉴를 캡처에서 제외</span></div></div>
+          </section>
+          <section class="settings-panel" data-settings-panel="association">
+            <h2>확장자 연결</h2><p>이미지 파일을 Mini Capture로 바로 열 수 있습니다.</p>
+            <div class="settings-section"><h3>지원 이미지</h3><div class="association"><code>.PNG</code><span>PNG 이미지</span><b>Mini Capture</b><button>변경</button></div><div class="association"><code>.JPG</code><span>JPEG 이미지</span><b>다른 앱</b><button>변경</button></div><div class="association"><code>.JPEG</code><span>JPEG 이미지</span><b>다른 앱</b><button>변경</button></div></div>
+            <div class="settings-section"><button class="command action-button" data-message="Windows 기본 앱 설정을 열었습니다"><span class="glyph">&#xE8A7;</span>Windows 기본 앱에서 선택하기</button></div>
+          </section>
+        </main>
+      </div>
+      <footer class="settings-foot"><button>기본값</button><button class="primary action-button" data-message="설정을 저장했습니다">저장</button></footer>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"><span class="glyph">&#xE73E;</span><span id="toastText">완료</span></div>
+<details class="dev-note"><summary>개발 연결 메모</summary><div>기존 WPF 이벤트와 자동화 ID를 유지하는 구성안입니다. 메인 툴바는 1행으로 두고 펜·화살표·도형·텍스트를 선택할 때만 맞춤형 보조 툴바를 표시합니다. 파일 목록과 캡처 루트 탐색은 그대로 유지합니다.</div></details>
+
+<script>
+const root = document.documentElement;
+const toast = document.getElementById('toast');
+const toastText = document.getElementById('toastText');
+let toastTimer;
+function showToast(message) {
+  toastText.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+document.querySelectorAll('.review-tab').forEach(button => button.addEventListener('click', () => {
+  document.querySelectorAll('.review-tab').forEach(item => item.classList.toggle('active', item === button));
+  document.querySelectorAll('[data-screen-panel]').forEach(panel => panel.classList.toggle('active', panel.dataset.screenPanel === button.dataset.screen));
+}));
+
+document.getElementById('themeButton').addEventListener('click', event => {
+  const dark = root.dataset.theme === 'dark';
+  root.dataset.theme = dark ? 'light' : 'dark';
+  event.currentTarget.querySelector('span:last-child').textContent = dark ? '어둡게' : '밝게';
+});
+
+document.querySelectorAll('.action-button').forEach(button => button.addEventListener('click', () => showToast(button.dataset.message)));
+
+const contextToolbar = document.getElementById('contextToolbar');
+const contextToolName = document.getElementById('contextToolName');
+const contextGroups = [...document.querySelectorAll('[data-context]')];
+const TOOL_CONTEXT = {
+  '펜': ['color', 'stroke'],
+  '화살표': ['color', 'stroke'],
+  '네모': ['color', 'stroke'],
+  '원': ['color', 'stroke'],
+  '텍스트': ['color', 'text']
+};
+function renderToolContext(tool) {
+  const visibleGroups = TOOL_CONTEXT[tool] || [];
+  contextToolbar.hidden = visibleGroups.length === 0;
+  contextToolName.textContent = `${tool} 설정`;
+  contextGroups.forEach(group => { group.hidden = !visibleGroups.includes(group.dataset.context); });
+}
+
+document.getElementById('toolGroup').addEventListener('click', event => {
+  const button = event.target.closest('[data-tool]');
+  if (!button) return;
+  document.querySelectorAll('#toolGroup [data-tool]').forEach(item => item.classList.toggle('active', item === button));
+  document.getElementById('selectedToolStatus').textContent = `${button.dataset.tool} 도구`;
+  renderToolContext(button.dataset.tool);
+});
+
+let zoom = 72;
+function updateZoom() {
+  document.getElementById('zoomReadout').textContent = `${zoom}%`;
+  document.getElementById('statusZoom').textContent = `${zoom}%`;
+  document.getElementById('shotPreview').style.transform = `scale(${Math.max(.72, zoom / 100)})`;
+}
+document.querySelectorAll('.zoom-button').forEach(button => button.addEventListener('click', () => {
+  zoom = Math.max(30, Math.min(180, zoom + Number(button.dataset.step)));
+  updateZoom();
+}));
+
+const files = [...document.querySelectorAll('.file-item')];
+files.forEach((button, index) => button.addEventListener('click', () => {
+  files.forEach(item => item.classList.toggle('active', item === button));
+  document.getElementById('currentFile').textContent = button.dataset.title;
+  document.getElementById('imageMeta').textContent = button.dataset.meta.split(' · ')[0];
+  document.getElementById('shotPreview').style.setProperty('--shot-accent', button.dataset.accent);
+  document.getElementById('shotTitle').innerHTML = ['작업 흐름을<br>더 가볍게.','확인은 빠르게,<br>화면은 넓게.','표시는 간단하게,<br>결과는 또렷하게.','캡처가 쌓여도<br>찾기는 쉽게.'][index];
+}));
+document.getElementById('fileSearch').addEventListener('input', event => {
+  const query = event.target.value.trim().toLowerCase();
+  files.forEach(item => { item.hidden = !item.dataset.title.toLowerCase().includes(query); });
+});
+
+document.getElementById('swatches').addEventListener('click', event => {
+  const button = event.target.closest('.swatch');
+  if (!button) return;
+  document.querySelectorAll('.swatch').forEach(item => item.classList.toggle('active', item === button));
+});
+document.getElementById('strokeRange').addEventListener('input', event => { document.getElementById('strokeValue').textContent = `${event.target.value}px`; });
+
+document.querySelectorAll('.settings-nav button').forEach(button => button.addEventListener('click', () => {
+  document.querySelectorAll('.settings-nav button').forEach(item => item.classList.toggle('active', item === button));
+  document.querySelectorAll('[data-settings-panel]').forEach(panel => panel.classList.toggle('active', panel.dataset.settingsPanel === button.dataset.settings));
+}));
+document.querySelectorAll('.switch').forEach(button => button.addEventListener('click', () => button.classList.toggle('off')));
+document.querySelectorAll('.timer-strip button').forEach(button => button.addEventListener('click', () => {
+  document.querySelectorAll('.timer-strip button').forEach(item => item.classList.toggle('active', item === button));
+}));
+
+const quickWrap = document.getElementById('quickWrap');
+const quickButton = document.getElementById('quickButton');
+let dragState = null;
+quickButton.addEventListener('pointerdown', event => {
+  dragState = { id: event.pointerId, startX: event.clientX, startY: event.clientY, left: quickWrap.offsetLeft, top: quickWrap.offsetTop, moved: false };
+  quickButton.setPointerCapture(event.pointerId);
+});
+quickButton.addEventListener('pointermove', event => {
+  if (!dragState || dragState.id !== event.pointerId) return;
+  const dx = event.clientX - dragState.startX;
+  const dy = event.clientY - dragState.startY;
+  if (Math.hypot(dx, dy) > 4) dragState.moved = true;
+  if (!dragState.moved) return;
+  const desktop = quickWrap.parentElement.getBoundingClientRect();
+  quickWrap.style.left = `${Math.max(8, Math.min(desktop.width - 66, dragState.left + dx))}px`;
+  quickWrap.style.top = `${Math.max(8, Math.min(desktop.height - 66, dragState.top + dy))}px`;
+  quickWrap.style.right = 'auto';
+});
+quickButton.addEventListener('pointerup', event => {
+  if (!dragState || dragState.id !== event.pointerId) return;
+  const moved = dragState.moved;
+  dragState = null;
+  if (!moved) quickWrap.classList.toggle('open');
+});
+document.querySelectorAll('.capture-mode').forEach(button => button.addEventListener('click', () => {
+  showToast(`${button.dataset.mode}를 시작합니다`);
+  quickWrap.classList.remove('open');
+}));
+</script>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mini Capture UI 개편안 B - Focus Canvas</title>
+<style>
+:root {
+  --bg: oklch(0.13 0.008 45);
+  --surface: oklch(0.175 0.012 45);
+  --surface-2: oklch(0.215 0.014 45);
+  --surface-3: oklch(0.275 0.018 45);
+  --ink: oklch(0.95 0.008 70);
+  --muted: oklch(0.68 0.018 65);
+  --line: oklch(0.31 0.018 50);
+  --accent: oklch(0.7 0.19 30);
+  --accent-soft: oklch(0.28 0.09 30);
+  --mint: oklch(0.78 0.12 165);
+  --cyan: oklch(0.73 0.11 220);
+  --yellow: oklch(0.82 0.14 92);
+  --canvas: oklch(0.105 0.006 45);
+  --shadow: 0 18px 54px rgb(0 0 0 / 44%);
+  --font: "Segoe UI Variable", "Segoe UI", sans-serif;
+  --display: Bahnschrift, "Arial Narrow", sans-serif;
+}
+[data-theme="light"] {
+  --bg: oklch(0.93 0.012 70);
+  --surface: oklch(0.985 0.006 70);
+  --surface-2: oklch(0.95 0.01 70);
+  --surface-3: oklch(0.89 0.014 70);
+  --ink: oklch(0.21 0.018 45);
+  --muted: oklch(0.5 0.02 55);
+  --line: oklch(0.83 0.018 55);
+  --accent: oklch(0.61 0.19 30);
+  --accent-soft: oklch(0.91 0.06 30);
+  --mint: oklch(0.56 0.13 165);
+  --cyan: oklch(0.56 0.13 220);
+  --yellow: oklch(0.73 0.15 92);
+  --canvas: oklch(0.22 0.012 45);
+  --shadow: 0 18px 54px rgb(65 45 35 / 20%);
+}
+* { box-sizing: border-box; letter-spacing: 0; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+body { color: var(--ink); background: var(--bg); font: 13px/1.45 var(--font); }
+button, input, select { color: inherit; font: inherit; }
+button { border: 0; cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.glyph { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 16px; line-height: 1; }
+.review { height: 42px; display: flex; align-items: center; gap: 12px; padding: 0 14px; color: #f5efeb; background: #171514; border-bottom: 1px solid #332c29; }
+.review-brand { min-width: 205px; font: 650 14px/1 var(--display); }
+.review-brand small { margin-left: 7px; color: #a89b94; font: 11px/1 var(--font); }
+.review nav { display: flex; height: 100%; }
+.review-tab { min-width: 72px; height: 100%; padding: 0 12px; color: #a99e98; background: transparent; border-bottom: 2px solid transparent; }
+.review-tab:hover { color: #fff; background: #211e1c; }
+.review-tab.active { color: #fff; border-bottom-color: #ff7666; }
+.grow { flex: 1; }
+.theme { width: 34px; height: 30px; color: #cec5bf; background: #262220; border: 1px solid #403835; border-radius: 4px; }
+.stage { height: calc(100vh - 42px); padding: 12px; }
+.screen { display: none; width: 100%; height: 100%; }
+.screen.active { display: block; animation: reveal 150ms ease; }
+@keyframes reveal { from { opacity: .45; } to { opacity: 1; } }
+.viewer { width: 100%; height: 100%; min-height: 480px; display: grid; grid-template-rows: 44px minmax(0,1fr) 76px 24px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: 5px; box-shadow: var(--shadow); }
+.topline { min-width: 0; display: flex; align-items: center; gap: 5px; padding: 0 8px 0 13px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.brand-sign { width: 24px; height: 24px; display: grid; place-items: center; color: #171514; background: var(--accent); border-radius: 3px; font: 800 13px/1 var(--display); }
+.file-title { min-width: 0; flex: 1; margin-left: 5px; overflow: hidden; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.top-command { height: 30px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; color: var(--muted); background: transparent; border-radius: 3px; }
+.top-command:hover { color: var(--ink); background: var(--surface-2); }
+.top-command.save { min-width: 68px; color: #1b1512; background: var(--accent); font-weight: 750; }
+.top-command.icon { width: 30px; padding: 0; }
+.mainarea { min-width: 0; min-height: 0; display: grid; grid-template-columns: 54px minmax(360px,1fr) 248px; }
+.toolrail { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 5px; background: var(--surface-2); border-right: 1px solid var(--line); }
+.rail-tool { width: 40px; height: 38px; position: relative; display: grid; place-items: center; color: var(--muted); background: transparent; border-radius: 3px; }
+.rail-tool:hover { color: var(--ink); background: var(--surface-3); }
+.rail-tool.active { color: var(--accent); background: var(--accent-soft); }
+.rail-tool.active::before { content: ""; position: absolute; left: -5px; top: 8px; bottom: 8px; width: 3px; background: var(--accent); }
+.rail-spacer { flex: 1; }
+.canvas { min-width: 0; min-height: 0; position: relative; display: grid; place-items: center; overflow: auto; padding: 28px; background-color: var(--canvas); background-image: radial-gradient(circle, color-mix(in oklch, var(--line) 42%, transparent) 1px, transparent 1px); background-size: 20px 20px; }
+.canvas-nav { position: absolute; left: 12px; top: 12px; z-index: 2; display: flex; gap: 3px; }
+.canvas-nav button { width: 32px; height: 30px; color: var(--muted); background: color-mix(in oklch, var(--surface) 92%, transparent); border: 1px solid var(--line); border-radius: 3px; }
+.canvas-nav button:hover { color: var(--ink); }
+.zoom-chip { position: absolute; right: 12px; bottom: 12px; z-index: 2; display: flex; align-items: center; gap: 5px; height: 32px; padding: 0 5px; color: var(--muted); background: color-mix(in oklch, var(--surface) 94%, transparent); border: 1px solid var(--line); border-radius: 3px; }
+.zoom-chip button { width: 24px; height: 24px; color: inherit; background: transparent; }
+.zoom-chip span { min-width: 40px; text-align: center; }
+.artboard { width: min(82%, 820px); min-width: 430px; aspect-ratio: 16/9; position: relative; overflow: hidden; color: #282321; background: #fffaf5; border: 1px solid #7e7069; box-shadow: 0 22px 44px rgb(0 0 0 / 45%); transform-origin: center; }
+.art-band { height: 12px; background: var(--art-accent, #ff705f); }
+.art-content { height: calc(100% - 12px); display: grid; grid-template-columns: 1.1fr .9fr; }
+.art-copy { display: flex; flex-direction: column; justify-content: center; padding: 38px; }
+.art-index { margin-bottom: 16px; color: var(--art-accent, #d84e42); font: 700 11px/1 var(--display); }
+.art-copy h2 { margin: 0 0 13px; font: 750 34px/1.02 var(--display); }
+.art-copy p { max-width: 34ch; margin: 0; color: #71645d; font-size: 12px; }
+.art-scene { position: relative; overflow: hidden; background: #24312f; }
+.art-scene::before { content: ""; position: absolute; left: 13%; right: 13%; top: 15%; bottom: 15%; background: #ebf4ee; border: 8px solid #151b1a; box-shadow: 18px 18px 0 var(--art-accent, #ff705f); }
+.art-scene::after { content: "CAPTURE\A REVIEW\A MARKUP"; white-space: pre; position: absolute; left: 25%; top: 29%; color: #26322f; font: 800 18px/1.7 var(--display); }
+.inspector { min-width: 0; display: grid; grid-template-rows: 40px minmax(0,1fr); background: var(--surface); border-left: 1px solid var(--line); }
+.inspector-tabs { display: flex; border-bottom: 1px solid var(--line); }
+.inspector-tab { flex: 1; color: var(--muted); background: transparent; border-bottom: 2px solid transparent; }
+.inspector-tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+.drawer-panel { display: none; overflow: auto; }
+.drawer-panel.active { display: block; }
+.drawer-section { padding: 14px; border-bottom: 1px solid var(--line); }
+.drawer-title { margin-bottom: 10px; color: var(--muted); font: 700 10px/1 var(--display); text-transform: uppercase; }
+.active-tool { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--accent-soft); border-left: 3px solid var(--accent); }
+.active-tool .glyph { color: var(--accent); font-size: 20px; }
+.active-tool b { display: block; font-size: 12px; }
+.active-tool span { color: var(--muted); font-size: 10px; }
+.swatches { display: flex; gap: 7px; flex-wrap: wrap; }
+.swatch { width: 25px; height: 25px; padding: 4px; background: transparent; border: 1px solid var(--line); border-radius: 3px; }
+.swatch::after { content: ""; display: block; width: 15px; height: 15px; background: var(--c); border: 1px solid rgb(255 255 255 / 20%); }
+.swatch.active { border-color: var(--accent); }
+.property-row { display: grid; grid-template-columns: 48px 1fr 34px; gap: 8px; align-items: center; margin-top: 12px; color: var(--muted); font-size: 11px; }
+.property-row input { min-width: 0; accent-color: var(--accent); }
+.property-input { width: 100%; height: 32px; margin-top: 10px; padding: 0 9px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 3px; }
+.recent-row { min-width: 0; height: 52px; display: grid; grid-template-columns: 42px minmax(0,1fr); gap: 9px; align-items: center; padding: 5px 8px; color: var(--ink); background: transparent; border-bottom: 1px solid var(--line); text-align: left; }
+.recent-row:hover { background: var(--surface-2); }
+.recent-thumb, .film-thumb { position: relative; overflow: hidden; background: var(--t, #ff705f); border: 1px solid var(--line); }
+.recent-thumb { width: 42px; height: 38px; }
+.recent-thumb::after, .film-thumb::after { content: ""; position: absolute; inset: 7px; background: rgb(255 255 255 / 70%); border-left: 5px solid rgb(0 0 0 / 30%); }
+.recent-row strong, .recent-row span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-row strong { font-size: 10px; }
+.recent-row span { color: var(--muted); font-size: 9px; }
+.filmstrip { min-width: 0; display: flex; align-items: center; gap: 6px; padding: 7px 10px; overflow-x: auto; background: var(--surface-2); border-top: 1px solid var(--line); }
+.film-label { width: 82px; flex: 0 0 82px; color: var(--muted); font-size: 10px; }
+.film-label b { display: block; margin-bottom: 3px; color: var(--ink); font-size: 11px; }
+.film-file { width: 94px; height: 60px; flex: 0 0 94px; display: grid; grid-template-columns: 52px 1fr; gap: 6px; align-items: center; padding: 4px; text-align: left; color: var(--ink); background: transparent; border: 1px solid transparent; border-radius: 3px; }
+.film-file:hover { background: var(--surface-3); }
+.film-file.active { background: var(--accent-soft); border-color: var(--accent); }
+.film-thumb { width: 52px; height: 50px; }
+.film-file span:last-child { overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; }
+.film-actions { display: flex; gap: 3px; margin-left: auto; }
+.film-actions button { width: 30px; height: 30px; color: var(--muted); background: transparent; border-radius: 3px; }
+.film-actions button:hover { color: var(--ink); background: var(--surface-3); }
+.status { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 0 9px; color: var(--muted); background: var(--surface); border-top: 1px solid var(--line); font-size: 9px; }
+.status .path { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status .ok { color: var(--mint); }
+
+/* 퀵 캡처 */
+.capture-stage { position: relative; width: 100%; height: 100%; overflow: hidden; background: #1e2624; border: 1px solid var(--line); border-radius: 5px; box-shadow: var(--shadow); }
+.capture-stage::before { content: ""; position: absolute; inset: 0; opacity: .4; background-image: radial-gradient(circle, #41524d 1px, transparent 1px); background-size: 22px 22px; }
+.fake-app { position: absolute; overflow: hidden; background: #f8f3ed; border: 1px solid #6e7974; box-shadow: 0 20px 46px rgb(0 0 0 / 32%); }
+.fake-app.large { left: 8%; top: 10%; width: 58%; height: 67%; }
+.fake-app.small { right: 7%; top: 19%; width: 28%; height: 43%; }
+.fake-bar { height: 33px; background: #d9e1dc; border-bottom: 1px solid #b6c2bd; }
+.fake-body { display: grid; grid-template-columns: 30% 1fr; height: calc(100% - 33px); }
+.fake-side { background: #ece7e1; border-right: 1px solid #d0c7bf; }
+.fake-copy { padding: 22px; }
+.fake-copy i { display: block; width: 78%; height: 9px; margin-bottom: 12px; background: #d4cbc4; }
+.fake-copy i:nth-child(2) { width: 48%; background: #f08b7e; }
+.capture-dock { position: absolute; left: 50%; bottom: 34px; z-index: 3; display: flex; align-items: center; gap: 4px; padding: 6px; background: color-mix(in oklch, var(--surface) 96%, transparent); border: 1px solid var(--line); border-radius: 5px; box-shadow: var(--shadow); transform: translateX(-50%); }
+.capture-trigger { width: 46px; height: 46px; display: grid; place-items: center; color: #1b1512; background: var(--accent); border-radius: 50%; font-size: 20px; }
+.capture-option { min-width: 88px; height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 10px; color: var(--muted); background: transparent; border-radius: 3px; text-align: left; }
+.capture-option:hover, .capture-option.active { color: var(--ink); background: var(--surface-3); }
+.capture-option .glyph { color: var(--accent); }
+.capture-option b { display: block; font-size: 11px; }
+.capture-option small { display: block; color: var(--muted); font-size: 9px; }
+.delay { display: flex; align-items: center; gap: 2px; margin-left: 4px; padding-left: 8px; border-left: 1px solid var(--line); }
+.delay button { width: 30px; height: 28px; color: var(--muted); background: transparent; border-radius: 3px; font-size: 10px; }
+.delay button.active { color: #1b1512; background: var(--yellow); }
+
+/* 설정 */
+.settings { width: min(1080px,100%); height: 100%; min-height: 480px; margin: auto; display: grid; grid-template-rows: 58px 42px minmax(0,1fr) 52px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: 5px; box-shadow: var(--shadow); }
+.settings-head { display: flex; align-items: center; gap: 12px; padding: 0 20px; border-bottom: 1px solid var(--line); }
+.settings-head .brand-sign { width: 30px; height: 30px; }
+.settings-head h1 { margin: 0; font: 700 17px/1 var(--display); }
+.settings-head p { margin: 3px 0 0; color: var(--muted); font-size: 10px; }
+.settings-tabs { display: flex; padding: 0 18px; border-bottom: 1px solid var(--line); }
+.settings-tab { min-width: 110px; color: var(--muted); background: transparent; border-bottom: 2px solid transparent; }
+.settings-tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+.settings-content { min-height: 0; overflow: auto; padding: 24px; }
+.settings-panel { display: none; }
+.settings-panel.active { display: block; }
+.settings-grid { max-width: 900px; display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.settings-section { min-height: 196px; padding: 18px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.settings-section h2 { margin: 0 0 4px; font: 700 15px/1.2 var(--display); }
+.settings-section > p { margin: 0 0 16px; color: var(--muted); font-size: 10px; }
+.shortcut { min-height: 38px; display: grid; grid-template-columns: 92px 1fr auto; gap: 8px; align-items: center; border-top: 1px solid var(--line); }
+.shortcut:first-of-type { border-top: 0; }
+.shortcut label { color: var(--muted); font-size: 10px; }
+.shortcut code { font: 650 11px/1 Consolas, monospace; }
+.shortcut button { height: 26px; padding: 0 8px; color: var(--accent); background: transparent; border: 1px solid var(--line); border-radius: 3px; font-size: 9px; }
+.setting-row { min-height: 40px; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); }
+.setting-row:first-of-type { border-top: 0; }
+.setting-row label { flex: 1; color: var(--muted); }
+.setting-row select { height: 29px; padding: 0 7px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 3px; }
+.switch { width: 38px; height: 20px; position: relative; padding: 0; background: var(--mint); border-radius: 10px; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 21px; width: 14px; height: 14px; background: #16201d; border-radius: 50%; }
+.switch.off { background: var(--surface-3); }
+.switch.off::after { left: 3px; background: var(--muted); }
+.assoc-row { min-height: 46px; display: grid; grid-template-columns: 60px 1fr 110px auto; gap: 10px; align-items: center; border-top: 1px solid var(--line); }
+.assoc-row code { color: var(--cyan); }
+.assoc-row span { color: var(--muted); }
+.assoc-row button { height: 27px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 3px; }
+.settings-foot { display: flex; align-items: center; justify-content: flex-end; gap: 6px; padding: 0 18px; background: var(--surface-2); border-top: 1px solid var(--line); }
+.settings-foot button { height: 31px; min-width: 72px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 3px; }
+.settings-foot .save { color: #1b1512; background: var(--accent); border-color: transparent; font-weight: 750; }
+.toast { position: fixed; right: 22px; bottom: 22px; z-index: 20; min-width: 250px; display: none; align-items: center; gap: 9px; padding: 11px 13px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 4px; box-shadow: var(--shadow); }
+.toast.show { display: flex; animation: reveal 120ms ease; }
+.toast .glyph { color: var(--mint); }
+.dev { position: fixed; top: 7px; right: 58px; z-index: 40; color: #a99e98; font-size: 10px; }
+.dev summary { cursor: pointer; }
+.dev div { position: absolute; top: 33px; right: -38px; width: 320px; padding: 12px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; box-shadow: var(--shadow); }
+@media (max-width: 980px) {
+  .mainarea { grid-template-columns: 50px minmax(330px,1fr) 210px; }
+  .artboard { width: 90%; }
+  .art-copy h2 { font-size: 28px; }
+  .top-command .text { display: none; }
+  .settings-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .stage { padding: 0; }
+  .viewer, .capture-stage, .settings { border: 0; border-radius: 0; }
+  .mainarea { grid-template-columns: 48px minmax(320px,1fr); }
+  .inspector { display: none; }
+  .film-label { display: none; }
+  .review-brand small { display: none; }
+  .capture-option { min-width: 48px; }
+  .capture-option div { display: none; }
+}
+</style>
+</head>
+<body>
+<header class="review">
+  <div class="review-brand">B · Focus Canvas <small>집중형</small></div>
+  <nav aria-label="미리 볼 화면"><button class="review-tab active" data-screen="viewer">뷰어</button><button class="review-tab" data-screen="capture">퀵 캡처</button><button class="review-tab" data-screen="settings">설정</button></nav>
+  <div class="grow"></div><button class="theme" id="themeButton" title="밝기 전환"><span class="glyph">&#xE706;</span></button>
+</header>
+
+<main class="stage">
+  <section class="screen active" data-panel="viewer">
+    <div class="viewer">
+      <header class="topline">
+        <div class="brand-sign">M</div><div class="file-title" id="fileTitle">260710_163625_496.png</div>
+        <button class="top-command icon" title="이전 이미지"><span class="glyph">&#xE76B;</span></button><button class="top-command icon" title="다음 이미지"><span class="glyph">&#xE76C;</span></button>
+        <button class="top-command action" data-message="이미지를 복사했습니다"><span class="glyph">&#xE8B0;</span><span class="text">복사</span></button><button class="top-command action" data-message="폴더를 열었습니다"><span class="glyph">&#xE8B7;</span><span class="text">폴더</span></button><button class="top-command save action" data-message="이미지를 저장했습니다"><span class="glyph">&#xE74E;</span><span class="text">저장</span></button>
+      </header>
+      <div class="mainarea">
+        <aside class="toolrail" id="toolRail">
+          <button class="rail-tool active" data-tool="핸드" data-icon="&#xE7C9;" title="핸드"><span class="glyph">&#xE7C9;</span></button><button class="rail-tool" data-tool="선택" data-icon="&#xE7C8;" title="선택"><span class="glyph">&#xE7C8;</span></button><button class="rail-tool" data-tool="펜" data-icon="&#xED63;" title="펜"><span class="glyph">&#xED63;</span></button><button class="rail-tool" data-tool="화살표" data-icon="&#xE72A;" title="화살표"><span class="glyph">&#xE72A;</span></button><button class="rail-tool" data-tool="네모" data-icon="&#xE739;" title="네모"><span class="glyph">&#xE739;</span></button><button class="rail-tool" data-tool="원" data-icon="&#xEA3A;" title="원"><span class="glyph">&#xEA3A;</span></button><button class="rail-tool" data-tool="텍스트" data-icon="&#xE8D2;" title="텍스트"><span class="glyph">&#xE8D2;</span></button><button class="rail-tool" data-tool="모자이크" data-icon="&#xE81E;" title="모자이크"><span class="glyph">&#xE81E;</span></button>
+          <div class="rail-spacer"></div><button class="rail-tool" title="되돌리기"><span class="glyph">&#xE7A7;</span></button><button class="rail-tool" title="다시 적용"><span class="glyph">&#xE7A6;</span></button>
+        </aside>
+        <section class="canvas">
+          <div class="canvas-nav"><button title="창에 맞춤"><span class="glyph">&#xE9A6;</span></button><button title="원본 크기">1:1</button></div>
+          <article class="artboard" id="artboard" style="--art-accent:#ff705f"><div class="art-band"></div><div class="art-content"><div class="art-copy"><div class="art-index">MINI CAPTURE / 01</div><h2 id="artTitle">보는 화면은 넓게.<br>도구는 필요한 만큼.</h2><p>캡처 이미지를 중심에 두고, 표시 도구와 파일은 가장자리에서 빠르게 꺼냅니다.</p></div><div class="art-scene"></div></div></article>
+          <div class="zoom-chip"><button class="zoom" data-step="-10">−</button><span id="zoomValue">68%</span><button class="zoom" data-step="10">+</button></div>
+        </section>
+        <aside class="inspector">
+          <div class="inspector-tabs"><button class="inspector-tab active" data-drawer="properties">속성</button><button class="inspector-tab" data-drawer="recent">최근</button></div>
+          <div class="drawer-panel active" data-drawer-panel="properties">
+            <section class="drawer-section"><div class="drawer-title">현재 도구</div><div class="active-tool"><span class="glyph" id="activeToolIcon">&#xE7C9;</span><div><b id="activeToolName">핸드</b><span>이미지를 움직입니다</span></div></div></section>
+            <section class="drawer-section"><div class="drawer-title">표시 스타일</div><div class="swatches" id="swatches"><button class="swatch active" style="--c:#ff705f" title="산호색"></button><button class="swatch" style="--c:#6fd6ad" title="민트"></button><button class="swatch" style="--c:#66bfe1" title="하늘"></button><button class="swatch" style="--c:#e4bd47" title="노랑"></button><button class="swatch" style="--c:#f5efe8" title="흰색"></button><button class="swatch" style="--c:#161413" title="검정"></button></div><div class="property-row"><span>두께</span><input id="stroke" type="range" min="1" max="18" value="4"><b id="strokeValue">4px</b></div><input class="property-input" value="텍스트" aria-label="주석 텍스트"></section>
+            <section class="drawer-section"><div class="drawer-title">이미지</div><div class="property-row"><span>크기</span><span id="imageSize">1430 × 504</span><b>PNG</b></div></section>
+          </div>
+          <div class="drawer-panel" data-drawer-panel="recent" id="recentList">
+            <button class="recent-row"><span class="recent-thumb" style="--t:#ff705f"></span><span><strong>260710_163625_496.png</strong><span>오늘 16:36</span></span></button><button class="recent-row"><span class="recent-thumb" style="--t:#6d93d9"></span><span><strong>260710_161842_228.png</strong><span>오늘 16:18</span></span></button><button class="recent-row"><span class="recent-thumb" style="--t:#6bb997"></span><span><strong>260710_154012_071.png</strong><span>오늘 15:40</span></span></button><button class="recent-row"><span class="recent-thumb" style="--t:#d4a84f"></span><span><strong>260710_142908_512.png</strong><span>오늘 14:29</span></span></button>
+          </div>
+        </aside>
+      </div>
+      <div class="filmstrip" id="filmstrip"><div class="film-label"><b>오늘 · 4개</b>최근 캡처</div><button class="film-file active" data-file="260710_163625_496.png" data-size="1430 × 504" data-color="#ff705f"><span class="film-thumb" style="--t:#ff705f"></span><span>16:36</span></button><button class="film-file" data-file="260710_161842_228.png" data-size="1920 × 1080" data-color="#6d93d9"><span class="film-thumb" style="--t:#6d93d9"></span><span>16:18</span></button><button class="film-file" data-file="260710_154012_071.png" data-size="1280 × 800" data-color="#6bb997"><span class="film-thumb" style="--t:#6bb997"></span><span>15:40</span></button><button class="film-file" data-file="260710_142908_512.png" data-size="984 × 612" data-color="#d4a84f"><span class="film-thumb" style="--t:#d4a84f"></span><span>14:29</span></button><div class="film-actions"><button title="보기 방식"><span class="glyph">&#xE8A9;</span></button><button title="폴더 열기"><span class="glyph">&#xE8B7;</span></button><button title="새로고침"><span class="glyph">&#xE72C;</span></button></div></div>
+      <footer class="status"><span class="path">C:\Users\user\Pictures\MiniCapture\2026\07\10</span><span id="toolStatus">핸드</span><span class="ok">● 저장됨</span><span id="zoomStatus">68%</span></footer>
+    </div>
+  </section>
+
+  <section class="screen" data-panel="capture">
+    <div class="capture-stage"><div class="fake-app large"><div class="fake-bar"></div><div class="fake-body"><div class="fake-side"></div><div class="fake-copy"><i></i><i></i><i></i><i></i></div></div></div><div class="fake-app small"><div class="fake-bar"></div><div class="fake-body"><div class="fake-side"></div><div class="fake-copy"><i></i><i></i><i></i></div></div></div>
+      <div class="capture-dock"><button class="capture-trigger action" data-message="퀵 캡처 메뉴"><span class="glyph">&#xE722;</span></button><button class="capture-option active" data-mode="영역 캡처"><span class="glyph">&#xE7C8;</span><div><b>영역</b><small>드래그 선택</small></div></button><button class="capture-option" data-mode="창 캡처"><span class="glyph">&#xE7C4;</span><div><b>창</b><small>창 선택</small></div></button><button class="capture-option" data-mode="전체 화면 캡처"><span class="glyph">&#xE740;</span><div><b>전체</b><small>모든 화면</small></div></button><button class="capture-option" data-mode="타이머 캡처"><span class="glyph">&#xE823;</span><div><b>타이머</b><small>잠시 뒤</small></div></button><div class="delay"><button class="active">3</button><button>5</button><button>7</button><button>10</button></div></div>
+    </div>
+  </section>
+
+  <section class="screen" data-panel="settings">
+    <div class="settings">
+      <header class="settings-head"><div class="brand-sign">M</div><div><h1>Mini Capture 설정</h1><p>빠른 캡처에 필요한 항목만 모았습니다.</p></div></header>
+      <nav class="settings-tabs"><button class="settings-tab active" data-setting="capture">캡처</button><button class="settings-tab" data-setting="association">확장자 연결</button></nav>
+      <div class="settings-content">
+        <section class="settings-panel active" data-setting-panel="capture"><div class="settings-grid">
+          <div class="settings-section"><h2>전역 단축키</h2><p>어느 화면에서도 바로 캡처합니다.</p><div class="shortcut"><label>영역</label><code>Ctrl + Alt + A</code><button>감지</button></div><div class="shortcut"><label>창</label><code>Ctrl + Alt + W</code><button>감지</button></div><div class="shortcut"><label>전체</label><code>Ctrl + Alt + F</code><button>감지</button></div><div class="shortcut"><label>타이머</label><code>Ctrl + Alt + T</code><button>감지</button></div></div>
+          <div class="settings-section"><h2>타이머</h2><p>기본 대기 시간을 선택합니다.</p><div class="setting-row"><label>전역 타이머</label><select><option>0초</option><option>3초</option><option>5초</option><option>7초</option><option>10초</option></select></div><div class="setting-row"><label>타이머 단축키</label><select><option>3초</option><option>5초</option><option>7초</option><option>10초</option></select></div></div>
+          <div class="settings-section"><h2>퀵 아이콘</h2><p>바탕화면의 캡처 버튼 동작입니다.</p><div class="setting-row"><label>바탕화면에 표시</label><button class="switch"></button></div><div class="setting-row"><label>캡처 결과에서 제외</label><button class="switch"></button></div></div>
+          <div class="settings-section"><h2>저장 후</h2><p>캡처 직후 보여줄 동작입니다.</p><div class="setting-row"><label>저장 알림 표시</label><button class="switch"></button></div><div class="setting-row"><label>최근 캡처에 추가</label><button class="switch"></button></div></div>
+        </div></section>
+        <section class="settings-panel" data-setting-panel="association"><div class="settings-grid"><div class="settings-section" style="grid-column:1/-1"><h2>이미지 확장자</h2><p>Windows 기본 앱 설정에서 연결 앱을 바꿀 수 있습니다.</p><div class="assoc-row"><code>.PNG</code><span>PNG 이미지</span><b>Mini Capture</b><button>변경</button></div><div class="assoc-row"><code>.JPG</code><span>JPEG 이미지</span><b>다른 앱</b><button>변경</button></div><div class="assoc-row"><code>.JPEG</code><span>JPEG 이미지</span><b>다른 앱</b><button>변경</button></div></div></div></section>
+      </div>
+      <footer class="settings-foot"><button>기본값</button><button class="save action" data-message="설정을 저장했습니다">저장</button></footer>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"><span class="glyph">&#xE73E;</span><span id="toastText">완료</span></div>
+<details class="dev"><summary>개발 메모</summary><div>뷰어의 현재 이벤트 처리와 파일 인덱스를 그대로 쓰되, 툴바를 좌측 레일과 우측 속성 패널로 재배치하는 안입니다. 캡처 화면은 기존 네 가지 모드만 노출합니다.</div></details>
+
+<script>
+const root = document.documentElement;
+const toast = document.getElementById('toast');
+const toastText = document.getElementById('toastText');
+let toastTimer;
+function showToast(message) { toastText.textContent = message; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 1700); }
+
+document.querySelectorAll('.review-tab').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('.review-tab').forEach(item => item.classList.toggle('active', item === button)); document.querySelectorAll('[data-panel]').forEach(panel => panel.classList.toggle('active', panel.dataset.panel === button.dataset.screen)); }));
+document.getElementById('themeButton').addEventListener('click', () => { root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; });
+document.querySelectorAll('.action').forEach(button => button.addEventListener('click', () => showToast(button.dataset.message)));
+
+document.getElementById('toolRail').addEventListener('click', event => { const button = event.target.closest('[data-tool]'); if (!button) return; document.querySelectorAll('#toolRail [data-tool]').forEach(item => item.classList.toggle('active', item === button)); document.getElementById('activeToolName').textContent = button.dataset.tool; document.getElementById('activeToolIcon').innerHTML = button.dataset.icon; document.getElementById('toolStatus').textContent = button.dataset.tool; });
+document.querySelectorAll('.inspector-tab').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('.inspector-tab').forEach(item => item.classList.toggle('active', item === button)); document.querySelectorAll('[data-drawer-panel]').forEach(panel => panel.classList.toggle('active', panel.dataset.drawerPanel === button.dataset.drawer)); }));
+document.getElementById('swatches').addEventListener('click', event => { const button = event.target.closest('.swatch'); if (!button) return; document.querySelectorAll('.swatch').forEach(item => item.classList.toggle('active', item === button)); });
+document.getElementById('stroke').addEventListener('input', event => { document.getElementById('strokeValue').textContent = `${event.target.value}px`; });
+
+let zoom = 68;
+function renderZoom() { document.getElementById('zoomValue').textContent = `${zoom}%`; document.getElementById('zoomStatus').textContent = `${zoom}%`; document.getElementById('artboard').style.transform = `scale(${Math.max(.72, zoom / 100)})`; }
+document.querySelectorAll('.zoom').forEach(button => button.addEventListener('click', () => { zoom = Math.max(30, Math.min(180, zoom + Number(button.dataset.step))); renderZoom(); }));
+
+const filmFiles = [...document.querySelectorAll('.film-file')];
+filmFiles.forEach((button, index) => button.addEventListener('click', () => { filmFiles.forEach(item => item.classList.toggle('active', item === button)); document.getElementById('fileTitle').textContent = button.dataset.file; document.getElementById('imageSize').textContent = button.dataset.size; document.getElementById('artboard').style.setProperty('--art-accent', button.dataset.color); document.getElementById('artTitle').innerHTML = ['보는 화면은 넓게.<br>도구는 필요한 만큼.','파일은 빠르게,<br>전환은 끊김 없이.','표시는 선명하게,<br>마무리는 한 번에.','캡처가 쌓여도<br>흐름은 가볍게.'][index]; }));
+
+document.querySelectorAll('.capture-option').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('.capture-option').forEach(item => item.classList.toggle('active', item === button)); showToast(`${button.dataset.mode}를 시작합니다`); }));
+document.querySelectorAll('.delay button').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('.delay button').forEach(item => item.classList.toggle('active', item === button)); }));
+
+document.querySelectorAll('.settings-tab').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('.settings-tab').forEach(item => item.classList.toggle('active', item === button)); document.querySelectorAll('[data-setting-panel]').forEach(panel => panel.classList.toggle('active', panel.dataset.settingPanel === button.dataset.setting)); }));
+document.querySelectorAll('.switch').forEach(button => button.addEventListener('click', () => button.classList.toggle('off')));
+</script>
+</body>
+</html>
