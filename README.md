@@ -2,6 +2,16 @@
 
 Mini Capture는 Windows에서 빠르게 화면을 캡처하고 바로 확인·표시·저장할 수 있는 가벼운 캡처 도구입니다. 화면 가장자리에 작은 캡처 버튼을 띄워 두고 영역, 창, 전체 화면, 타이머 캡처를 실행할 수 있습니다.
 
+## 동작 미리보기
+
+### 빠른 캡처 메뉴
+
+![플로팅 버튼에서 영역, 창, 전체 화면, 타이머 캡처를 선택하는 모습](docs/assets/readme/quick-capture-menu.gif)
+
+### 캡처 라이브러리와 뷰어
+
+![캡처 파일을 탐색하고 이미지 배율을 조절하는 Mini Capture 뷰어](docs/assets/readme/viewer-workflow.gif)
+
 ## 포터블 버전 다운로드
 
 1. [최신 릴리스](https://github.com/ai-blink/Mini-Capture/releases/latest)에서 `MiniCapture-v0.1.0-win-x64-portable.zip`을 내려받습니다.
