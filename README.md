@@ -14,7 +14,7 @@ Mini Capture는 Windows에서 빠르게 화면을 캡처하고 바로 확인·�
 
 ## 포터블 버전 다운로드
 
-1. [최신 릴리스](https://github.com/ai-blink/Mini-Capture/releases/latest)에서 `MiniCapture-v0.1.0-win-x64-portable.zip`을 내려받습니다.
+1. [최신 릴리스](https://github.com/ai-blink/Mini-Capture/releases/latest)에서 `MiniCapture-v0.1.1-win-x64-portable.zip`을 내려받습니다.
 2. ZIP 파일을 원하는 폴더에 압축 해제합니다.
 3. `MiniCapture.exe`를 실행합니다.
 
@@ -118,7 +118,7 @@ dotnet publish .\src\MiniCapture\MiniCapture.csproj `
   -p:IncludeNativeLibrariesForSelfExtract=true `
   -p:EnableCompressionInSingleFile=true `
   -p:DebugType=None `
-  -o .\artifacts\publish\MiniCapture-v0.1.0-win-x64-portable
+  -o .\artifacts\publish\MiniCapture-v0.1.1-win-x64-portable
 ```
 
 ## V1 범위
