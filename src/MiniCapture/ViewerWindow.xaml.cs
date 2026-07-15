@@ -283,7 +283,7 @@ public partial class ViewerWindow : Window
         AddressText.Text = folderPath;
         FolderTreeScopeText.Text = CaptureFileIndex.IsUnderRoot(folderPath) ? "캡처 루트" : "전체 경로";
 
-        var switchedToDetailsForLargeFolder = RequiresDetailsView(_isExternalFolder, _activeFolderFileCount) &&
+        var switchedToDetailsForLargeFolder = RequiresDetailsView(_activeFolderFileCount) &&
             _viewMode != ExplorerViewMode.Details;
         if (switchedToDetailsForLargeFolder)
         {
@@ -711,7 +711,7 @@ public partial class ViewerWindow : Window
             return;
         }
 
-        if (mode != ExplorerViewMode.Details && RequiresDetailsView(_isExternalFolder, _activeFolderFileCount))
+        if (mode != ExplorerViewMode.Details && RequiresDetailsView(_activeFolderFileCount))
         {
             var scope = _isExternalFolder
                 ? "외부 폴더"
@@ -1123,8 +1123,8 @@ public partial class ViewerWindow : Window
         UpdateViewButtons();
     }
 
-    internal static bool RequiresDetailsView(bool isExternalFolder, int fileCount) =>
-        isExternalFolder || fileCount > MaxIconViewFiles;
+    internal static bool RequiresDetailsView(int fileCount) =>
+        fileCount > MaxIconViewFiles;
 
     private void ApplyStoredViewerLayout()
     {

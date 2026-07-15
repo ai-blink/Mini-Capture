@@ -138,9 +138,9 @@ static void GetImages_DoesNotRecursivelyScanCaptureSubfolders()
 
 static void RequiresDetailsView_ForLargeFolder()
 {
-    AssertTrue(!ViewerWindow.RequiresDetailsView(false, ViewerWindow.MaxIconViewFiles), "capture-root icon views should remain available at the threshold");
-    AssertTrue(ViewerWindow.RequiresDetailsView(false, ViewerWindow.MaxIconViewFiles + 1), "large capture-root folders should use the virtualized details view");
-    AssertTrue(ViewerWindow.RequiresDetailsView(true, 1), "external folders should use the virtualized details view regardless of file count");
+    AssertTrue(!ViewerWindow.RequiresDetailsView(ViewerWindow.MaxIconViewFiles), "icon views should remain available at the threshold");
+    AssertTrue(ViewerWindow.RequiresDetailsView(ViewerWindow.MaxIconViewFiles + 1), "large folders should use the virtualized details view");
+    AssertTrue(!ViewerWindow.RequiresDetailsView(1), "small folders should allow icon views");
 }
 
 static void FolderSelection_IgnoresCurrentExternalFolder()
