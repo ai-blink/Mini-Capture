@@ -10,6 +10,7 @@ var tests = new (string Name, Action Run)[]
     ("GetImages_AllowsExternalFolderWithoutRecursiveScan", GetImages_AllowsExternalFolderWithoutRecursiveScan),
     ("GetImages_DoesNotRecursivelyScanCaptureSubfolders", GetImages_DoesNotRecursivelyScanCaptureSubfolders),
     ("BuildFolderTree_IncludesExternalPathAndChildFolders", BuildFolderTree_IncludesExternalPathAndChildFolders),
+    ("FolderSelection_IgnoresCurrentExternalFolder", FolderSelection_IgnoresCurrentExternalFolder),
     ("RequiresDetailsView_ForLargeFolder", RequiresDetailsView_ForLargeFolder),
     ("DecodeImageFile_AllowsBackgroundDecode", DecodeImageFile_AllowsBackgroundDecode),
     ("SingleInstance_ForwardsArgumentsToPrimary", SingleInstance_ForwardsArgumentsToPrimary)
@@ -140,6 +141,18 @@ static void RequiresDetailsView_ForLargeFolder()
     AssertTrue(!ViewerWindow.RequiresDetailsView(false, ViewerWindow.MaxIconViewFiles), "capture-root icon views should remain available at the threshold");
     AssertTrue(ViewerWindow.RequiresDetailsView(false, ViewerWindow.MaxIconViewFiles + 1), "large capture-root folders should use the virtualized details view");
     AssertTrue(ViewerWindow.RequiresDetailsView(true, 1), "external folders should use the virtualized details view regardless of file count");
+}
+
+static void FolderSelection_IgnoresCurrentExternalFolder()
+{
+    const string activeFolder = @"C:\images\external";
+
+    AssertTrue(
+        ViewerWindow.IsSameFolderSelection(activeFolder, @"c:\IMAGES\EXTERNAL"),
+        "selecting the active external folder should be recognized as the same navigation target");
+    AssertTrue(
+        !ViewerWindow.IsSameFolderSelection(activeFolder, @"C:\images\other"),
+        "selecting another external folder should still navigate");
 }
 
 static void DecodeImageFile_AllowsBackgroundDecode()

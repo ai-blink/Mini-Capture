@@ -253,6 +253,7 @@ public partial class ViewerWindow : Window
         Stopwatch? existingStopwatch = null)
     {
         var stopwatch = existingStopwatch ?? Stopwatch.StartNew();
+        _currentFolderPath = folderPath;
         SetViewerStatus("폴더를 읽는 중입니다.");
         FileCountText.Text = "읽는 중...";
 
@@ -276,7 +277,6 @@ public partial class ViewerWindow : Window
             return;
         }
 
-        _currentFolderPath = folderPath;
         _activeFolderFileCount = files.Count;
         _isExternalFolder = !CaptureFileIndex.IsUnderRoot(folderPath);
         _files.Clear();
@@ -415,10 +415,10 @@ public partial class ViewerWindow : Window
         return _files.FirstOrDefault(file => string.Equals(file.Path, path, StringComparison.OrdinalIgnoreCase));
     }
 
-    private bool IsCurrentFolder(string folderPath)
+    internal static bool IsSameFolderSelection(string? currentFolderPath, string selectedFolderPath)
     {
-        return !string.IsNullOrWhiteSpace(_currentFolderPath) &&
-            string.Equals(_currentFolderPath, folderPath, StringComparison.OrdinalIgnoreCase);
+        return !string.IsNullOrWhiteSpace(currentFolderPath) &&
+            string.Equals(currentFolderPath, selectedFolderPath, StringComparison.OrdinalIgnoreCase);
     }
 
     private void MoveFileToSortedPosition(CaptureImageFile file)
@@ -597,6 +597,11 @@ public partial class ViewerWindow : Window
             return;
         }
 
+        if (IsSameFolderSelection(_currentFolderPath, path))
+        {
+            return;
+        }
+
         if (!CaptureFileIndex.IsUnderRoot(path))
         {
             _ = NavigateToExternalFolderAsync(path);
@@ -769,7 +774,7 @@ public partial class ViewerWindow : Window
             _isLoadingSelection = false;
             _currentFile = fileToSelect;
         }
-        else if (IsCurrentFolder(savedFile.FolderPath))
+        else if (IsSameFolderSelection(_currentFolderPath, savedFile.FolderPath))
         {
             fileToSelect = savedFile;
             _isLoadingSelection = true;
