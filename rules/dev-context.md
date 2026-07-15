@@ -25,6 +25,9 @@ Latest polish:
 - Windows PNG/JPG/JPEG default-app association is intentionally deferred to an installer/registry slice; V1 code now supports the required quoted `%1`-style file path argument but does not mutate system associations.
 - Viewer editor annotations are selectable before save: newly added rectangle, ellipse, pen, arrow, and text markup can be moved/resized/deleted, and text markup is edited through regular WPF text boxes. Save/copy image still exports a flattened bitmap.
 - ViewerWindow persists its window bounds/state, Explorer view mode, and capture-library/file-list pane widths through the existing local app data `settings.json`.
+- ViewerWindow now keeps images opened outside `Pictures\MiniCapture` synchronized with their actual parent address, a unique expanded drive/share path tree, and a non-recursive same-folder image list; capture-root indexing remains recursive.
+- File association launches now reuse the existing MiniCapture process through a named mutex/pipe handoff, so repeatedly opening images does not multiply app processes. The viewer handles left/right keys before the file list and moves through the current folder's sibling images.
+- Full-resolution viewer decoding now runs off the UI thread with cancellation for stale selections. Build and regression tests pass, but an actual high-resolution external-image desktop pass is still required before calling the reported freeze resolved.
 
 ## Active Design
 
@@ -33,8 +36,8 @@ Latest polish:
 
 ## Immediate Next Step
 
-Use the latest sections of `doc/app-dev/05-run-report.md` as the release-readiness baseline. True multi-monitor hardware validation and any installer/self-contained/default-app association decision remain follow-ups.
+Use the latest sections of `doc/app-dev/05-run-report.md` as the release-readiness baseline. Manually validate repeated association launches, left/right sibling navigation, and a high-resolution external PNG/JPG/JPEG address/tree/list/save workflow on the interactive desktop; true multi-monitor hardware validation remains a follow-up.
 
 ## Current Stack Decision
 
-C# WPF plus Win32 P/Invoke remains the stack. Capture uses GDI `CopyFromScreen` with DWM bounds for window capture; the viewer/browser/editor is WPF-only, indexes PNG/JPG/JPEG files under `Pictures\MiniCapture`, and can preview a PNG/JPG/JPEG path passed on the command line.
+C# WPF plus Win32 P/Invoke remains the stack. Capture uses GDI `CopyFromScreen` with DWM bounds for window capture; the viewer/browser/editor is WPF-only, recursively indexes PNG/JPG/JPEG files under `Pictures\MiniCapture`, browses the direct parent folder when an external image is passed on the command line, and decodes the selected full-resolution image on a background worker.

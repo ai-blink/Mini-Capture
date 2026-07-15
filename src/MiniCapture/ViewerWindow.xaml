@@ -14,7 +14,7 @@
         UseLayoutRounding="True"
         WindowStartupLocation="CenterScreen"
         Loaded="OnLoaded"
-        KeyDown="OnKeyDown"
+        PreviewKeyDown="OnKeyDown"
         KeyUp="OnKeyUp">
     <Window.Resources>
         <SolidColorBrush x:Key="ViewerWindowBackgroundBrush" Color="#EEF1F1" />
@@ -854,7 +854,8 @@
                                    FontWeight="SemiBold"
                                    Foreground="{StaticResource ViewerTextBrush}"
                                    Text="Capture Library" />
-                        <TextBlock Margin="0,1,0,0"
+                        <TextBlock x:Name="FolderTreeScopeText"
+                                   Margin="0,1,0,0"
                                    FontSize="11"
                                    Foreground="{StaticResource ViewerDimTextBrush}"
                                    Text="캡처 루트" />

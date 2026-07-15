@@ -63,13 +63,7 @@ public partial class App : System.Windows.Application
 
     public void ShowCaptureWindow()
     {
-        if (_mainWindow is null)
-        {
-            _mainWindow = new MainWindow();
-            MainWindow = _mainWindow;
-        }
-
-        _mainWindow.ShowFromTray();
+        EnsureMainWindow().ShowFromTray();
     }
 
     public void ExitApplication()
@@ -78,6 +72,27 @@ public partial class App : System.Windows.Application
         _trayIcon?.Dispose();
         _trayIcon = null;
         Shutdown();
+    }
+
+    public void HandleActivationArguments(string[] args)
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            var imagePath = args.FirstOrDefault(CaptureFileIndex.IsImagePath);
+            if (imagePath is not null)
+            {
+                EnsureMainWindow().OpenViewer(imagePath);
+                return;
+            }
+
+            if (args.Any(arg => string.Equals(arg, "--settings", StringComparison.OrdinalIgnoreCase)))
+            {
+                EnsureMainWindow().OpenSettings();
+                return;
+            }
+
+            ShowCaptureWindow();
+        });
     }
 
     private void CreateTrayIcon()
@@ -130,13 +145,18 @@ public partial class App : System.Windows.Application
 
     private void ShowSettingsWindow()
     {
+        EnsureMainWindow().OpenSettings();
+    }
+
+    private MainWindow EnsureMainWindow()
+    {
         if (_mainWindow is null)
         {
             _mainWindow = new MainWindow();
             MainWindow = _mainWindow;
         }
 
-        _mainWindow.OpenSettings();
+        return _mainWindow;
     }
 
     private static void EnsureWindowsDirectoryEnvironment()

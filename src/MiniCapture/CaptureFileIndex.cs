@@ -22,7 +22,7 @@ public static class CaptureFileIndex
             return Array.Empty<CaptureImageFile>();
         }
 
-        return EnumerateImageFiles(folder)
+        return EnumerateImageFiles(folder, recursive: false)
             .Select(file => new CaptureImageFile(file))
             .OrderByDescending(file => file.LastWriteTime)
             .ThenBy(file => file.FileName, StringComparer.OrdinalIgnoreCase)
@@ -34,7 +34,7 @@ public static class CaptureFileIndex
         Directory.CreateDirectory(RootDirectory);
 
         FileInfo? latest = null;
-        foreach (var file in EnumerateImageFiles(RootDirectory))
+        foreach (var file in EnumerateImageFiles(RootDirectory, recursive: true))
         {
             if (latest is null ||
                 file.LastWriteTime > latest.LastWriteTime ||
@@ -48,17 +48,20 @@ public static class CaptureFileIndex
         return latest is null ? null : new CaptureImageFile(latest);
     }
 
-    public static ObservableCollection<FolderTreeNode> BuildFolderTree()
+    public static ObservableCollection<FolderTreeNode> BuildFolderTree(
+        string? targetFolder = null,
+        CaptureImageFile? knownLatest = null)
     {
         var root = RootDirectory;
         Directory.CreateDirectory(root);
+        var normalizedTargetFolder = NormalizeFolder(targetFolder) ?? root;
 
         var miniCaptureQuick = BuildDirectoryNode("MiniCapture", root, "캡처 루트");
         miniCaptureQuick.IsExpanded = true;
         var miniCaptureUnderPictures = CloneNode(miniCaptureQuick);
         miniCaptureUnderPictures.IsExpanded = true;
 
-        var latest = GetLatestImage();
+        var latest = knownLatest;
         if (latest is not null && IsUnderRoot(latest.FolderPath))
         {
             miniCaptureQuick.Children.Insert(0, new FolderTreeNode("최근 캡처", latest.FolderPath, "\uE81C", latest.ModifiedText));
@@ -80,6 +83,11 @@ public static class CaptureFileIndex
 
         var thisPc = new FolderTreeNode("내 PC", null, "\uEC4E");
         thisPc.Children.Add(pictures);
+        if (!IsUnderRoot(normalizedTargetFolder) && BuildExternalPathNode(normalizedTargetFolder) is { } externalPath)
+        {
+            thisPc.Children.Add(externalPath);
+        }
+
         thisPc.IsExpanded = true;
 
         return new ObservableCollection<FolderTreeNode>
@@ -125,9 +133,71 @@ public static class CaptureFileIndex
 
     public static bool IsUnderRoot(string folderPath)
     {
-        var root = EnsureTrailingSeparator(Path.GetFullPath(RootDirectory));
-        var folder = EnsureTrailingSeparator(Path.GetFullPath(folderPath));
-        return folder.StartsWith(root, StringComparison.OrdinalIgnoreCase);
+        try
+        {
+            var root = EnsureTrailingSeparator(Path.GetFullPath(RootDirectory));
+            var folder = EnsureTrailingSeparator(Path.GetFullPath(folderPath));
+            return folder.StartsWith(root, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            return false;
+        }
+    }
+
+    private static FolderTreeNode? BuildExternalPathNode(string targetFolder)
+    {
+        var fullPath = Path.GetFullPath(targetFolder);
+        var rootPath = Path.GetPathRoot(fullPath);
+        if (string.IsNullOrWhiteSpace(rootPath))
+        {
+            return null;
+        }
+
+        var rootName = rootPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        if (string.IsNullOrWhiteSpace(rootName))
+        {
+            rootName = rootPath;
+        }
+
+        var rootNode = new FolderTreeNode(rootName, rootPath, "\uEDA2", rootPath)
+        {
+            IsExpanded = true
+        };
+
+        var currentNode = rootNode;
+        var currentPath = rootPath;
+        var relativePath = Path.GetRelativePath(rootPath, fullPath);
+        if (!string.Equals(relativePath, ".", StringComparison.Ordinal))
+        {
+            foreach (var segment in relativePath.Split(
+                         [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+                         StringSplitOptions.RemoveEmptyEntries))
+            {
+                currentPath = Path.Combine(currentPath, segment);
+                var child = new FolderTreeNode(segment, currentPath)
+                {
+                    IsExpanded = true
+                };
+                currentNode.Children.Add(child);
+                currentNode = child;
+            }
+        }
+
+        AddImmediateDirectories(currentNode, fullPath);
+        return rootNode;
+    }
+
+    private static void AddImmediateDirectories(FolderTreeNode node, string path)
+    {
+        foreach (var directory in EnumerateDirectories(path))
+        {
+            node.Children.Add(new FolderTreeNode(Path.GetFileName(directory), directory));
+        }
     }
 
     private static FolderTreeNode BuildDirectoryNode(string name, string path, string? detail = null)
@@ -161,7 +231,7 @@ public static class CaptureFileIndex
         var root = RootDirectory;
         Directory.CreateDirectory(root);
 
-        if (string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath))
+        if (string.IsNullOrWhiteSpace(folderPath))
         {
             return root;
         }
@@ -169,7 +239,7 @@ public static class CaptureFileIndex
         try
         {
             var fullPath = Path.GetFullPath(folderPath);
-            return IsUnderRoot(fullPath) ? fullPath : root;
+            return Directory.Exists(fullPath) ? fullPath : root;
         }
         catch (ArgumentException)
         {
@@ -181,9 +251,9 @@ public static class CaptureFileIndex
         }
     }
 
-    private static IEnumerable<FileInfo> EnumerateImageFiles(string folder)
+    private static IEnumerable<FileInfo> EnumerateImageFiles(string folder, bool recursive)
     {
-        foreach (var file in EnumerateFiles(folder))
+        foreach (var file in EnumerateFiles(folder, recursive))
         {
             if (ImageExtensions.Contains(file.Extension))
             {
@@ -192,7 +262,7 @@ public static class CaptureFileIndex
         }
     }
 
-    private static IEnumerable<FileInfo> EnumerateFiles(string folder)
+    private static IEnumerable<FileInfo> EnumerateFiles(string folder, bool recursive)
     {
         var pending = new Stack<string>();
         pending.Push(folder);
@@ -200,9 +270,12 @@ public static class CaptureFileIndex
         while (pending.Count > 0)
         {
             var current = pending.Pop();
-            foreach (var child in EnumerateDirectories(current).Reverse())
+            if (recursive)
             {
-                pending.Push(child);
+                foreach (var child in EnumerateDirectories(current).Reverse())
+                {
+                    pending.Push(child);
+                }
             }
 
             IEnumerable<string> files;

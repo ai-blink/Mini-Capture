@@ -26,14 +26,17 @@
 - 2026-07-08: Viewer layout persistence added so `ViewerWindow` restores window bounds/state, Explorer view mode, and capture-library/file-list pane widths through the existing local `settings.json`.
 - 2026-07-08: Timer-delayed region/window capture now freezes the timer-expiry virtual-screen bitmap, selects on that frozen preview, and saves by cropping the snapshot with stored window metadata for delayed window selection.
 - 2026-07-08: Window picker frontmost selection fixed: live and frozen window picking now use Z-order first matching target selection instead of area/full-screen heuristics, with a regression harness covering large-front-window overlap.
+- 2026-07-16: Viewer file-association activation now hands later launches to the existing MiniCapture process, and left/right keys move through sibling images in the visible folder context.
+- 2026-07-16: External-folder listings were constrained to direct images, external folders use the virtualized details view, and selected full-resolution images now decode on a cancellable background worker to avoid blocking the WPF UI thread.
 
 ## Current Work
 
-- Window picker frontmost selection is complete within the current V1 scope. Next implementation slice is manual hardware validation of the reported hard-to-pick window or installer/default-app registration if distribution requires Mini Capture to appear directly in Windows default-app choices.
+- The viewer activation and performance slice is code-complete and regression-tested: repeated file opens target one process, left/right navigate sibling images, and full-resolution decode is off the UI thread. Manual interactive validation with a high-resolution external image is pending; do not yet treat the reported freeze as user-confirmed resolved.
 
 ## Next Actions
 
 - Run a true multi-monitor hardware pass when a multi-display setup is available.
+- Manually open a high-resolution external image repeatedly through the Windows association, then verify no duplicate MiniCapture process, responsive window interaction, and left/right sibling navigation.
 - Decide later whether V1 needs an installer or self-contained package; the current baseline is a framework-dependent `win-x64` publish folder.
 - If Mini Capture should appear as a Windows default app for PNG/JPG/JPEG, implement that in an installer/registry slice with versioned ProgIDs and quoted `%1` command registration.
 - Keep Windows.Graphics.Capture, protected/accelerated-window coverage, and deeper thumbnail cancellation/cache eviction as hardening follow-ups unless a release blocker appears.
@@ -96,3 +99,5 @@
 - Viewer layout persistence build/check: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `git diff --check` passed with CRLF conversion warnings only before the docs-only follow-up.
 - Frozen timer selection build/check: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `git diff --check` passed with CRLF conversion warnings only.
 - Window picker frontmost selection build/check: default Debug output was initially locked by a running `MiniCapture` process, so verification used isolated artifacts paths; later `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors after the lock cleared; `dotnet build MiniCapture.slnx --artifacts-path artifacts\build-picker-fix -p:UseAppHost=false` passed; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-picker-fix -p:UseAppHost=false` passed 4 cases; `git diff --check` passed with CRLF conversion warnings only.
+- External full-path browser build/check: `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-external-browser-final -p:UseAppHost=false` passed with 0 warnings and 0 errors; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-external-browser-final -p:UseAppHost=false` passed 6 cases; `git diff --check` passed with CRLF conversion warnings only. Descendant UI Automation enumeration timed out in this desktop harness, so interactive address/tree/list/save verification remains a manual follow-up.
+- Viewer activation/background decode build/check: `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-background-image-decode -p:UseAppHost=false` passed with 0 warnings and 0 errors; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-background-image-decode -p:UseAppHost=false` passed 10 cases, including single-instance argument forwarding and background full-resolution image decode; `git diff --check` passed with only existing CRLF conversion warnings.

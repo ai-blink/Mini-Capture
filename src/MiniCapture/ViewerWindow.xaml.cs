@@ -56,6 +56,7 @@ public partial class ViewerWindow : Window
     private const double ZoomStep = 1.25;
     private const int MaxUndoSnapshots = 20;
     private const int FilePopulateBatchSize = 160;
+    internal const int MaxIconViewFiles = 300;
     private const double MinStoredViewerWidth = 980;
     private const double MinStoredViewerHeight = 580;
     private const double MaxStoredPanelWidth = 1200;
@@ -89,6 +90,7 @@ public partial class ViewerWindow : Window
     private readonly Stack<BitmapSource> _redoImages = new();
     private readonly Stack<BitmapSource> _undoImages = new();
     private readonly DispatcherTimer _viewStateSaveTimer;
+    private CancellationTokenSource? _imageLoadCancellation;
     private CancellationTokenSource? _loadCancellation;
     private ObservableCollection<FolderTreeNode> _folderNodes = new();
     private BitmapSource? _editableImage;
@@ -104,6 +106,7 @@ public partial class ViewerWindow : Window
     private bool _fitMode = true;
     private bool _isDirty;
     private bool _isDrawing;
+    private bool _isExternalFolder;
     private bool _isLoadingSelection;
     private bool _isSelectingFolder;
     private bool _isPanning;
@@ -112,6 +115,7 @@ public partial class ViewerWindow : Window
     private bool _isRestoringImageViewState;
     private bool _isUpdatingZoomSlider;
     private bool _spacePanActive;
+    private int _activeFolderFileCount;
     private WpfPoint _annotationDragStartPoint;
     private WpfRect _annotationStartBounds;
     private List<WpfPoint> _annotationStartPoints = new();
@@ -164,6 +168,9 @@ public partial class ViewerWindow : Window
         _loadCancellation?.Cancel();
         _loadCancellation?.Dispose();
         _loadCancellation = null;
+        _imageLoadCancellation?.Cancel();
+        _imageLoadCancellation?.Dispose();
+        _imageLoadCancellation = null;
         base.OnClosed(e);
     }
 
@@ -191,13 +198,19 @@ public partial class ViewerWindow : Window
         catch (OperationCanceledException)
         {
         }
+        catch (Exception ex)
+        {
+            ShowFolderLoadFailure(ex);
+        }
     }
 
     private static ViewerIndexSnapshot BuildIndexSnapshot(string? requestedPath)
     {
-        var folderNodes = CaptureFileIndex.BuildFolderTree();
         var targetPath = ResolveTargetPath(requestedPath);
-        return new ViewerIndexSnapshot(folderNodes, targetPath, GetTargetFolder(targetPath));
+        var targetFolder = GetTargetFolder(targetPath);
+        CaptureFileIndex.TryCreateImageFile(targetPath, out var knownLatest);
+        var folderNodes = CaptureFileIndex.BuildFolderTree(targetFolder, knownLatest);
+        return new ViewerIndexSnapshot(folderNodes, targetPath, targetFolder);
     }
 
     private static string? ResolveTargetPath(string? requestedPath)
@@ -215,9 +228,18 @@ public partial class ViewerWindow : Window
         if (!string.IsNullOrWhiteSpace(targetPath))
         {
             var folder = IOPath.GetDirectoryName(targetPath);
-            if (!string.IsNullOrWhiteSpace(folder) && CaptureFileIndex.IsUnderRoot(folder))
+            if (!string.IsNullOrWhiteSpace(folder) && Directory.Exists(folder))
             {
-                return folder;
+                try
+                {
+                    return IOPath.GetFullPath(folder);
+                }
+                catch (ArgumentException)
+                {
+                }
+                catch (NotSupportedException)
+                {
+                }
             }
         }
 
@@ -231,17 +253,8 @@ public partial class ViewerWindow : Window
         Stopwatch? existingStopwatch = null)
     {
         var stopwatch = existingStopwatch ?? Stopwatch.StartNew();
-        _currentFolderPath = folderPath;
-        _files.Clear();
-        AddressText.Text = folderPath;
+        SetViewerStatus("폴더를 읽는 중입니다.");
         FileCountText.Text = "읽는 중...";
-
-        var preferredIsInFolder = false;
-        if (CaptureFileIndex.TryCreateImageFile(preferredPath, out var preferredFile) && preferredFile is not null)
-        {
-            preferredIsInFolder = string.Equals(preferredFile.FolderPath, folderPath, StringComparison.OrdinalIgnoreCase);
-            LoadImage(preferredFile);
-        }
 
         IReadOnlyList<CaptureImageFile> files;
         try
@@ -252,10 +265,36 @@ public partial class ViewerWindow : Window
         {
             return;
         }
+        catch (Exception ex)
+        {
+            ShowFolderLoadFailure(ex);
+            return;
+        }
 
         if (!IsCurrentLoad(load))
         {
             return;
+        }
+
+        _currentFolderPath = folderPath;
+        _activeFolderFileCount = files.Count;
+        _isExternalFolder = !CaptureFileIndex.IsUnderRoot(folderPath);
+        _files.Clear();
+        AddressText.Text = folderPath;
+        FolderTreeScopeText.Text = CaptureFileIndex.IsUnderRoot(folderPath) ? "캡처 루트" : "전체 경로";
+
+        var switchedToDetailsForLargeFolder = RequiresDetailsView(_isExternalFolder, _activeFolderFileCount) &&
+            _viewMode != ExplorerViewMode.Details;
+        if (switchedToDetailsForLargeFolder)
+        {
+            SetViewMode(ExplorerViewMode.Details);
+        }
+
+        var preferredIsInFolder = false;
+        if (CaptureFileIndex.TryCreateImageFile(preferredPath, out var preferredFile) && preferredFile is not null)
+        {
+            preferredIsInFolder = string.Equals(preferredFile.FolderPath, folderPath, StringComparison.OrdinalIgnoreCase);
+            LoadImage(preferredFile);
         }
 
         try
@@ -264,6 +303,11 @@ public partial class ViewerWindow : Window
         }
         catch (OperationCanceledException)
         {
+            return;
+        }
+        catch (Exception ex)
+        {
+            ShowFolderLoadFailure(ex);
             return;
         }
         if (!IsCurrentLoad(load))
@@ -298,7 +342,12 @@ public partial class ViewerWindow : Window
             ClearImage("선택한 폴더에 이미지가 없습니다.");
         }
 
-        SetViewerStatus($"폴더 로딩 완료: {_files.Count:0}개, {stopwatch.ElapsedMilliseconds:0}ms");
+        var largeFolderSuffix = switchedToDetailsForLargeFolder
+            ? _isExternalFolder
+                ? " · 외부 폴더는 응답성을 위해 세부 정보 보기로 표시합니다."
+                : " · 대용량 폴더는 세부 정보 보기로 표시합니다."
+            : string.Empty;
+        SetViewerStatus($"폴더 로딩 완료: {_files.Count:0}개, {stopwatch.ElapsedMilliseconds:0}ms{largeFolderSuffix}");
     }
 
     private async Task PopulateFilesAsync(
@@ -332,6 +381,23 @@ public partial class ViewerWindow : Window
         _loadCancellation?.Cancel();
         _loadCancellation = new CancellationTokenSource();
         return _loadCancellation;
+    }
+
+    private CancellationTokenSource StartNewImageLoad()
+    {
+        CancelImageLoad();
+        _imageLoadCancellation = new CancellationTokenSource();
+        return _imageLoadCancellation;
+    }
+
+    private void CancelImageLoad()
+    {
+        _imageLoadCancellation?.Cancel();
+    }
+
+    private bool IsCurrentImageLoad(CancellationTokenSource load)
+    {
+        return ReferenceEquals(_imageLoadCancellation, load) && !load.IsCancellationRequested;
     }
 
     private bool IsCurrentLoad(CancellationTokenSource load)
@@ -409,11 +475,19 @@ public partial class ViewerWindow : Window
 
     private void LoadImage(CaptureImageFile? file)
     {
+        _ = LoadImageAsync(file);
+    }
+
+    private async Task LoadImageAsync(CaptureImageFile? file)
+    {
         if (file is null)
         {
+            CancelImageLoad();
             ClearImage("표시할 이미지가 없습니다.");
             return;
         }
+
+        var load = StartNewImageLoad();
 
         if (_currentFile is not null &&
             !string.Equals(_currentFile.Path, file.Path, StringComparison.OrdinalIgnoreCase))
@@ -421,45 +495,67 @@ public partial class ViewerWindow : Window
             FlushCurrentImageViewState();
         }
 
+        SetViewerStatus("이미지를 불러오는 중입니다.");
+
+        BitmapSource image;
         try
         {
-            using var stream = File.Open(file.Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-            var image = new BitmapImage();
-            image.BeginInit();
-            image.CacheOption = BitmapCacheOption.OnLoad;
-            image.StreamSource = stream;
-            image.EndInit();
-            image.Freeze();
-
-            _currentFile = file;
-            _lastSavedPath = file.Path;
-            _editableImage = image;
-            ClearAnnotations();
-            ClearEditHistory();
-            _isDirty = false;
-            PreviewImage.Source = _editableImage;
-            EmptyMessage.Visibility = Visibility.Collapsed;
-            StatusText.Text = file.Path;
-            UpdateStatusMetadata();
-            UpdateDirtyIndicator();
-
-            if (_fitMode)
-            {
-                FitToStage();
-            }
-            else
-            {
-                ApplyZoom();
-            }
-
-            RestoreImageViewState(file.Path);
+            image = await Task.Run(() => DecodeImageFile(file.Path), load.Token);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        catch (OperationCanceledException)
         {
-            ClearImage($"이미지를 열 수 없습니다: {ex.Message}");
+            return;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or InvalidOperationException)
+        {
+            if (IsCurrentImageLoad(load))
+            {
+                ClearImage($"이미지를 열 수 없습니다: {ex.Message}");
+            }
+
+            return;
         }
 
+        if (!IsCurrentImageLoad(load))
+        {
+            return;
+        }
+
+        _currentFile = file;
+        _lastSavedPath = file.Path;
+        _editableImage = image;
+        ClearAnnotations();
+        ClearEditHistory();
+        _isDirty = false;
+        PreviewImage.Source = _editableImage;
+        EmptyMessage.Visibility = Visibility.Collapsed;
+        StatusText.Text = file.Path;
+        UpdateStatusMetadata();
+        UpdateDirtyIndicator();
+
+        if (_fitMode)
+        {
+            FitToStage();
+        }
+        else
+        {
+            ApplyZoom();
+        }
+
+        RestoreImageViewState(file.Path);
         UpdateNavigationButtons();
+    }
+
+    internal static BitmapSource DecodeImageFile(string path)
+    {
+        using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        var image = new BitmapImage();
+        image.BeginInit();
+        image.CacheOption = BitmapCacheOption.OnLoad;
+        image.StreamSource = stream;
+        image.EndInit();
+        image.Freeze();
+        return image;
     }
 
     private void ClearImage(string message)
@@ -501,8 +597,42 @@ public partial class ViewerWindow : Window
             return;
         }
 
+        if (!CaptureFileIndex.IsUnderRoot(path))
+        {
+            _ = NavigateToExternalFolderAsync(path);
+            return;
+        }
+
         var load = StartNewLoad();
         _ = LoadFolderAsync(path, null, load);
+    }
+
+    private async Task NavigateToExternalFolderAsync(string folderPath)
+    {
+        var load = StartNewLoad();
+        var stopwatch = Stopwatch.StartNew();
+        SetViewerStatus("외부 이미지 폴더를 읽는 중입니다.");
+
+        try
+        {
+            var folderNodes = await Task.Run(() => CaptureFileIndex.BuildFolderTree(folderPath), load.Token);
+            if (!IsCurrentLoad(load))
+            {
+                return;
+            }
+
+            _folderNodes = folderNodes;
+            FolderTree.ItemsSource = _folderNodes;
+            SelectFolderPath(folderPath);
+            await LoadFolderAsync(folderPath, null, load, stopwatch);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            ShowFolderLoadFailure(ex);
+        }
     }
 
     private void OnFileSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -573,6 +703,15 @@ public partial class ViewerWindow : Window
         if (sender is not System.Windows.Controls.Button { Tag: string tag } ||
             !Enum.TryParse<ExplorerViewMode>(tag, out var mode))
         {
+            return;
+        }
+
+        if (mode != ExplorerViewMode.Details && RequiresDetailsView(_isExternalFolder, _activeFolderFileCount))
+        {
+            var scope = _isExternalFolder
+                ? "외부 폴더"
+                : $"{_activeFolderFileCount:0}개 파일";
+            SetViewerStatus($"{scope}은(는) 세부 정보 보기에서만 표시합니다. 아이콘 보기는 응답성을 위해 제한됩니다.");
             return;
         }
 
@@ -978,6 +1117,9 @@ public partial class ViewerWindow : Window
         FileList.SelectedItem = selected;
         UpdateViewButtons();
     }
+
+    internal static bool RequiresDetailsView(bool isExternalFolder, int fileCount) =>
+        isExternalFolder || fileCount > MaxIconViewFiles;
 
     private void ApplyStoredViewerLayout()
     {
@@ -2905,6 +3047,12 @@ public partial class ViewerWindow : Window
     {
         StatusText.Text = message;
         AutomationProperties.SetName(StatusText, message);
+    }
+
+    private void ShowFolderLoadFailure(Exception ex)
+    {
+        FileCountText.Text = "읽기 실패";
+        SetViewerStatus($"폴더를 읽을 수 없습니다: {ex.Message}");
     }
 
     private static void SetViewButtonState(System.Windows.Controls.Button button, bool selected)

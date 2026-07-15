@@ -9,9 +9,19 @@ public static class Program
     {
         DpiAwarenessApi.TryEnablePerMonitorV2();
 
-        var app = new App(args);
-        app.InitializeComponent();
-        app.Run();
+        if (!SingleInstanceCoordinator.TryCreatePrimary(out var instance))
+        {
+            SingleInstanceCoordinator.NotifyPrimary(args);
+            return;
+        }
+
+        using (instance!)
+        {
+            var app = new App(args);
+            instance!.StartListening(app.HandleActivationArguments);
+            app.InitializeComponent();
+            app.Run();
+        }
     }
 }
 

@@ -23,3 +23,10 @@
 | done | Window picker frontmost selection fix | Z-order first matching window selection, large-front-window overlap regression, isolated artifacts build/test |
 | done | Viewer save/copy and thumbnail refresh | header save/image/path actions, `Ctrl+S`/`Ctrl+C`/`Ctrl+Shift+C`, save-time thumbnail/metadata invalidation, isolated build/test |
 | done | V0.1.0 portable release | Korean README, self-contained single-file `win-x64` ZIP, portable launch smoke, GitHub release |
+| done | External image full-path browser integration | actual external parent address, unique drive/share path tree, direct-folder image list, isolated build and 6 regression tests |
+| done | Viewer single instance and keyboard navigation | mutex/named-pipe launch forwarding, existing viewer reuse, `PreviewKeyDown` previous/next selection, isolated build and 7 regression tests |
+| done | Viewer folder-scoped image loading | direct-folder PNG/JPG/JPEG listing for capture and external folders, known latest-image tree reuse, isolated build and 8 regression tests |
+| done | External folder loading failure state | retain prior list until direct-folder enumeration succeeds and surface async loading errors, isolated build and 8 regression tests |
+| done | Large folder virtualized view guard | force virtualized Details view above 300 images and block non-virtualized icon thumbnails, isolated build and 9 regression tests |
+| done | External folder Details-only guard | external folders always use virtualized Details view, with GLM-5.2 cross-check and 9 regression tests |
+| done | Background full-resolution image decode | cancelable worker-thread image decode with frozen WPF handoff, preserved raster save path, isolated build and 10 regression tests |

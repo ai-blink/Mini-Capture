@@ -962,3 +962,307 @@ Viewer markup can be completed inside the image viewer through visible save/copy
 - `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj`: passed 4 regression cases.
 - Portable `MiniCapture.exe --settings` launch: passed; process was responsive and reported product version `0.1.0`.
 - ZIP SHA-256: `229220E1BC009224905A0424E767D6A3CA9937B30A4CD47C665DD445AC178DE5`.
+
+## External Image Full-Path Browser Integration
+
+### Finish Line
+
+Opening a PNG/JPG/JPEG outside `Pictures\MiniCapture` keeps the viewer, address display, folder tree, file list, and previous/next context synchronized to the image's actual parent folder.
+
+### Acceptance Checks
+
+- External image folders are not coerced back to the capture root.
+- The tree contains one expanded drive/share-root-to-target path and the target's immediate child folders.
+- The external folder list includes supported images in that folder without recursively scanning the entire drive.
+- The existing recursive capture-root index and latest-capture entry remain unchanged.
+- Build, focused path/tree regressions, and diff hygiene pass.
+
+### Scope Limit
+
+- No address editing, search, delete, rename, move, Save As, or general-purpose file-manager operations.
+- Existing external save behavior remains unchanged: PNG overwrites the selected PNG and JPG/JPEG saves an `_edited.png` sibling.
+
+### Review Budget
+
+- Two implementation/review loops.
+
+### Stop Rule
+
+- Stop after the isolated build, focused regression tests, diff check, and run-report/roadmap update pass.
+
+### Changes
+
+- Allowed validated existing folders outside the capture root to become the active viewer folder.
+- Kept capture-root indexing recursive while limiting external folders to direct image files.
+- Added an expanded external drive/share path chain and immediate child-folder nodes without duplicating the selected target path.
+- Rebuilt the external tree when navigating to an external ancestor or child so deeper traversal stays synchronized.
+- Labeled the folder pane as `전체 경로` while browsing outside the capture root.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-external-browser-final -p:UseAppHost=false`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-external-browser-final -p:UseAppHost=false`: passed 6 cases, including external direct-folder indexing and unique full-path tree construction.
+- `git diff --check`: passed with CRLF conversion warnings only.
+- The isolated viewer process stayed alive with an external image argument, but this desktop harness repeatedly timed out while enumerating the viewer's descendant UI Automation tree. Address/list/tree UIA assertions remain a manual follow-up rather than claimed evidence.
+
+### Decisions
+
+- Full-path integration means the real filesystem drive/share hierarchy for the opened image, not Windows shell virtual folders or a general file manager.
+- External folders use non-recursive image enumeration to avoid accidental drive-wide scans; selecting a child rebuilds the focused path tree for continued navigation.
+
+### Follow-ups
+
+- FOLLOW_UP: manually open an external PNG and JPG/JPEG and confirm the expanded path, selected node, sibling list, previous/next navigation, and save refresh on the interactive desktop.
+
+## Viewer Single Instance And Keyboard Navigation
+
+### Finish Line
+
+Opening image files repeatedly reuses one Mini Capture process and viewer window, while Left/Right reliably changes the selected image within the active folder.
+
+### Acceptance Checks
+
+- A secondary launch forwards its command-line arguments to the primary process through a local named pipe and exits.
+- A forwarded image path opens in the existing viewer window.
+- Left/Right is handled before file-list controls consume the key, except while editing text.
+- Isolated build, focused IPC regression, existing browser regressions, and diff hygiene pass.
+
+### Scope Limit
+
+- No installer, registry, association, image-ordering, or general file-browser behavior changes.
+
+### Review Budget
+
+- One implementation/fix loop.
+
+### Stop Rule
+
+- Stop after the isolated build, seven regression cases, and diff check pass.
+
+### Changes
+
+- Added a mutex-plus-named-pipe single-instance coordinator and routed forwarded image/settings/plain-launch requests onto the existing app dispatcher.
+- Moved the viewer's keyboard handler to `PreviewKeyDown`, so the current folder's previous/next selection works even when the file list has focus.
+- Added an isolated IPC forwarding regression using unique test mutex/pipe names.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-single-instance-navigation-final -p:UseAppHost=false`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-single-instance-navigation-final -p:UseAppHost=false`: passed 7 cases, including `SingleInstance_ForwardsArgumentsToPrimary`.
+- `git diff --check`: passed; only existing CRLF-conversion warnings were emitted.
+
+### Follow-ups
+
+- FOLLOW_UP: manually open several PNG/JPG/JPEG files through Windows Explorer with the currently installed app, then confirm only one `MiniCapture.exe` process remains and the existing viewer changes images with Left/Right.
+
+## Viewer Folder-Scoped Image Loading
+
+### Finish Line
+
+Opening an image or selecting a folder no longer recursively loads every image beneath the capture root; the viewer loads only direct image siblings in the active folder.
+
+### Acceptance Checks
+
+- PNG/JPG/JPEG lists are limited to the selected folder's direct files, including folders beneath `Pictures\MiniCapture`.
+- An image-path open reuses that image for the `최근 캡처` tree entry instead of triggering another root-wide latest-image scan.
+- First opening the viewer with no supplied image may still perform one latest-capture search.
+- Build, eight regression cases, and diff hygiene pass.
+
+### Scope Limit
+
+- No changes to image ordering, thumbnail rendering, capture output directories, external-folder browsing, or the existing recursive directory-tree presentation.
+
+### Review Budget
+
+- One implementation/review loop.
+
+### Stop Rule
+
+- Stop after isolated build, focused regression coverage, and diff check pass.
+
+### Changes
+
+- Changed image enumeration to direct-folder-only for both capture-root and external folders.
+- Passed the already resolved startup image into folder-tree construction, avoiding its redundant full capture-root latest-image traversal.
+- Added a capture-root regression proving nested image files are excluded from the active folder list.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-folder-lazy-loading -p:UseAppHost=false`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-folder-lazy-loading -p:UseAppHost=false`: passed 8 cases, including capture-root and external non-recursive image listing.
+- `git diff --check`: passed; only existing CRLF-conversion warnings were emitted.
+
+### Follow-ups
+
+- FOLLOW_UP: if capture directory nesting itself becomes large, replace the existing recursive directory-tree construction with expand-on-demand nodes in a separate viewer-tree slice.
+
+## External Folder Loading Failure State
+
+### Finish Line
+
+An external-folder load failure no longer leaves the viewer permanently showing a loading message; the viewer reports the failure while preserving the prior image list until a new folder list is available.
+
+### Acceptance Checks
+
+- Folder enumeration completes before the active list and address are replaced.
+- Tree-building, file enumeration, and UI batch failures change the status to `읽기 실패` with the underlying message.
+- Cancellation remains silent and does not overwrite a newer navigation request.
+- Build, existing regression coverage, and diff hygiene pass.
+
+### Scope Limit
+
+- No retry queue, timeout policy, network-share mounting logic, or folder-tree architecture changes.
+
+### Review Budget
+
+- One implementation/review loop.
+
+### Stop Rule
+
+- Stop after isolated build, regression tests, diff check, and republishing the latest executable.
+
+### Changes
+
+- Deferred clearing the current file list and changing the address until direct-folder enumeration succeeds.
+- Added visible failure-state handling for initial index, external-tree, image-enumeration, and UI-population exceptions.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-external-folder-error-state -p:UseAppHost=false`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-external-folder-error-state -p:UseAppHost=false`: passed 8 cases.
+- `git diff --check`: passed; only existing CRLF-conversion warnings were emitted.
+
+### Follow-ups
+
+- FOLLOW_UP: manually select an inaccessible, disconnected, or transient external folder and confirm the status changes from the loading text to `폴더를 읽을 수 없습니다: …` without blanking the preceding list.
+
+## Large Folder Virtualized View Guard
+
+### Finish Line
+
+Opening a large external image folder keeps the viewer responsive by preventing the non-virtualized icon WrapPanel from creating every icon and thumbnail at once.
+
+### Acceptance Checks
+
+- Folders with more than 300 images switch from an icon view to the existing virtualized Details view before file items are populated.
+- Icon view requests remain blocked while such a folder is active, with an explanatory status message.
+- Folders at or below the threshold preserve all existing icon view choices.
+- Build, nine regression cases, and diff hygiene pass.
+
+### Scope Limit
+
+- No custom virtualizing WrapPanel, paging UI, thumbnail cache redesign, or changes to ordinary-size folder views.
+
+### Review Budget
+
+- One implementation/review loop.
+
+### Stop Rule
+
+- Stop after isolated build, regression coverage, diff check, and republishing the latest executable.
+
+### Changes
+
+- Added a 300-file guard for icon views, which use WPF's non-virtualized WrapPanel and otherwise realize every thumbnail.
+- Automatically use the existing Details `VirtualizingStackPanel` for larger folders and prevent switching back to an icon template until a smaller folder is selected.
+- Added boundary regression coverage for the view-mode guard.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-large-folder-virtualized-view -p:UseAppHost=false`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-large-folder-virtualized-view -p:UseAppHost=false`: passed 9 cases.
+- `git diff --check`: passed; only existing CRLF-conversion warnings were emitted.
+
+### Follow-ups
+
+- FOLLOW_UP: manually open the reported large external folder and verify that Details view remains responsive and process memory stabilizes without the icon-mode thumbnail surge.
+
+## External Folder Details-Only Guard
+
+### Finish Line
+
+External image folders never enter the non-virtualized icon/thumbnail layout, including folders below the previous large-folder threshold.
+
+### Acceptance Checks
+
+- Every external folder uses the existing virtualized Details view before its files are displayed.
+- Requests to select Small, Medium, or Large icon view remain blocked while an external folder is active.
+- Capture-root folders retain icon views through the 300-file threshold policy.
+- Build, nine regression cases, and diff hygiene pass.
+
+### Scope Limit
+
+- No custom virtualizing WrapPanel, paging behavior, or capture-root icon UI change.
+
+### Review Budget
+
+- Second and final implementation/review loop for this freeze report.
+
+### Stop Rule
+
+- Stop after isolated build, regression coverage, diff check, and republishing the latest executable.
+
+### Changes
+
+- Used GLM-5.2 for a bounded cross-check of the list/tree/icon rendering paths.
+- Confirmed the running executable matched the previous latest publish and that persisted viewer mode was `SmallIcons`.
+- Restricted all external folders to Details mode because the existing WrapPanel icon layouts are non-virtualized even below 300 files.
+- Extended the view-policy regression to cover external folders with a single image.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-external-folder-details-only -p:UseAppHost=false`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-external-folder-details-only -p:UseAppHost=false`: passed 9 cases.
+- `git diff --check`: passed; only existing CRLF-conversion warnings were emitted.
+
+### Follow-ups
+
+- FOLLOW_UP: close the existing process, launch this publish, and manually re-open the reported external folder to verify the status shows Details view and memory no longer grows from icon thumbnails.
+
+## Background Full-Resolution Image Decode
+
+### Finish Line
+
+Opening a high-resolution external image keeps the viewer window responsive while preserving the full-resolution raster used by the editor and save path.
+
+### Acceptance Checks
+
+- Full-resolution image decoding runs outside the WPF UI thread.
+- A new file selection cancels an earlier pending decode and prevents stale image assignment.
+- The decoded bitmap is frozen before it reaches WPF controls.
+- Existing full-resolution editing and save behavior remains unchanged.
+- Build, ten regression cases, and diff hygiene pass.
+
+### Scope Limit
+
+- No preview downscaling, image-quality reduction, editor export change, or thumbnail cache redesign.
+
+### Review Budget
+
+- Root-cause implementation after two unsuccessful view-policy mitigations; no adjacent performance work follows this slice.
+
+### Stop Rule
+
+- Stop after isolated build, focused decode regression, diff check, and republishing the latest executable.
+
+### Root Cause Evidence
+
+- The current published executable was confirmed to match `C:\app\MiniCapture.exe` by SHA-256, so stale deployment was excluded.
+- The active process retained roughly 300 MB while recent external folders had modest file counts.
+- Recent images include a 3646×7671 (28 MP) source. `ViewerWindow.LoadImage` synchronously decoded that source at full resolution on the WPF UI thread, creating an approximately 112 MB raw pixel buffer before rendering overhead.
+
+### Changes
+
+- Split image loading into a cancelable `Task.Run` decode and a UI-thread-only assignment phase.
+- Reused the existing full-resolution bitmap and `Freeze()` behavior, so save/export fidelity is unchanged.
+- Added a regression that decodes a valid PNG on a background worker and verifies dimensions plus frozen UI handoff.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-background-image-decode -p:UseAppHost=false`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-background-image-decode -p:UseAppHost=false`: passed 10 cases, including background image decoding.
+- `git diff --check`: passed; only existing CRLF-conversion warnings were emitted.
+
+### Follow-ups
+
+- FOLLOW_UP: manually open the reported 28 MP external image and verify the viewer stays interactive during the loading status, then save once to confirm the original-resolution editor workflow remains intact.
