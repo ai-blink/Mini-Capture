@@ -568,7 +568,7 @@
                                     AutomationProperties.Name="새로고침"
                                     Click="OnRefreshClick"
                                     Content="&#xE72C;"
-                                    ToolTip="새로고침"
+                                    ToolTip="파일 목록 새로고침 (F5)"
                                     Style="{StaticResource ToolbarIconButtonStyle}" />
                         </StackPanel>
                     </Border>
@@ -915,11 +915,30 @@
                             BorderBrush="{StaticResource ViewerMutedBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="4">
-                        <TextBlock x:Name="AddressText"
-                                   AutomationProperties.AutomationId="ViewerAddressText"
-                                   FontSize="12"
-                                   Foreground="{StaticResource ViewerMutedTextBrush}"
-                                   TextTrimming="CharacterEllipsis" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="28" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="AddressText"
+                                       AutomationProperties.AutomationId="ViewerAddressText"
+                                       VerticalAlignment="Center"
+                                       FontSize="12"
+                                       Foreground="{StaticResource ViewerMutedTextBrush}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <Button Grid.Column="1"
+                                    Width="26"
+                                    Height="24"
+                                    MinWidth="26"
+                                    Padding="0"
+                                    AutomationProperties.AutomationId="FileListRefreshButton"
+                                    AutomationProperties.Name="파일 목록 새로고침"
+                                    Click="OnRefreshClick"
+                                    Content="&#xE72C;"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    ToolTip="현재 폴더 파일 목록 새로고침 (F5)"
+                                    Style="{StaticResource ViewButtonStyle}" />
+                        </Grid>
                     </Border>
 
                     <DockPanel Grid.Row="1"
@@ -930,8 +949,8 @@
                                    FontSize="12"
                                    Foreground="{StaticResource ViewerDimTextBrush}" />
                         <StackPanel DockPanel.Dock="Right"
-                                    Orientation="Horizontal"
-                                    HorizontalAlignment="Right">
+                                     Orientation="Horizontal"
+                                     HorizontalAlignment="Right">
                             <Button x:Name="DetailsViewButton"
                                     AutomationProperties.AutomationId="DetailsViewButton"
                                     Click="OnViewModeClick"

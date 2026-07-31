@@ -49,6 +49,14 @@ internal enum ViewerAnnotationKind
     Arrow
 }
 
+internal enum ViewerFileSortColumn
+{
+    Name,
+    ModifiedDate,
+    Type,
+    Size
+}
+
 public partial class ViewerWindow : Window
 {
     private const double MinZoom = 0.1;
@@ -127,6 +135,8 @@ public partial class ViewerWindow : Window
     private double _strokeThickness = 4.0;
     private double _zoom = 1.0;
     private ExplorerViewMode _viewMode = ExplorerViewMode.Details;
+    private ViewerFileSortColumn _fileSortColumn = ViewerFileSortColumn.ModifiedDate;
+    private ListSortDirection _fileSortDirection = ListSortDirection.Descending;
 
     public ViewerWindow(string? imagePath)
     {
@@ -213,6 +223,16 @@ public partial class ViewerWindow : Window
         return new ViewerIndexSnapshot(folderNodes, targetPath, targetFolder);
     }
 
+    private static ViewerIndexSnapshot BuildFolderSnapshot(string folderPath, string? preferredPath)
+    {
+        var targetFolder = Directory.Exists(folderPath)
+            ? IOPath.GetFullPath(folderPath)
+            : CaptureFileIndex.RootDirectory;
+        CaptureFileIndex.TryCreateImageFile(preferredPath, out var preferredFile);
+        var folderNodes = CaptureFileIndex.BuildFolderTree(targetFolder, preferredFile);
+        return new ViewerIndexSnapshot(folderNodes, preferredFile?.Path, targetFolder);
+    }
+
     private static string? ResolveTargetPath(string? requestedPath)
     {
         if (CaptureFileIndex.IsImagePath(requestedPath))
@@ -258,9 +278,16 @@ public partial class ViewerWindow : Window
         FileCountText.Text = "읽는 중...";
 
         IReadOnlyList<CaptureImageFile> files;
+        var requestedSortColumn = _fileSortColumn;
+        var requestedSortDirection = _fileSortDirection;
         try
         {
-            files = await Task.Run(() => CaptureFileIndex.GetImages(folderPath), load.Token);
+            files = await Task.Run(
+                () => SortFiles(
+                    CaptureFileIndex.GetImages(folderPath),
+                    requestedSortColumn,
+                    requestedSortDirection),
+                load.Token);
         }
         catch (OperationCanceledException)
         {
@@ -310,6 +337,12 @@ public partial class ViewerWindow : Window
             ShowFolderLoadFailure(ex);
             return;
         }
+
+        if (requestedSortColumn != _fileSortColumn || requestedSortDirection != _fileSortDirection)
+        {
+            ApplyFileSort();
+        }
+
         if (!IsCurrentLoad(load))
         {
             return;
@@ -415,7 +448,7 @@ public partial class ViewerWindow : Window
         return _files.FirstOrDefault(file => string.Equals(file.Path, path, StringComparison.OrdinalIgnoreCase));
     }
 
-    internal static bool IsSameFolderSelection(string? currentFolderPath, string selectedFolderPath)
+    internal static bool IsSameFolderSelection(string? currentFolderPath, string? selectedFolderPath)
     {
         return !string.IsNullOrWhiteSpace(currentFolderPath) &&
             string.Equals(currentFolderPath, selectedFolderPath, StringComparison.OrdinalIgnoreCase);
@@ -437,20 +470,86 @@ public partial class ViewerWindow : Window
     {
         for (var index = 0; index < _files.Count; index++)
         {
-            var current = _files[index];
-            if (file.LastWriteTime > current.LastWriteTime)
-            {
-                return index;
-            }
-
-            if (file.LastWriteTime == current.LastWriteTime &&
-                string.Compare(file.FileName, current.FileName, StringComparison.OrdinalIgnoreCase) < 0)
+            if (CompareFiles(file, _files[index], _fileSortColumn, _fileSortDirection) < 0)
             {
                 return index;
             }
         }
 
         return _files.Count;
+    }
+
+    internal static IReadOnlyList<CaptureImageFile> SortFiles(
+        IEnumerable<CaptureImageFile> files,
+        ViewerFileSortColumn sortColumn,
+        ListSortDirection sortDirection)
+    {
+        var sorted = files.ToList();
+        sorted.Sort((left, right) => CompareFiles(left, right, sortColumn, sortDirection));
+        return sorted;
+    }
+
+    internal static int CompareFiles(
+        CaptureImageFile left,
+        CaptureImageFile right,
+        ViewerFileSortColumn sortColumn,
+        ListSortDirection sortDirection)
+    {
+        var comparison = sortColumn switch
+        {
+            ViewerFileSortColumn.Name => StringComparer.CurrentCultureIgnoreCase.Compare(left.FileName, right.FileName),
+            ViewerFileSortColumn.ModifiedDate => left.LastWriteTime.CompareTo(right.LastWriteTime),
+            ViewerFileSortColumn.Type => StringComparer.CurrentCultureIgnoreCase.Compare(left.Extension, right.Extension),
+            ViewerFileSortColumn.Size => left.Length.CompareTo(right.Length),
+            _ => 0
+        };
+
+        if (sortDirection == ListSortDirection.Descending)
+        {
+            comparison = comparison switch
+            {
+                < 0 => 1,
+                > 0 => -1,
+                _ => 0
+            };
+        }
+
+        if (comparison != 0)
+        {
+            return comparison;
+        }
+
+        comparison = StringComparer.CurrentCultureIgnoreCase.Compare(left.FileName, right.FileName);
+        return comparison != 0
+            ? comparison
+            : StringComparer.OrdinalIgnoreCase.Compare(left.Path, right.Path);
+    }
+
+    private void ApplyFileSort()
+    {
+        var selectedPath = (FileList.SelectedItem as CaptureImageFile)?.Path;
+        var sorted = SortFiles(_files, _fileSortColumn, _fileSortDirection);
+
+        if (!sorted.SequenceEqual(_files))
+        {
+            _isLoadingSelection = true;
+            _files.Clear();
+            foreach (var file in sorted)
+            {
+                _files.Add(file);
+            }
+
+            FileList.SelectedItem = FindFile(selectedPath);
+            if (FileList.SelectedItem is not null)
+            {
+                FileList.ScrollIntoView(FileList.SelectedItem);
+            }
+
+            _isLoadingSelection = false;
+        }
+
+        UpdateDetailsSortHeaders();
+        UpdateNavigationButtons();
     }
 
     private static bool PathsEqual(string? left, string? right)
@@ -697,10 +796,53 @@ public partial class ViewerWindow : Window
         SetZoom(1.0);
     }
 
-    private void OnRefreshClick(object sender, RoutedEventArgs e)
+    private async void OnRefreshClick(object sender, RoutedEventArgs e)
     {
-        _pendingPath = _currentFile?.Path;
-        _ = RefreshIndexAsync();
+        await RefreshCurrentFolderAsync();
+    }
+
+    private async Task RefreshCurrentFolderAsync()
+    {
+        var folderPath = _currentFolderPath;
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            await RefreshIndexAsync();
+            return;
+        }
+
+        var load = StartNewLoad();
+        var stopwatch = Stopwatch.StartNew();
+        var preferredPath = (FileList.SelectedItem as CaptureImageFile)?.Path;
+        if (string.IsNullOrWhiteSpace(preferredPath) &&
+            IsSameFolderSelection(folderPath, _currentFile?.FolderPath))
+        {
+            preferredPath = _currentFile?.Path;
+        }
+
+        SetViewerStatus("현재 폴더 파일 목록을 새로고침하는 중입니다.");
+
+        try
+        {
+            var snapshot = await Task.Run(
+                () => BuildFolderSnapshot(folderPath, preferredPath),
+                load.Token);
+            if (!IsCurrentLoad(load))
+            {
+                return;
+            }
+
+            _folderNodes = snapshot.FolderNodes;
+            FolderTree.ItemsSource = _folderNodes;
+            SelectFolderPath(snapshot.TargetFolder);
+            await LoadFolderAsync(snapshot.TargetFolder, snapshot.TargetPath, load, stopwatch);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            ShowFolderLoadFailure(ex);
+        }
     }
 
     private void OnViewModeClick(object sender, RoutedEventArgs e)
@@ -1123,6 +1265,31 @@ public partial class ViewerWindow : Window
         UpdateViewButtons();
     }
 
+    private void OnFileColumnHeaderClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not GridViewColumnHeader { Tag: ViewerFileSortColumn sortColumn })
+        {
+            return;
+        }
+
+        if (_fileSortColumn == sortColumn)
+        {
+            _fileSortDirection = _fileSortDirection == ListSortDirection.Ascending
+                ? ListSortDirection.Descending
+                : ListSortDirection.Ascending;
+        }
+        else
+        {
+            _fileSortColumn = sortColumn;
+            _fileSortDirection = sortColumn == ViewerFileSortColumn.ModifiedDate
+                ? ListSortDirection.Descending
+                : ListSortDirection.Ascending;
+        }
+
+        ApplyFileSort();
+        SetViewerStatus($"파일 정렬: {GetSortColumnLabel(_fileSortColumn)} {GetSortDirectionLabel(_fileSortDirection)}");
+    }
+
     internal static bool RequiresDetailsView(int fileCount) =>
         fileCount > MaxIconViewFiles;
 
@@ -1323,7 +1490,7 @@ public partial class ViewerWindow : Window
         return virtualScreen.IntersectsWith(bounds);
     }
 
-    private static GridView CreateDetailsView()
+    private GridView CreateDetailsView()
     {
         return new GridView
         {
@@ -1331,31 +1498,82 @@ public partial class ViewerWindow : Window
             {
                 new GridViewColumn
                 {
-                    Header = "이름",
+                    Header = CreateSortableColumnHeader("이름", ViewerFileSortColumn.Name),
                     Width = 180,
                     DisplayMemberBinding = new WpfBinding(nameof(CaptureImageFile.FileName))
                 },
                 new GridViewColumn
                 {
-                    Header = "수정한 날짜",
+                    Header = CreateSortableColumnHeader("수정한 날짜", ViewerFileSortColumn.ModifiedDate),
                     Width = 116,
                     DisplayMemberBinding = new WpfBinding(nameof(CaptureImageFile.ModifiedText))
                 },
                 new GridViewColumn
                 {
-                    Header = "유형",
+                    Header = CreateSortableColumnHeader("유형", ViewerFileSortColumn.Type),
                     Width = 48,
                     DisplayMemberBinding = new WpfBinding(nameof(CaptureImageFile.Extension))
                 },
                 new GridViewColumn
                 {
-                    Header = "크기",
+                    Header = CreateSortableColumnHeader("크기", ViewerFileSortColumn.Size),
                     Width = 70,
                     DisplayMemberBinding = new WpfBinding(nameof(CaptureImageFile.SizeText))
                 }
             }
         };
     }
+
+    private GridViewColumnHeader CreateSortableColumnHeader(string label, ViewerFileSortColumn sortColumn)
+    {
+        var header = new GridViewColumnHeader
+        {
+            Tag = sortColumn,
+            Content = GetSortHeaderText(label, sortColumn)
+        };
+        AutomationProperties.SetName(header, $"{label} 기준 정렬");
+        header.Click += OnFileColumnHeaderClick;
+        return header;
+    }
+
+    private void UpdateDetailsSortHeaders()
+    {
+        if (FileList.View is not GridView detailsView)
+        {
+            return;
+        }
+
+        foreach (var column in detailsView.Columns)
+        {
+            if (column.Header is GridViewColumnHeader { Tag: ViewerFileSortColumn sortColumn } header)
+            {
+                header.Content = GetSortHeaderText(GetSortColumnLabel(sortColumn), sortColumn);
+            }
+        }
+    }
+
+    private string GetSortHeaderText(string label, ViewerFileSortColumn sortColumn)
+    {
+        if (_fileSortColumn != sortColumn)
+        {
+            return label;
+        }
+
+        var arrow = _fileSortDirection == ListSortDirection.Ascending ? "▲" : "▼";
+        return $"{label} {arrow}";
+    }
+
+    private static string GetSortColumnLabel(ViewerFileSortColumn sortColumn) => sortColumn switch
+    {
+        ViewerFileSortColumn.Name => "이름",
+        ViewerFileSortColumn.ModifiedDate => "수정한 날짜",
+        ViewerFileSortColumn.Type => "유형",
+        ViewerFileSortColumn.Size => "크기",
+        _ => "이름"
+    };
+
+    private static string GetSortDirectionLabel(ListSortDirection sortDirection) =>
+        sortDirection == ListSortDirection.Ascending ? "오름차순" : "내림차순";
 
     private void PushUndoSnapshot()
     {
@@ -2846,6 +3064,10 @@ public partial class ViewerWindow : Window
 
         switch (key)
         {
+            case Key.F5:
+                _ = RefreshCurrentFolderAsync();
+                e.Handled = true;
+                break;
             case Key.Left:
                 MoveSelection(-1);
                 e.Handled = true;

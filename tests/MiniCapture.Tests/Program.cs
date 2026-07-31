@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.ComponentModel;
 using MiniCapture;
 
 var tests = new (string Name, Action Run)[]
@@ -12,6 +13,7 @@ var tests = new (string Name, Action Run)[]
     ("BuildFolderTree_IncludesExternalPathAndChildFolders", BuildFolderTree_IncludesExternalPathAndChildFolders),
     ("FolderSelection_IgnoresCurrentExternalFolder", FolderSelection_IgnoresCurrentExternalFolder),
     ("RequiresDetailsView_ForLargeFolder", RequiresDetailsView_ForLargeFolder),
+    ("SortFiles_UsesRequestedColumnAndDirection", SortFiles_UsesRequestedColumnAndDirection),
     ("DecodeImageFile_AllowsBackgroundDecode", DecodeImageFile_AllowsBackgroundDecode),
     ("SingleInstance_ForwardsArgumentsToPrimary", SingleInstance_ForwardsArgumentsToPrimary)
 };
@@ -143,6 +145,51 @@ static void RequiresDetailsView_ForLargeFolder()
     AssertTrue(!ViewerWindow.RequiresDetailsView(1), "small folders should allow icon views");
 }
 
+static void SortFiles_UsesRequestedColumnAndDirection()
+{
+    var folder = CreateTemporaryFolder();
+    try
+    {
+        var alphaPath = Path.Combine(folder, "alpha.png");
+        var betaPath = Path.Combine(folder, "beta.jpg");
+        var gammaPath = Path.Combine(folder, "gamma.jpeg");
+        File.WriteAllBytes(alphaPath, new byte[30]);
+        File.WriteAllBytes(betaPath, new byte[10]);
+        File.WriteAllBytes(gammaPath, new byte[20]);
+        File.SetLastWriteTime(alphaPath, new DateTime(2026, 1, 1, 10, 0, 0));
+        File.SetLastWriteTime(betaPath, new DateTime(2026, 1, 2, 10, 0, 0));
+        File.SetLastWriteTime(gammaPath, new DateTime(2026, 1, 3, 10, 0, 0));
+
+        var files = new[]
+        {
+            new CaptureImageFile(new FileInfo(betaPath)),
+            new CaptureImageFile(new FileInfo(gammaPath)),
+            new CaptureImageFile(new FileInfo(alphaPath))
+        };
+
+        AssertFileOrder(
+            ["alpha.png", "beta.jpg", "gamma.jpeg"],
+            ViewerWindow.SortFiles(files, ViewerFileSortColumn.Name, ListSortDirection.Ascending),
+            "name ascending");
+        AssertFileOrder(
+            ["gamma.jpeg", "beta.jpg", "alpha.png"],
+            ViewerWindow.SortFiles(files, ViewerFileSortColumn.ModifiedDate, ListSortDirection.Descending),
+            "modified date descending");
+        AssertFileOrder(
+            ["beta.jpg", "gamma.jpeg", "alpha.png"],
+            ViewerWindow.SortFiles(files, ViewerFileSortColumn.Size, ListSortDirection.Ascending),
+            "size ascending");
+        AssertFileOrder(
+            ["alpha.png", "beta.jpg", "gamma.jpeg"],
+            ViewerWindow.SortFiles(files, ViewerFileSortColumn.Type, ListSortDirection.Descending),
+            "type descending");
+    }
+    finally
+    {
+        Directory.Delete(folder, recursive: true);
+    }
+}
+
 static void FolderSelection_IgnoresCurrentExternalFolder()
 {
     const string activeFolder = @"C:\images\external";
@@ -252,6 +299,19 @@ static void AssertIntEqual(int expected, int actual, string label)
     if (expected != actual)
     {
         throw new InvalidOperationException($"Expected {label} {expected}, got {actual}.");
+    }
+}
+
+static void AssertFileOrder(
+    IReadOnlyList<string> expectedNames,
+    IReadOnlyList<CaptureImageFile> actual,
+    string label)
+{
+    var actualNames = actual.Select(file => file.FileName).ToArray();
+    if (!expectedNames.SequenceEqual(actualNames, StringComparer.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException(
+            $"Expected {label} [{string.Join(", ", expectedNames)}], got [{string.Join(", ", actualNames)}].");
     }
 }
 

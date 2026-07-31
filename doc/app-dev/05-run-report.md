@@ -1266,3 +1266,32 @@ Opening a high-resolution external image keeps the viewer window responsive whil
 ### Follow-ups
 
 - FOLLOW_UP: manually open the reported 28 MP external image and verify the viewer stays interactive during the loading status, then save once to confirm the original-resolution editor workflow remains intact.
+
+## Viewer File Refresh, Details Sorting, And Tooltip Capture Exclusion
+
+### Finish Line
+
+Refresh the viewer's active folder without navigating away, sort the Details file list by clicking Name, Modified Date, Type, or Size with ascending/descending toggles, and apply capture exclusion to floating/radial tooltip windows.
+
+### Scope Limit
+
+- No general-purpose file manager behavior, file watching, search, or persistent sort preference.
+- No capture pipeline or overlay architecture change.
+
+### Changes
+
+- Added a current-folder refresh button beside the browser address and F5 support; the existing toolbar refresh now uses the same folder-preserving path.
+- Added clickable Details headers with visible ascending/descending arrows.
+- Sorts modified dates as `DateTime` and sizes as bytes rather than formatted display text.
+- Keeps the active sort order consistent for refreshes, saves, new list entries, and previous/next navigation.
+- Applies the existing best-effort `WDA_EXCLUDEFROMCAPTURE` path when floating-button and radial-menu tooltip HWNDs open.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --no-build`: passed 12 cases, including name/date/type/size sorting.
+- `git diff --check`: passed; only existing CRLF-conversion warnings were emitted.
+
+### Follow-ups
+
+- FOLLOW_UP: manually confirm the address-row refresh button, F5 refresh, all four header toggles, and tooltip capture exclusion on the interactive desktop.

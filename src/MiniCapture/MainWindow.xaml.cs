@@ -12,6 +12,7 @@ using System.Windows.Threading;
 using WpfBrushes = System.Windows.Media.Brushes;
 using WpfClipboard = System.Windows.Clipboard;
 using WpfPoint = System.Windows.Point;
+using WpfToolTip = System.Windows.Controls.ToolTip;
 
 namespace MiniCapture;
 
@@ -101,6 +102,14 @@ public partial class MainWindow : Window
         if (sender is ContextMenu menu)
         {
             ApplyCaptureExclusion(menu);
+        }
+    }
+
+    private void OnOverlayToolTipOpened(object sender, RoutedEventArgs e)
+    {
+        if (sender is WpfToolTip toolTip)
+        {
+            ApplyCaptureExclusion(toolTip);
         }
     }
 
@@ -782,6 +791,14 @@ public partial class MainWindow : Window
     private void ApplyCaptureExclusion(ContextMenu menu)
     {
         if (PresentationSource.FromVisual(menu) is HwndSource source)
+        {
+            ApplyCaptureExclusion(source.Handle);
+        }
+    }
+
+    private void ApplyCaptureExclusion(WpfToolTip toolTip)
+    {
+        if (PresentationSource.FromVisual(toolTip) is HwndSource source)
         {
             ApplyCaptureExclusion(source.Handle);
         }

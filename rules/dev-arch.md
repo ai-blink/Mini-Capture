@@ -35,3 +35,5 @@ Start with manual Windows validation for capture overlays, DPI, multi-monitor be
 - P1 done: drag/full/timer capture, dated PNG auto-save, result panel actions.
 - P2 done: window picker overlay, DWM bounds highlight, selected-window PNG capture, Esc cancel.
 - P3 done: internal image viewer, capture folder index, Explorer-style folder tree/file pane, details view, and small/medium/large icon views.
+- P4 done: DPI/package checks, overlay-free selection, editable raster markup, layout persistence, external-image activation, and extension settings.
+- Viewer reinforcement done: single-instance file handoff, cancellable background full-resolution decode, current-folder refresh, and sortable Details columns.

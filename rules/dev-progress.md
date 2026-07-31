@@ -2,39 +2,22 @@
 
 ## Current Status
 
-- 2026-07-02: Brainstorming design approved and committed in `03d01aa`.
-- 2026-07-02: App-dev workflow initialized from the approved design.
-- 2026-07-02: P0 WPF skeleton, floating capture button, four-mode menu, placeholder mode selection, and shutdown flow implemented.
-- 2026-07-02: P1 basic drag/full/timer capture, dated PNG auto-save, and result panel actions implemented.
-- 2026-07-02: P2 window picker, hover highlight overlay, selected-window PNG capture, and Esc cancel implemented.
-- 2026-07-02: P3 internal viewer and first Explorer-style browser slice implemented.
-- 2026-07-03: P3 usability polish completed for the mock-aligned floating button, drag repositioning, centered radial mode menu, and wrapping icon file views.
-- 2026-07-03: Timer UX corrected to delay selection only, countdown feedback added, and window capture target filtering/smoke validation completed.
-- 2026-07-03: Window picker target selection fixed so screen-covering helper windows no longer win over real window candidates.
-- 2026-07-03: DPI coordinate handling added for capture overlays with Per-Monitor DPI awareness and physical-pixel/DIP conversion.
-- 2026-07-03: Close-to-tray behavior added so closing the floating window hides it while keeping the app alive in the system tray.
-- 2026-07-03: Viewer/browser V1 reinforcement completed with richer capture-root tree, simple annotation tools, PNG save, open, path-copy, and image-copy actions.
-- 2026-07-04: Region/window selection no longer uses a virtual-screen-sized overlay; global input hooks drive a small hint or target-sized highlight window.
-- 2026-07-04: TabPaint-inspired editor workflow reinforcement completed with pen, arrow, stroke thickness, rotate, undo/redo, and lightweight keyboard shortcuts inside the existing viewer.
-- 2026-07-04: Viewer toolbar UI was reorganized around TabPaint-style compact icon actions, grouped edit tools, color swatches, and inline stroke/text controls.
-- 2026-07-04: ViewerWindow was redesigned as a Dark Screenshot Markup Shell with dark File/View/Markup/Properties command groups, a stronger markup row, capture-root library panes, dotted canvas workspace, and reinforced status/zoom metadata.
-- 2026-07-04: P4 hardening and package checks completed with DPI/publish evidence, repeated capture smoke, drag/window/full/timer coverage, viewer regression smoke, and close-to-tray verification.
-- 2026-07-05: Viewer performance and file-argument entry slice completed with async folder loading, background thumbnail decode, optimized latest-image lookup, and PNG/JPG/JPEG command-line image opening.
-- 2026-07-05: A separate SettingsWindow was added with an extension-association section for PNG/JPG/JPEG, plus floating-button/tray `설정` entry points and a `--settings` startup path; Windows Default Apps settings remain one button inside that settings UI without direct registry mutation.
-- 2026-07-05: SettingsWindow extension association UI was expanded into category-based image extension status/request controls for PNG/JPG/JPEG/BMP/GIF/WEBP/TIF/TIFF, with read-only current association checks, separate request candidate checks, select/clear/refresh actions, 10-second refresh, and Activated refresh.
-- 2026-07-05: Viewer editor markup now stays selectable before save: new rectangle/ellipse/pen/arrow/text annotations can be selected, moved, resized, deleted, and exported through save/copy image composition; text annotations use normal WPF text boxes for direct editing.
-- 2026-07-08: Viewer layout persistence added so `ViewerWindow` restores window bounds/state, Explorer view mode, and capture-library/file-list pane widths through the existing local `settings.json`.
-- 2026-07-08: Timer-delayed region/window capture now freezes the timer-expiry virtual-screen bitmap, selects on that frozen preview, and saves by cropping the snapshot with stored window metadata for delayed window selection.
-- 2026-07-08: Window picker frontmost selection fixed: live and frozen window picking now use Z-order first matching target selection instead of area/full-screen heuristics, with a regression harness covering large-front-window overlap.
-- 2026-07-16: Viewer file-association activation now hands later launches to the existing MiniCapture process, and left/right keys move through sibling images in the visible folder context.
-- 2026-07-16: External-folder listings were constrained to direct images, external folders use the virtualized details view, and selected full-resolution images now decode on a cancellable background worker to avoid blocking the WPF UI thread.
+- 2026-07-02: Product design and app-dev workflow approved; P0-P3 capture, save, window picker, viewer, and Explorer-style browser implemented.
+- 2026-07-03: Timer/window targeting, Per-Monitor DPI handling, close-to-tray behavior, and viewer/browser V1 reinforcement completed.
+- 2026-07-04: Overlay-free selection, editable raster markup, toolbar/shell redesign, and P4 package checks completed.
+- 2026-07-05: Async viewer indexing/thumbnails, command-line image opening, extension settings, and selectable annotations completed.
+- 2026-07-08: Viewer layout persistence, frozen timer selection, and frontmost window targeting completed.
+- 2026-07-16: Single-instance file activation, external-folder browsing guards, sibling navigation, and background full-resolution decode completed.
+- 2026-07-31: Current-folder refresh and sortable Details columns completed with build and 12 regression cases.
+- 2026-07-31: Floating/radial tooltip windows now receive best-effort capture exclusion through their HWND.
 
 ## Current Work
 
-- The viewer activation and performance slice is code-complete and regression-tested: repeated file opens target one process, left/right navigate sibling images, and full-resolution decode is off the UI thread. Manual interactive validation with a high-resolution external image is pending; do not yet treat the reported freeze as user-confirmed resolved.
+- The viewer refresh/sorting and tooltip capture-exclusion slice is code-complete and regression-tested. Interactive desktop validation remains pending alongside the earlier high-resolution external-image validation.
 
 ## Next Actions
 
+- Manually verify address-row/toolbar/F5 refresh, all four Details sort toggles, and tooltip capture exclusion.
 - Run a true multi-monitor hardware pass when a multi-display setup is available.
 - Manually open a high-resolution external image repeatedly through the Windows association, then verify no duplicate MiniCapture process, responsive window interaction, and left/right sibling navigation.
 - Decide later whether V1 needs an installer or self-contained package; the current baseline is a framework-dependent `win-x64` publish folder.
@@ -101,3 +84,5 @@
 - Window picker frontmost selection build/check: default Debug output was initially locked by a running `MiniCapture` process, so verification used isolated artifacts paths; later `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors after the lock cleared; `dotnet build MiniCapture.slnx --artifacts-path artifacts\build-picker-fix -p:UseAppHost=false` passed; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-picker-fix -p:UseAppHost=false` passed 4 cases; `git diff --check` passed with CRLF conversion warnings only.
 - External full-path browser build/check: `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-external-browser-final -p:UseAppHost=false` passed with 0 warnings and 0 errors; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-external-browser-final -p:UseAppHost=false` passed 6 cases; `git diff --check` passed with CRLF conversion warnings only. Descendant UI Automation enumeration timed out in this desktop harness, so interactive address/tree/list/save verification remains a manual follow-up.
 - Viewer activation/background decode build/check: `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-background-image-decode -p:UseAppHost=false` passed with 0 warnings and 0 errors; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-background-image-decode -p:UseAppHost=false` passed 10 cases, including single-instance argument forwarding and background full-resolution image decode; `git diff --check` passed with only existing CRLF conversion warnings.
+- Viewer refresh/sort build/check: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --no-build` passed 12 cases, including Name/Modified Date/Type/Size ordering.
+- Tooltip capture-exclusion check: XAML compilation and the full regression suite pass; interactive screenshot confirmation remains pending.
