@@ -10,14 +10,19 @@
 - 2026-07-16: Single-instance file activation, external-folder browsing guards, sibling navigation, and background full-resolution decode completed.
 - 2026-07-31: Current-folder refresh and sortable Details columns completed with build and 12 regression cases.
 - 2026-07-31: Floating/radial tooltip windows now receive best-effort capture exclusion through their HWND.
+- 2026-07-31: Viewer pixel-area selection, clipboard copy/cut/paste, and left-sidebar crop preview/apply controls completed with build and 13 regression cases.
+- 2026-08-03: Configurable executable-path exclusions for window targeting completed with build and 15 regression cases.
+- 2026-08-03: Viewer toolbar now wraps command groups at normal window widths; the crop command uses a four-corner crop icon.
 
 ## Current Work
 
-- The viewer refresh/sorting and tooltip capture-exclusion slice is code-complete and regression-tested. Interactive desktop validation remains pending alongside the earlier high-resolution external-image validation.
+- The viewer refresh/sorting, tooltip capture-exclusion, pixel-area editing/crop, and configurable window-exclusion slices are code-complete and regression-tested. Interactive desktop validation remains pending alongside the earlier high-resolution external-image validation.
 
 ## Next Actions
 
 - Manually verify address-row/toolbar/F5 refresh, all four Details sort toggles, and tooltip capture exclusion.
+- Manually verify selected-area Ctrl+C/Ctrl+X/Ctrl+V plus 2-row left-sidebar crop sliders/numeric inputs and preview/apply behavior.
+- Manually verify toolbar wrapping/crop icon and register a visible process through `창 제외` before checking it cannot be selected.
 - Run a true multi-monitor hardware pass when a multi-display setup is available.
 - Manually open a high-resolution external image repeatedly through the Windows association, then verify no duplicate MiniCapture process, responsive window interaction, and left/right sibling navigation.
 - Decide later whether V1 needs an installer or self-contained package; the current baseline is a framework-dependent `win-x64` publish folder.
@@ -86,3 +91,5 @@
 - Viewer activation/background decode build/check: `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-background-image-decode -p:UseAppHost=false` passed with 0 warnings and 0 errors; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-background-image-decode -p:UseAppHost=false` passed 10 cases, including single-instance argument forwarding and background full-resolution image decode; `git diff --check` passed with only existing CRLF conversion warnings.
 - Viewer refresh/sort build/check: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --no-build` passed 12 cases, including Name/Modified Date/Type/Size ordering.
 - Tooltip capture-exclusion check: XAML compilation and the full regression suite pass; interactive screenshot confirmation remains pending.
+- Pixel selection/crop build/check: `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-crop-selection -p:UseAppHost=false` passed with 0 warnings and 0 errors; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-crop-selection -p:UseAppHost=false` passed 13 cases, including crop-margin clamping; `git diff --check` passed with only existing CRLF conversion warnings.
+- Window exclusions and responsive toolbar build/check: `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-crop-icon -p:UseAppHost=false` passed with 0 warnings and 0 errors; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --no-build --artifacts-path artifacts\verify-crop-labels -p:UseAppHost=false` passed 15 cases; `git diff --check` passed with only existing CRLF-conversion warnings.

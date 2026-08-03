@@ -16,7 +16,8 @@ namespace MiniCapture;
 internal enum SettingsSection
 {
     ExtensionDefaults,
-    CaptureSettings
+    CaptureSettings,
+    WindowExclusions
 }
 
 public partial class SettingsWindow : Window
@@ -32,6 +33,10 @@ public partial class SettingsWindow : Window
     ];
 
     public ObservableCollection<CaptureHotkeyGroup> HotkeyGroups { get; }
+
+    public ObservableCollection<RunningProcessItem> RunningProcessItems { get; } = [];
+
+    public ObservableCollection<WindowExclusionItem> WindowExclusionItems { get; } = [];
 
     private IEnumerable<CaptureHotkeySettingItem> HotkeySettings =>
         HotkeyGroups.SelectMany(group => group.Slots);
@@ -59,6 +64,8 @@ public partial class SettingsWindow : Window
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         LoadCaptureSettingsFields();
+        LoadWindowExclusionFields();
+        RefreshRunningProcesses();
         ExecutablePathText.Text = GetExecutablePath();
         ShowSection(SettingsSection.ExtensionDefaults);
         RefreshAssociationStates("설정 창 열림");
@@ -158,7 +165,7 @@ public partial class SettingsWindow : Window
 
     private void ShowSection(SettingsSection section)
     {
-        if (ExtensionDefaultsPanel is null || CaptureSettingsPanel is null)
+        if (ExtensionDefaultsPanel is null || CaptureSettingsPanel is null || WindowExclusionsPanel is null)
         {
             return;
         }
@@ -167,6 +174,9 @@ public partial class SettingsWindow : Window
             ? Visibility.Visible
             : Visibility.Collapsed;
         CaptureSettingsPanel.Visibility = section == SettingsSection.CaptureSettings
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        WindowExclusionsPanel.Visibility = section == SettingsSection.WindowExclusions
             ? Visibility.Visible
             : Visibility.Collapsed;
     }
@@ -208,6 +218,144 @@ public partial class SettingsWindow : Window
         ShortcutTimerDelayBox.Text = _captureSettings.ShortcutTimerDelaySeconds.ToString();
         QuickButtonVisibleCheck.IsChecked = _captureSettings.QuickButtonVisible;
         CaptureUiExcludedCheck.IsChecked = _captureSettings.CaptureUiExcludedFromCapture;
+    }
+
+    private void LoadWindowExclusionFields()
+    {
+        _captureSettings = MiniCaptureSettingsStore.Load();
+        WindowExclusionItems.Clear();
+        foreach (var executablePath in _captureSettings.WindowCaptureExcludedExecutablePaths)
+        {
+            WindowExclusionItems.Add(new WindowExclusionItem(executablePath));
+        }
+    }
+
+    private void OnRefreshWindowExclusionProcessesClick(object sender, RoutedEventArgs e)
+    {
+        RefreshRunningProcesses();
+        SetStatus($"실행 중인 프로세스 {RunningProcessItems.Count}개를 새로고침했습니다.");
+    }
+
+    private void OnAddRunningProcessExclusionClick(object sender, RoutedEventArgs e)
+    {
+        if (RunningProcessBox.SelectedItem is not RunningProcessItem process)
+        {
+            SetStatus("제외할 실행 중인 프로세스를 먼저 선택하세요.");
+            return;
+        }
+
+        AddWindowExclusion(process.ExecutablePath);
+    }
+
+    private void OnBrowseWindowExclusionPathClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "창 지정에서 제외할 실행 파일 선택",
+            CheckFileExists = true,
+            Filter = "실행 파일 (*.exe)|*.exe|모든 파일 (*.*)|*.*"
+        };
+        if (dialog.ShowDialog(this) == true)
+        {
+            WindowExclusionPathBox.Text = dialog.FileName;
+        }
+    }
+
+    private void OnAddWindowExclusionPathClick(object sender, RoutedEventArgs e)
+    {
+        AddWindowExclusion(WindowExclusionPathBox.Text);
+    }
+
+    private void OnRemoveWindowExclusionClick(object sender, RoutedEventArgs e)
+    {
+        if (WindowExclusionList.SelectedItem is not WindowExclusionItem selected)
+        {
+            SetStatus("삭제할 실행 파일을 목록에서 선택하세요.");
+            return;
+        }
+
+        var settings = MiniCaptureSettingsStore.Load();
+        var removed = settings.WindowCaptureExcludedExecutablePaths.RemoveAll(path =>
+            string.Equals(path, selected.ExecutablePath, StringComparison.OrdinalIgnoreCase));
+        if (removed == 0)
+        {
+            SetStatus("선택한 실행 파일은 이미 목록에서 제거되었습니다.");
+            LoadWindowExclusionFields();
+            return;
+        }
+
+        _captureSettings = settings;
+        MiniCaptureSettingsStore.Save(settings);
+        LoadWindowExclusionFields();
+        SetStatus($"{selected.DisplayName}을(를) 창 지정 제외 목록에서 제거했습니다.");
+    }
+
+    private void RefreshRunningProcesses()
+    {
+        var selectedPath = (RunningProcessBox.SelectedItem as RunningProcessItem)?.ExecutablePath;
+        var items = new List<RunningProcessItem>();
+        foreach (var process in Process.GetProcesses())
+        {
+            try
+            {
+                if (process.Id == Environment.ProcessId ||
+                    !MiniCaptureSettings.TryNormalizeWindowCaptureExcludedExecutablePath(
+                        process.MainModule?.FileName,
+                        out var executablePath))
+                {
+                    continue;
+                }
+
+                items.Add(new RunningProcessItem(process.ProcessName, process.Id, executablePath));
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or Win32Exception or NotSupportedException)
+            {
+                // Some protected system processes do not expose their executable path.
+            }
+            finally
+            {
+                process.Dispose();
+            }
+        }
+
+        RunningProcessItems.Clear();
+        foreach (var item in items
+                     .OrderBy(item => item.ProcessName, StringComparer.OrdinalIgnoreCase)
+                     .ThenBy(item => item.ProcessId))
+        {
+            RunningProcessItems.Add(item);
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedPath))
+        {
+            RunningProcessBox.SelectedItem = RunningProcessItems.FirstOrDefault(item =>
+                string.Equals(item.ExecutablePath, selectedPath, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    private void AddWindowExclusion(string? executablePath)
+    {
+        if (!MiniCaptureSettings.TryNormalizeWindowCaptureExcludedExecutablePath(executablePath, out var normalizedPath) ||
+            !File.Exists(normalizedPath))
+        {
+            SetStatus("존재하는 .exe 파일의 절대 경로를 입력하거나 실행 중인 프로세스를 선택하세요.");
+            return;
+        }
+
+        var settings = MiniCaptureSettingsStore.Load();
+        if (settings.WindowCaptureExcludedExecutablePaths.Any(path =>
+            string.Equals(path, normalizedPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            SetStatus("해당 실행 파일은 이미 창 지정 제외 목록에 있습니다.");
+            return;
+        }
+
+        settings.WindowCaptureExcludedExecutablePaths.Add(normalizedPath);
+        _captureSettings = settings;
+        MiniCaptureSettingsStore.Save(settings);
+        WindowExclusionPathBox.Clear();
+        LoadWindowExclusionFields();
+        SetStatus($"{Path.GetFileName(normalizedPath)} 창을 다음 창 지정 캡처부터 제외합니다.");
     }
 
     private bool TryBuildCaptureSettings(out MiniCaptureSettings settings, out string error)
@@ -395,6 +543,24 @@ public partial class SettingsWindow : Window
             Process.GetCurrentProcess().MainModule?.FileName ??
             Path.Combine(AppContext.BaseDirectory, "MiniCapture.exe");
     }
+}
+
+public sealed class RunningProcessItem(string processName, int processId, string executablePath)
+{
+    public string ProcessName { get; } = processName;
+
+    public int ProcessId { get; } = processId;
+
+    public string ExecutablePath { get; } = executablePath;
+
+    public string DisplayName => $"{ProcessName} (PID {ProcessId})";
+}
+
+public sealed class WindowExclusionItem(string executablePath)
+{
+    public string ExecutablePath { get; } = executablePath;
+
+    public string DisplayName => Path.GetFileName(ExecutablePath);
 }
 
 public enum CaptureHotkeyKind

@@ -15,6 +15,8 @@ public sealed class MiniCaptureSettings
 
     public bool CaptureUiExcludedFromCapture { get; set; } = true;
 
+    public List<string> WindowCaptureExcludedExecutablePaths { get; set; } = [];
+
     public double? QuickButtonLeft { get; set; }
 
     public double? QuickButtonTop { get; set; }
@@ -60,6 +62,7 @@ public sealed class MiniCaptureSettings
             ShortcutTimerDelaySeconds = ShortcutTimerDelaySeconds,
             QuickButtonVisible = QuickButtonVisible,
             CaptureUiExcludedFromCapture = CaptureUiExcludedFromCapture,
+            WindowCaptureExcludedExecutablePaths = NormalizeWindowCaptureExcludedExecutablePaths(WindowCaptureExcludedExecutablePaths).ToList(),
             QuickButtonLeft = QuickButtonLeft,
             QuickButtonTop = QuickButtonTop,
             WindowCaptureHotkey = WindowCaptureHotkey,
@@ -114,6 +117,47 @@ public sealed class MiniCaptureSettings
                 TimerCaptureHotkeys = normalized;
                 TimerCaptureHotkey = normalized.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
                 break;
+        }
+    }
+
+    internal static IReadOnlyList<string> NormalizeWindowCaptureExcludedExecutablePaths(IReadOnlyList<string>? executablePaths)
+    {
+        var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (executablePaths is null)
+        {
+            return [];
+        }
+
+        foreach (var executablePath in executablePaths)
+        {
+            if (TryNormalizeWindowCaptureExcludedExecutablePath(executablePath, out var normalizedPath))
+            {
+                paths.Add(normalizedPath);
+            }
+        }
+
+        return paths.OrderBy(path => path, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    internal static bool TryNormalizeWindowCaptureExcludedExecutablePath(string? executablePath, out string normalizedPath)
+    {
+        normalizedPath = string.Empty;
+        var trimmedPath = executablePath?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedPath) ||
+            !Path.IsPathFullyQualified(trimmedPath) ||
+            !string.Equals(Path.GetExtension(trimmedPath), ".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        try
+        {
+            normalizedPath = Path.GetFullPath(trimmedPath);
+            return true;
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return false;
         }
     }
 
@@ -229,6 +273,8 @@ public static class MiniCaptureSettingsStore
         settings.SetHotkeySlots(CaptureHotkeyKind.Region, settings.GetHotkeySlots(CaptureHotkeyKind.Region));
         settings.SetHotkeySlots(CaptureHotkeyKind.FullScreen, settings.GetHotkeySlots(CaptureHotkeyKind.FullScreen));
         settings.SetHotkeySlots(CaptureHotkeyKind.Timer, settings.GetHotkeySlots(CaptureHotkeyKind.Timer));
+        settings.WindowCaptureExcludedExecutablePaths = MiniCaptureSettings.NormalizeWindowCaptureExcludedExecutablePaths(
+            settings.WindowCaptureExcludedExecutablePaths).ToList();
         return settings;
     }
 }

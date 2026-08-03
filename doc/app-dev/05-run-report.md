@@ -1295,3 +1295,71 @@ Refresh the viewer's active folder without navigating away, sort the Details fil
 ### Follow-ups
 
 - FOLLOW_UP: manually confirm the address-row refresh button, F5 refresh, all four header toggles, and tooltip capture exclusion on the interactive desktop.
+
+## Pixel-Area Clipboard Editing And Sidebar Crop
+
+### Finish Line
+
+Provide a pixel-area selection tool with copy, cut, and paste, plus a toolbar crop entry whose live-preview panel appears below the left file list in two rows.
+
+### Scope Limit
+
+- No new file-manager, vector editor, OCR, cloud, scrolling-capture, or video behavior.
+- Existing annotation selection, save, undo/redo, and raster image paths remain in place.
+
+### Changes
+
+- Added a distinct pixel-area selection tool without repurposing the existing annotation-selection tool.
+- Added toolbar copy, cut, paste, and crop controls; `Ctrl+C`, `Ctrl+X`, and `Ctrl+V` use the selected pixel area when present.
+- Added a left-sidebar crop panel directly below the file list: its two rows are left/right and top/bottom, each pairing a slider with manual pixel input.
+- Dims the crop-outside area and outlines the retained rectangle before apply; crop, cut, and paste remain undoable raster edits.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-crop-selection -p:UseAppHost=false`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-crop-selection -p:UseAppHost=false`: passed 13 regression cases, including crop-margin clamping and a one-pixel minimum retained canvas.
+- `git diff --check`: passed; only existing CRLF-conversion warnings were emitted.
+
+### Follow-ups
+
+- FOLLOW_UP: on the interactive desktop, verify clipboard ownership and transparency after cut, pasting into a selected destination, all four crop controls, crop preview, apply/cancel, and undo/redo.
+
+## Configurable Window-Selection Exclusions
+
+### Finish Line
+
+Allow users to exclude a window-selection target by choosing a running process or adding its executable path directly.
+
+### Changes
+
+- Added a `창 제외` settings section with a refreshable running-process picker, executable-file browser/manual path entry, registered-path list, and deletion action.
+- Store normalized executable paths in the settings file and exclude matching top-level windows during window selection.
+- Keep the built-in DimScreen process exclusion and normalize paths before matching so differently formatted equivalent paths still match.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx --artifacts-path artifacts\build-window-exclusions-2 -p:UseAppHost=false`: passed with 0 warnings and 0 errors.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --artifacts-path artifacts\test-window-exclusions-2 -p:UseAppHost=false`: passed 15 regression cases, including executable-path normalization and exclusion matching.
+- `git diff --check`: passed; only existing CRLF-conversion warnings were emitted.
+
+### Follow-ups
+
+- FOLLOW_UP: restart the interactive app, register a visible process from `창 제외`, and confirm its window is no longer highlighted or selectable. Repeat with the same process's direct `.exe` path.
+- NO_ROADMAP_CHANGE: this is a bounded extension of the completed P2 window-targeting behavior, not a new milestone.
+
+## v0.1.2 Release Preparation
+
+### Changes
+
+- Updated the normal-width viewer toolbar to wrap command groups instead of exposing a horizontal scrollbar or clipping commands.
+- Replaced the crop scissors with the Windows four-corner crop glyph, while keeping `영역 잘라내기` as an explicit text command.
+- Updated the user README for pixel-area clipboard editing, crop, refresh/sorting, executable-path exclusions, and the v0.1.2 portable package name.
+
+### Release Checks
+
+- Version metadata is `0.1.2` for the application, assembly, file, and informational versions.
+- The complete build, regression suite, self-contained single-file publish, archive integrity, and GitHub release upload are required before publication.
+
+### Follow-ups
+
+- Interactive checks for toolbar wrapping, crop, and window-exclusion behavior remain part of the hardware validation follow-up.

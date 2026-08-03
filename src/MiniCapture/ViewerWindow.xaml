@@ -390,7 +390,7 @@
     <Grid Background="{StaticResource ViewerWindowBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="46" />
-            <RowDefinition Height="54" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="34" />
@@ -462,10 +462,8 @@
                 Background="{StaticResource ViewerToolbarBackgroundBrush}"
                 BorderBrush="{StaticResource ViewerBorderBrush}"
                 BorderThickness="0,0,0,1">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                          VerticalScrollBarVisibility="Disabled">
-                <StackPanel Margin="10,7,0,7"
-                            Orientation="Horizontal">
+            <WrapPanel Margin="10,7,0,2"
+                       Orientation="Horizontal">
                     <Border Style="{StaticResource RibbonGroupStyle}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource RibbonGroupLabelStyle}"
@@ -688,8 +686,46 @@
                                     Style="{StaticResource ToolbarIconButtonStyle}" />
                         </StackPanel>
                     </Border>
-                </StackPanel>
-            </ScrollViewer>
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource RibbonGroupLabelStyle}"
+                                       Text="영역" />
+                            <Button x:Name="PixelSelectToolButton"
+                                    AutomationProperties.AutomationId="ViewerPixelSelectToolButton"
+                                    AutomationProperties.Name="영역 선택"
+                                    Click="OnToolButtonClick"
+                                    Content="▧"
+                                    ToolTip="영역 선택"
+                                    Style="{StaticResource ToolGlyphButtonStyle}"
+                                    Tag="PixelSelect" />
+                            <Button AutomationProperties.AutomationId="ViewerCopySelectionButton"
+                                    AutomationProperties.Name="선택 영역 복사"
+                                    Click="OnCopySelectionClick"
+                                    Content="복사"
+                                    ToolTip="선택 영역 복사 (Ctrl+C)"
+                                    Style="{StaticResource RibbonTextButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ViewerCutSelectionButton"
+                                    AutomationProperties.Name="선택 영역 잘라내기"
+                                    Click="OnCutSelectionClick"
+                                    Content="영역 잘라내기"
+                                    ToolTip="선택 영역을 클립보드로 잘라내기 (Ctrl+X)"
+                                    Style="{StaticResource RibbonTextButtonStyle}" />
+                            <Button AutomationProperties.AutomationId="ViewerPasteSelectionButton"
+                                    AutomationProperties.Name="선택 영역 붙여넣기"
+                                    Click="OnPasteSelectionClick"
+                                    Content="붙여넣기"
+                                    ToolTip="선택 영역 위치에 붙여넣기 (Ctrl+V)"
+                                    Style="{StaticResource RibbonTextButtonStyle}" />
+                            <Button x:Name="CropToolButton"
+                                    AutomationProperties.AutomationId="ViewerCropToolButton"
+                                    AutomationProperties.Name="이미지 자르기"
+                                    Click="OnCropToolClick"
+                                    Content="&#xE7A8;"
+                                    ToolTip="이미지 위·아래·양옆 자르기"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
+                        </StackPanel>
+                    </Border>
+            </WrapPanel>
         </Border>
 
         <Border x:Name="ContextToolbar"
@@ -906,6 +942,7 @@
                         <RowDefinition Height="42" />
                         <RowDefinition Height="42" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <Border Grid.Row="0"
@@ -992,6 +1029,214 @@
                               SelectionChanged="OnFileSelectionChanged"
                               VirtualizingPanel.IsVirtualizing="True"
                               VirtualizingPanel.VirtualizationMode="Recycling" />
+
+                    <Border x:Name="CropPanel"
+                            Grid.Row="3"
+                            Margin="10,8,10,10"
+                            Padding="10"
+                            AutomationProperties.AutomationId="ViewerCropPanel"
+                            AutomationProperties.Name="자르기 설정"
+                            Background="#EEF4F3"
+                            BorderBrush="{StaticResource ViewerBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Visibility="Collapsed">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       Grid.ColumnSpan="2"
+                                       Margin="0,0,0,8"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource ViewerTextBrush}"
+                                       Text="자르기" />
+
+                            <Grid Grid.Row="1"
+                                  Grid.Column="0"
+                                  Margin="0,0,8,8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="28" />
+                                </Grid.RowDefinitions>
+                                <TextBlock FontSize="11"
+                                           Foreground="{StaticResource ViewerMutedTextBrush}"
+                                           Text="왼쪽" />
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="42" />
+                                    </Grid.ColumnDefinitions>
+                                    <Slider x:Name="CropLeftSlider"
+                                            Grid.Column="0"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            AutomationProperties.AutomationId="ViewerCropLeftSlider"
+                                            AutomationProperties.Name="왼쪽 자르기"
+                                            IsSnapToTickEnabled="True"
+                                            Maximum="1"
+                                            Minimum="0"
+                                            TickFrequency="1"
+                                            ValueChanged="OnCropValueChanged" />
+                                    <TextBox x:Name="CropLeftText"
+                                             Grid.Column="1"
+                                             Padding="4,0"
+                                             AutomationProperties.AutomationId="ViewerCropLeftInput"
+                                             AutomationProperties.Name="왼쪽 자르기 픽셀"
+                                             LostKeyboardFocus="OnCropTextLostKeyboardFocus"
+                                             PreviewKeyDown="OnCropTextPreviewKeyDown"
+                                             Tag="Left"
+                                             TextAlignment="Right"
+                                             VerticalContentAlignment="Center" />
+                                </Grid>
+                            </Grid>
+
+                            <Grid Grid.Row="1"
+                                  Grid.Column="1"
+                                  Margin="8,0,0,8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="28" />
+                                </Grid.RowDefinitions>
+                                <TextBlock FontSize="11"
+                                           Foreground="{StaticResource ViewerMutedTextBrush}"
+                                           Text="오른쪽" />
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="42" />
+                                    </Grid.ColumnDefinitions>
+                                    <Slider x:Name="CropRightSlider"
+                                            Grid.Column="0"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            AutomationProperties.AutomationId="ViewerCropRightSlider"
+                                            AutomationProperties.Name="오른쪽 자르기"
+                                            IsSnapToTickEnabled="True"
+                                            Maximum="1"
+                                            Minimum="0"
+                                            TickFrequency="1"
+                                            ValueChanged="OnCropValueChanged" />
+                                    <TextBox x:Name="CropRightText"
+                                             Grid.Column="1"
+                                             Padding="4,0"
+                                             AutomationProperties.AutomationId="ViewerCropRightInput"
+                                             AutomationProperties.Name="오른쪽 자르기 픽셀"
+                                             LostKeyboardFocus="OnCropTextLostKeyboardFocus"
+                                             PreviewKeyDown="OnCropTextPreviewKeyDown"
+                                             Tag="Right"
+                                             TextAlignment="Right"
+                                             VerticalContentAlignment="Center" />
+                                </Grid>
+                            </Grid>
+
+                            <Grid Grid.Row="2"
+                                  Grid.Column="0"
+                                  Margin="0,0,8,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="28" />
+                                </Grid.RowDefinitions>
+                                <TextBlock FontSize="11"
+                                           Foreground="{StaticResource ViewerMutedTextBrush}"
+                                           Text="위" />
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="42" />
+                                    </Grid.ColumnDefinitions>
+                                    <Slider x:Name="CropTopSlider"
+                                            Grid.Column="0"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            AutomationProperties.AutomationId="ViewerCropTopSlider"
+                                            AutomationProperties.Name="위 자르기"
+                                            IsSnapToTickEnabled="True"
+                                            Maximum="1"
+                                            Minimum="0"
+                                            TickFrequency="1"
+                                            ValueChanged="OnCropValueChanged" />
+                                    <TextBox x:Name="CropTopText"
+                                             Grid.Column="1"
+                                             Padding="4,0"
+                                             AutomationProperties.AutomationId="ViewerCropTopInput"
+                                             AutomationProperties.Name="위 자르기 픽셀"
+                                             LostKeyboardFocus="OnCropTextLostKeyboardFocus"
+                                             PreviewKeyDown="OnCropTextPreviewKeyDown"
+                                             Tag="Top"
+                                             TextAlignment="Right"
+                                             VerticalContentAlignment="Center" />
+                                </Grid>
+                            </Grid>
+
+                            <Grid Grid.Row="2"
+                                  Grid.Column="1"
+                                  Margin="8,0,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="28" />
+                                </Grid.RowDefinitions>
+                                <TextBlock FontSize="11"
+                                           Foreground="{StaticResource ViewerMutedTextBrush}"
+                                           Text="아래" />
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="42" />
+                                    </Grid.ColumnDefinitions>
+                                    <Slider x:Name="CropBottomSlider"
+                                            Grid.Column="0"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            AutomationProperties.AutomationId="ViewerCropBottomSlider"
+                                            AutomationProperties.Name="아래 자르기"
+                                            IsSnapToTickEnabled="True"
+                                            Maximum="1"
+                                            Minimum="0"
+                                            TickFrequency="1"
+                                            ValueChanged="OnCropValueChanged" />
+                                    <TextBox x:Name="CropBottomText"
+                                             Grid.Column="1"
+                                             Padding="4,0"
+                                             AutomationProperties.AutomationId="ViewerCropBottomInput"
+                                             AutomationProperties.Name="아래 자르기 픽셀"
+                                             LostKeyboardFocus="OnCropTextLostKeyboardFocus"
+                                             PreviewKeyDown="OnCropTextPreviewKeyDown"
+                                             Tag="Bottom"
+                                             TextAlignment="Right"
+                                             VerticalContentAlignment="Center" />
+                                </Grid>
+                            </Grid>
+
+                            <StackPanel Grid.Row="3"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="2"
+                                        Margin="0,10,0,0"
+                                        HorizontalAlignment="Right"
+                                        Orientation="Horizontal">
+                                <Button AutomationProperties.AutomationId="ViewerCropCancelButton"
+                                        AutomationProperties.Name="자르기 취소"
+                                        Click="OnCancelCropClick"
+                                        Content="취소"
+                                        Style="{StaticResource ViewButtonStyle}" />
+                                <Button AutomationProperties.AutomationId="ViewerCropApplyButton"
+                                        AutomationProperties.Name="자르기 적용"
+                                        Click="OnApplyCropClick"
+                                        Content="적용"
+                                        Style="{StaticResource PrimaryRibbonButtonStyle}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                 </Grid>
             </Border>
 

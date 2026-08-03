@@ -8,12 +8,15 @@ var tests = new (string Name, Action Run)[]
     ("SelectTargetAt_ReturnsLargeFrontWindowBeforeSmallerCoveredWindow", SelectTargetAt_ReturnsLargeFrontWindowBeforeSmallerCoveredWindow),
     ("SelectTargetAt_SkipsCandidatesOutsideCursorPoint", SelectTargetAt_SkipsCandidatesOutsideCursorPoint),
     ("SelectTargetAt_ReturnsNullWhenNoCandidateContainsPoint", SelectTargetAt_ReturnsNullWhenNoCandidateContainsPoint),
+    ("IsIgnoredProcessName_RecognizesDimScreenOverlay", IsIgnoredProcessName_RecognizesDimScreenOverlay),
+    ("WindowExclusions_NormalizeAndMatchExecutablePaths", WindowExclusions_NormalizeAndMatchExecutablePaths),
     ("GetImages_AllowsExternalFolderWithoutRecursiveScan", GetImages_AllowsExternalFolderWithoutRecursiveScan),
     ("GetImages_DoesNotRecursivelyScanCaptureSubfolders", GetImages_DoesNotRecursivelyScanCaptureSubfolders),
     ("BuildFolderTree_IncludesExternalPathAndChildFolders", BuildFolderTree_IncludesExternalPathAndChildFolders),
     ("FolderSelection_IgnoresCurrentExternalFolder", FolderSelection_IgnoresCurrentExternalFolder),
     ("RequiresDetailsView_ForLargeFolder", RequiresDetailsView_ForLargeFolder),
     ("SortFiles_UsesRequestedColumnAndDirection", SortFiles_UsesRequestedColumnAndDirection),
+    ("CalculateCropRectangle_ClampsMarginsAndPreservesOnePixel", CalculateCropRectangle_ClampsMarginsAndPreservesOnePixel),
     ("DecodeImageFile_AllowsBackgroundDecode", DecodeImageFile_AllowsBackgroundDecode),
     ("SingleInstance_ForwardsArgumentsToPrimary", SingleInstance_ForwardsArgumentsToPrimary)
 };
@@ -64,6 +67,23 @@ static void SelectTargetAt_ReturnsNullWhenNoCandidateContainsPoint()
     {
         throw new InvalidOperationException($"Expected no target, got {selected.Value.Title}.");
     }
+}
+
+static void IsIgnoredProcessName_RecognizesDimScreenOverlay()
+{
+    AssertTrue(WindowPickerService.IsIgnoredProcessName("DimScreen"), "DimScreen overlay process should not be selectable");
+    AssertTrue(!WindowPickerService.IsIgnoredProcessName("notepad"), "ordinary processes should remain selectable");
+}
+
+static void WindowExclusions_NormalizeAndMatchExecutablePaths()
+{
+    var paths = MiniCaptureSettings.NormalizeWindowCaptureExcludedExecutablePaths(
+        [@"C:\\Apps\\DimScreen.exe", @"c:\\apps\\dimscreen.exe", "", "DimScreen"]);
+
+    AssertIntEqual(1, paths.Count, "normalized exclusion count");
+    AssertTrue(
+        WindowPickerService.IsExcludedExecutablePath(@"C:\\Apps\\DimScreen.exe", paths.ToHashSet(StringComparer.OrdinalIgnoreCase)),
+        "configured executable path should be excluded");
 }
 
 static void GetImages_AllowsExternalFolderWithoutRecursiveScan()
@@ -200,6 +220,21 @@ static void FolderSelection_IgnoresCurrentExternalFolder()
     AssertTrue(
         !ViewerWindow.IsSameFolderSelection(activeFolder, @"C:\images\other"),
         "selecting another external folder should still navigate");
+}
+
+static void CalculateCropRectangle_ClampsMarginsAndPreservesOnePixel()
+{
+    var regularCrop = ViewerWindow.CalculateCropRectangle(100, 80, 10, 20, 5, 15);
+    AssertIntEqual(10, regularCrop.X, "crop left");
+    AssertIntEqual(5, regularCrop.Y, "crop top");
+    AssertIntEqual(70, regularCrop.Width, "crop width");
+    AssertIntEqual(60, regularCrop.Height, "crop height");
+
+    var constrainedCrop = ViewerWindow.CalculateCropRectangle(10, 8, 99, 99, 99, 99);
+    AssertIntEqual(9, constrainedCrop.X, "constrained crop x");
+    AssertIntEqual(7, constrainedCrop.Y, "constrained crop y");
+    AssertIntEqual(1, constrainedCrop.Width, "constrained crop width");
+    AssertIntEqual(1, constrainedCrop.Height, "constrained crop height");
 }
 
 static void DecodeImageFile_AllowsBackgroundDecode()

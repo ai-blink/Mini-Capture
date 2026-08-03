@@ -18,6 +18,11 @@ public static class WindowPickerService
         "Shell Handwriting Canvas"
     };
 
+    private static readonly HashSet<string> IgnoredProcessNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "DimScreen"
+    };
+
     public static WindowCaptureTarget? FindTargetAt(Point screenPoint, int currentProcessId)
     {
         return FindTargetAt(screenPoint, GetSelectableTargetsInZOrder(currentProcessId));
@@ -26,9 +31,12 @@ public static class WindowPickerService
     public static IReadOnlyList<WindowCaptureTarget> GetSelectableTargetsInZOrder(int currentProcessId)
     {
         var targets = new List<WindowCaptureTarget>();
+        var excludedExecutablePaths = MiniCaptureSettingsStore.Load()
+            .WindowCaptureExcludedExecutablePaths
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var hwnd in NativeWindowApi.EnumerateTopLevelWindows())
         {
-            if (!TryCreateTarget(hwnd, currentProcessId, out var target))
+            if (!TryCreateTarget(hwnd, currentProcessId, excludedExecutablePaths, out var target))
             {
                 continue;
             }
@@ -59,10 +67,14 @@ public static class WindowPickerService
         return null;
     }
 
-    private static bool TryCreateTarget(IntPtr hwnd, int currentProcessId, out WindowCaptureTarget target)
+    private static bool TryCreateTarget(
+        IntPtr hwnd,
+        int currentProcessId,
+        ISet<string> excludedExecutablePaths,
+        out WindowCaptureTarget target)
     {
         target = default;
-        if (!IsCandidate(hwnd, currentProcessId))
+        if (!IsCandidate(hwnd, currentProcessId, excludedExecutablePaths))
         {
             return false;
         }
@@ -87,7 +99,7 @@ public static class WindowPickerService
         return true;
     }
 
-    private static bool IsCandidate(IntPtr hwnd, int currentProcessId)
+    private static bool IsCandidate(IntPtr hwnd, int currentProcessId, ISet<string> excludedExecutablePaths)
     {
         if (!NativeWindowApi.IsVisible(hwnd))
         {
@@ -104,6 +116,12 @@ public static class WindowPickerService
             return false;
         }
 
+        var process = NativeWindowApi.GetProcessInfo(hwnd);
+        if (IsIgnoredProcessName(process.Name) || IsExcludedExecutablePath(process.ExecutablePath, excludedExecutablePaths))
+        {
+            return false;
+        }
+
         var className = NativeWindowApi.GetClassName(hwnd);
         if (IgnoredWindowClasses.Contains(className))
         {
@@ -111,6 +129,17 @@ public static class WindowPickerService
         }
 
         return !IgnoredWindowTitles.Contains(NativeWindowApi.GetTitle(hwnd));
+    }
+
+    internal static bool IsIgnoredProcessName(string? processName)
+    {
+        return !string.IsNullOrWhiteSpace(processName) && IgnoredProcessNames.Contains(processName);
+    }
+
+    internal static bool IsExcludedExecutablePath(string? executablePath, ISet<string> excludedExecutablePaths)
+    {
+        return MiniCaptureSettings.TryNormalizeWindowCaptureExcludedExecutablePath(executablePath, out var normalizedPath) &&
+            excludedExecutablePaths.Contains(normalizedPath);
     }
 
 }

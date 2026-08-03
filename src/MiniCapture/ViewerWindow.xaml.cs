@@ -32,6 +32,7 @@ internal enum ViewerEditTool
 {
     Pan,
     Select,
+    PixelSelect,
     Rectangle,
     Ellipse,
     Mosaic,
@@ -103,6 +104,9 @@ public partial class ViewerWindow : Window
     private ObservableCollection<FolderTreeNode> _folderNodes = new();
     private BitmapSource? _editableImage;
     private WpfShape? _previewShape;
+    private WpfPath? _cropPreviewMask;
+    private WpfRectangle? _cropPreviewFrame;
+    private WpfRectangle? _pixelSelectionFrame;
     private WpfRectangle? _resizeHandle;
     private WpfRectangle? _selectionFrame;
     private EditableAnnotation? _selectedAnnotation;
@@ -116,7 +120,9 @@ public partial class ViewerWindow : Window
     private bool _isDrawing;
     private bool _isExternalFolder;
     private bool _isLoadingSelection;
+    private bool _isCropMode;
     private bool _isSelectingFolder;
+    private bool _isUpdatingCropControls;
     private bool _isPanning;
     private bool _isResizingAnnotation;
     private bool _isMovingAnnotation;
@@ -129,6 +135,7 @@ public partial class ViewerWindow : Window
     private List<WpfPoint> _annotationStartPoints = new();
     private WpfPoint _drawStartPoint;
     private WpfPoint _panStartPoint;
+    private Int32Rect? _pixelSelection;
     private double _panStartHorizontalOffset;
     private double _panStartVerticalOffset;
     private WpfColor _selectedColor = WpfColor.FromRgb(239, 68, 68);
@@ -624,6 +631,8 @@ public partial class ViewerWindow : Window
         _lastSavedPath = file.Path;
         _editableImage = image;
         ClearAnnotations();
+        _pixelSelection = null;
+        CloseCropMode();
         ClearEditHistory();
         _isDirty = false;
         PreviewImage.Source = _editableImage;
@@ -664,6 +673,8 @@ public partial class ViewerWindow : Window
         _lastSavedPath = null;
         _editableImage = null;
         ClearAnnotations();
+        _pixelSelection = null;
+        CloseCropMode();
         ClearEditHistory();
         _isDirty = false;
         PreviewImage.Source = null;
@@ -1008,6 +1019,189 @@ public partial class ViewerWindow : Window
         }
     }
 
+    private void OnCopySelectionClick(object sender, RoutedEventArgs e)
+    {
+        CopyPixelSelection();
+    }
+
+    private void OnCutSelectionClick(object sender, RoutedEventArgs e)
+    {
+        CutPixelSelection();
+    }
+
+    private void OnPasteSelectionClick(object sender, RoutedEventArgs e)
+    {
+        PasteIntoPixelSelection();
+    }
+
+    private void CopyPixelSelection()
+    {
+        if (!TryGetPixelSelection(out var selection))
+        {
+            SetViewerStatus("먼저 복사할 영역을 선택하세요.");
+            return;
+        }
+
+        try
+        {
+            CopyPixelSelectionToClipboard(selection);
+            SetViewerStatus($"선택 영역을 클립보드에 복사했습니다: {selection.Width} × {selection.Height}px");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+        {
+            SetViewerStatus($"선택 영역 복사 실패: {ex.Message}");
+        }
+    }
+
+    private void CutPixelSelection()
+    {
+        if (!TryGetPixelSelection(out var selection))
+        {
+            SetViewerStatus("먼저 잘라낼 영역을 선택하세요.");
+            return;
+        }
+
+        try
+        {
+            CopyPixelSelectionToClipboard(selection);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+        {
+            SetViewerStatus($"선택 영역 복사 실패: {ex.Message}");
+            return;
+        }
+
+        CommitAnnotationsToBitmap("잘라내기 전 주석을 이미지에 적용했습니다.", pushUndo: true);
+        if (_editableImage is null)
+        {
+            return;
+        }
+
+        PushUndoSnapshot();
+        SetEditableImage(ClearPixelRectangle(_editableImage, selection), "선택 영역을 잘라냈습니다.");
+    }
+
+    private void PasteIntoPixelSelection()
+    {
+        if (_editableImage is null)
+        {
+            SetViewerStatus("붙여넣을 이미지가 없습니다.");
+            return;
+        }
+
+        BitmapSource? clipboardImage;
+        try
+        {
+            clipboardImage = WpfClipboard.ContainsImage() ? WpfClipboard.GetImage() : null;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+        {
+            SetViewerStatus($"클립보드를 읽을 수 없습니다: {ex.Message}");
+            return;
+        }
+
+        if (clipboardImage is null || clipboardImage.PixelWidth < 1 || clipboardImage.PixelHeight < 1)
+        {
+            SetViewerStatus("클립보드에 붙여넣을 이미지가 없습니다.");
+            return;
+        }
+
+        var target = GetPasteTarget(clipboardImage);
+        if (target.Width < 1 || target.Height < 1)
+        {
+            SetViewerStatus("붙여넣을 수 있는 이미지 영역이 없습니다.");
+            return;
+        }
+
+        CommitAnnotationsToBitmap("붙여넣기 전 주석을 이미지에 적용했습니다.", pushUndo: true);
+        if (_editableImage is null)
+        {
+            return;
+        }
+
+        PushUndoSnapshot();
+        _pixelSelection = target;
+        SetEditableImage(PasteBitmap(_editableImage, clipboardImage, target), "선택 영역 위치에 이미지를 붙여넣었습니다.");
+    }
+
+    private void CopyPixelSelectionToClipboard(Int32Rect selection)
+    {
+        var copied = new CroppedBitmap(ComposeImageForExport(), selection);
+        copied.Freeze();
+        WpfClipboard.SetImage(copied);
+    }
+
+    private bool TryGetPixelSelection(out Int32Rect selection)
+    {
+        if (_editableImage is not null && _pixelSelection is { } current &&
+            current.Width > 0 && current.Height > 0)
+        {
+            selection = current;
+            return true;
+        }
+
+        selection = new Int32Rect();
+        return false;
+    }
+
+    private Int32Rect GetPasteTarget(BitmapSource pastedImage)
+    {
+        if (_editableImage is null)
+        {
+            return new Int32Rect();
+        }
+
+        var sourceWidth = _editableImage.PixelWidth;
+        var sourceHeight = _editableImage.PixelHeight;
+        var x = _pixelSelection?.X ?? Math.Max(0, (sourceWidth - pastedImage.PixelWidth) / 2);
+        var y = _pixelSelection?.Y ?? Math.Max(0, (sourceHeight - pastedImage.PixelHeight) / 2);
+        x = Math.Clamp(x, 0, sourceWidth - 1);
+        y = Math.Clamp(y, 0, sourceHeight - 1);
+        return new Int32Rect(
+            x,
+            y,
+            Math.Min(pastedImage.PixelWidth, sourceWidth - x),
+            Math.Min(pastedImage.PixelHeight, sourceHeight - y));
+    }
+
+    private static BitmapSource ClearPixelRectangle(BitmapSource source, Int32Rect selection)
+    {
+        var bitmapSource = ConvertToBgra32(source);
+        var width = bitmapSource.PixelWidth;
+        var height = bitmapSource.PixelHeight;
+        var stride = width * 4;
+        var pixels = new byte[stride * height];
+        bitmapSource.CopyPixels(pixels, stride, 0);
+
+        var right = Math.Min(width, selection.X + selection.Width);
+        var bottom = Math.Min(height, selection.Y + selection.Height);
+        for (var y = Math.Max(0, selection.Y); y < bottom; y++)
+        {
+            Array.Clear(pixels, (y * stride) + (Math.Max(0, selection.X) * 4), Math.Max(0, right - selection.X) * 4);
+        }
+
+        var cleared = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, null);
+        cleared.WritePixels(new Int32Rect(0, 0, width, height), pixels, stride, 0);
+        cleared.Freeze();
+        return cleared;
+    }
+
+    private static BitmapSource PasteBitmap(BitmapSource source, BitmapSource pastedImage, Int32Rect target)
+    {
+        var sourceBitmap = ConvertToPbgra32(source);
+        var pastedBitmap = ConvertToPbgra32(pastedImage);
+        var visual = new DrawingVisual();
+        using (var drawing = visual.RenderOpen())
+        {
+            drawing.DrawImage(sourceBitmap, new WpfRect(0, 0, sourceBitmap.PixelWidth, sourceBitmap.PixelHeight));
+            drawing.PushClip(new RectangleGeometry(new WpfRect(target.X, target.Y, target.Width, target.Height)));
+            drawing.DrawImage(pastedBitmap, new WpfRect(target.X, target.Y, pastedBitmap.PixelWidth, pastedBitmap.PixelHeight));
+            drawing.Pop();
+        }
+
+        return RenderBitmap(visual, sourceBitmap.PixelWidth, sourceBitmap.PixelHeight);
+    }
+
     private void OnUndoClick(object sender, RoutedEventArgs e)
     {
         UndoEdit();
@@ -1050,12 +1244,23 @@ public partial class ViewerWindow : Window
             return;
         }
 
+        if (_isCropMode)
+        {
+            CloseCropMode();
+        }
+
         _editTool = tool;
+        if (tool == ViewerEditTool.PixelSelect)
+        {
+            SelectAnnotation(null);
+        }
+
         UpdateToolButtons();
         SetViewerStatus(tool switch
         {
             ViewerEditTool.Pan => "핸드툴: 이미지를 끌어 이동합니다.",
             ViewerEditTool.Select => "선택: 보기 상태를 유지하고 편집하지 않습니다.",
+            ViewerEditTool.PixelSelect => "영역 선택: 드래그한 영역을 복사, 잘라내기, 붙여넣기할 수 있습니다.",
             ViewerEditTool.Rectangle => "네모: 이미지 위에서 드래그해 그립니다.",
             ViewerEditTool.Ellipse => "동그라미: 이미지 위에서 드래그해 그립니다.",
             ViewerEditTool.Mosaic => "모자이크: 가릴 영역을 드래그합니다.",
@@ -1063,6 +1268,69 @@ public partial class ViewerWindow : Window
             ViewerEditTool.Arrow => "화살표: 드래그해서 방향을 표시합니다.",
             _ => "텍스트: 이미지 위를 클릭해 입력합니다."
         });
+    }
+
+    private void OnCropToolClick(object sender, RoutedEventArgs e)
+    {
+        if (_editableImage is null)
+        {
+            SetViewerStatus("자를 이미지가 없습니다.");
+            return;
+        }
+
+        if (_isCropMode)
+        {
+            CloseCropMode();
+            SetViewerStatus("자르기를 취소했습니다.");
+            return;
+        }
+
+        _isCropMode = true;
+        _editTool = ViewerEditTool.Pan;
+        SelectAnnotation(null);
+        ResetCropControls();
+        CropPanel.Visibility = Visibility.Visible;
+        UpdateToolButtons();
+        RenderAnnotations();
+        SetViewerStatus("자르기: 왼쪽 패널에서 값을 조절한 뒤 적용하세요.");
+    }
+
+    private void OnCropValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isUpdatingCropControls || !_isCropMode)
+        {
+            return;
+        }
+
+        SynchronizeCropControls();
+        RenderAnnotations();
+    }
+
+    private void OnCropTextLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        ApplyCropTextValue(sender as System.Windows.Controls.TextBox);
+    }
+
+    private void OnCropTextPreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter)
+        {
+            return;
+        }
+
+        ApplyCropTextValue(sender as System.Windows.Controls.TextBox);
+        e.Handled = true;
+    }
+
+    private void OnCancelCropClick(object sender, RoutedEventArgs e)
+    {
+        CloseCropMode();
+        SetViewerStatus("자르기를 취소했습니다.");
+    }
+
+    private void OnApplyCropClick(object sender, RoutedEventArgs e)
+    {
+        ApplyCrop();
     }
 
     private void OnColorSwatchClick(object sender, RoutedEventArgs e)
@@ -1103,6 +1371,18 @@ public partial class ViewerWindow : Window
         if (_editTool == ViewerEditTool.Select)
         {
             SelectAnnotation(null);
+            e.Handled = true;
+            return;
+        }
+
+        if (_editTool == ViewerEditTool.PixelSelect)
+        {
+            _isDrawing = true;
+            _drawStartPoint = position;
+            _previewShape = CreatePixelSelectionPreview();
+            AnnotationOverlay.Children.Add(_previewShape);
+            UpdatePreviewShape(position);
+            AnnotationOverlay.CaptureMouse();
             e.Handled = true;
             return;
         }
@@ -1214,6 +1494,19 @@ public partial class ViewerWindow : Window
 
         var rect = GetPixelRect(_drawStartPoint, endPoint);
         RemovePreviewShape();
+
+        if (_editTool == ViewerEditTool.PixelSelect)
+        {
+            _pixelSelection = rect.Width >= 2 && rect.Height >= 2 ? rect : null;
+            _isDrawing = false;
+            AnnotationOverlay.ReleaseMouseCapture();
+            RenderAnnotations();
+            SetViewerStatus(_pixelSelection is null
+                ? "영역 선택을 해제했습니다."
+                : $"영역 선택: {rect.Width} × {rect.Height}px");
+            e.Handled = true;
+            return;
+        }
 
         if (rect.Width >= 2 && rect.Height >= 2)
         {
@@ -1661,6 +1954,159 @@ public partial class ViewerWindow : Window
         SetEditableImage(transformed, angle < 0 ? "왼쪽으로 회전했습니다." : "오른쪽으로 회전했습니다.");
     }
 
+    private void ResetCropControls()
+    {
+        _isUpdatingCropControls = true;
+        try
+        {
+            CropLeftSlider.Value = 0;
+            CropRightSlider.Value = 0;
+            CropTopSlider.Value = 0;
+            CropBottomSlider.Value = 0;
+        }
+        finally
+        {
+            _isUpdatingCropControls = false;
+        }
+
+        SynchronizeCropControls();
+    }
+
+    private void SynchronizeCropControls()
+    {
+        if (_editableImage is null)
+        {
+            return;
+        }
+
+        var width = _editableImage.PixelWidth;
+        var height = _editableImage.PixelHeight;
+        _isUpdatingCropControls = true;
+        try
+        {
+            var left = Math.Clamp((int)Math.Round(CropLeftSlider.Value), 0, Math.Max(0, width - 1));
+            var right = Math.Clamp((int)Math.Round(CropRightSlider.Value), 0, Math.Max(0, width - left - 1));
+            var top = Math.Clamp((int)Math.Round(CropTopSlider.Value), 0, Math.Max(0, height - 1));
+            var bottom = Math.Clamp((int)Math.Round(CropBottomSlider.Value), 0, Math.Max(0, height - top - 1));
+
+            CropLeftSlider.Maximum = Math.Max(0, width - right - 1);
+            CropRightSlider.Maximum = Math.Max(0, width - left - 1);
+            CropTopSlider.Maximum = Math.Max(0, height - bottom - 1);
+            CropBottomSlider.Maximum = Math.Max(0, height - top - 1);
+            CropLeftSlider.Value = Math.Min(left, CropLeftSlider.Maximum);
+            CropRightSlider.Value = Math.Min(right, CropRightSlider.Maximum);
+            CropTopSlider.Value = Math.Min(top, CropTopSlider.Maximum);
+            CropBottomSlider.Value = Math.Min(bottom, CropBottomSlider.Maximum);
+            CropLeftText.Text = ((int)Math.Round(CropLeftSlider.Value)).ToString(CultureInfo.CurrentCulture);
+            CropRightText.Text = ((int)Math.Round(CropRightSlider.Value)).ToString(CultureInfo.CurrentCulture);
+            CropTopText.Text = ((int)Math.Round(CropTopSlider.Value)).ToString(CultureInfo.CurrentCulture);
+            CropBottomText.Text = ((int)Math.Round(CropBottomSlider.Value)).ToString(CultureInfo.CurrentCulture);
+        }
+        finally
+        {
+            _isUpdatingCropControls = false;
+        }
+    }
+
+    private void ApplyCropTextValue(System.Windows.Controls.TextBox? textBox)
+    {
+        if (!_isCropMode || textBox?.Tag is not string side)
+        {
+            return;
+        }
+
+        if (!int.TryParse(textBox.Text, NumberStyles.Integer, CultureInfo.CurrentCulture, out var value) || value < 0)
+        {
+            SynchronizeCropControls();
+            SetViewerStatus("자르기 값은 0 이상의 정수로 입력하세요.");
+            return;
+        }
+
+        var slider = side switch
+        {
+            "Left" => CropLeftSlider,
+            "Right" => CropRightSlider,
+            "Top" => CropTopSlider,
+            "Bottom" => CropBottomSlider,
+            _ => null
+        };
+        if (slider is null)
+        {
+            return;
+        }
+
+        slider.Value = Math.Clamp(value, slider.Minimum, slider.Maximum);
+        SynchronizeCropControls();
+        RenderAnnotations();
+    }
+
+    private Int32Rect GetCropPixelRect()
+    {
+        if (_editableImage is null)
+        {
+            return new Int32Rect();
+        }
+
+        return CalculateCropRectangle(
+            _editableImage.PixelWidth,
+            _editableImage.PixelHeight,
+            (int)Math.Round(CropLeftSlider.Value),
+            (int)Math.Round(CropRightSlider.Value),
+            (int)Math.Round(CropTopSlider.Value),
+            (int)Math.Round(CropBottomSlider.Value));
+    }
+
+    internal static Int32Rect CalculateCropRectangle(int width, int height, int left, int right, int top, int bottom)
+    {
+        if (width < 1 || height < 1)
+        {
+            return new Int32Rect();
+        }
+
+        left = Math.Clamp(left, 0, width - 1);
+        right = Math.Clamp(right, 0, width - left - 1);
+        top = Math.Clamp(top, 0, height - 1);
+        bottom = Math.Clamp(bottom, 0, height - top - 1);
+        return new Int32Rect(left, top, width - left - right, height - top - bottom);
+    }
+
+    private void ApplyCrop()
+    {
+        if (_editableImage is null)
+        {
+            return;
+        }
+
+        var crop = GetCropPixelRect();
+        if (crop.Width == _editableImage.PixelWidth && crop.Height == _editableImage.PixelHeight)
+        {
+            CloseCropMode();
+            SetViewerStatus("자르기 값이 없어 원본을 유지했습니다.");
+            return;
+        }
+
+        CommitAnnotationsToBitmap("자르기 전 주석을 이미지에 적용했습니다.", pushUndo: true);
+        if (_editableImage is null)
+        {
+            return;
+        }
+
+        PushUndoSnapshot();
+        var cropped = new CroppedBitmap(ConvertToPbgra32(_editableImage), crop);
+        cropped.Freeze();
+        _pixelSelection = null;
+        CloseCropMode();
+        SetEditableImage(cropped, $"이미지를 {crop.Width} × {crop.Height}px로 잘랐습니다.");
+    }
+
+    private void CloseCropMode()
+    {
+        _isCropMode = false;
+        CropPanel.Visibility = Visibility.Collapsed;
+        UpdateToolButtons();
+        RenderAnnotations();
+    }
+
     private string? GetSaveTargetPath()
     {
         var sourcePath = _currentFile?.Path ?? _lastSavedPath;
@@ -1828,7 +2274,68 @@ public partial class ViewerWindow : Window
             RenderAnnotation(annotation);
         }
 
+        RenderCropPreview();
         RenderSelectionFrame();
+        RenderPixelSelectionFrame();
+    }
+
+    private void RenderCropPreview()
+    {
+        _cropPreviewMask = null;
+        _cropPreviewFrame = null;
+        if (!_isCropMode || _editableImage is null || AnnotationOverlay.ActualWidth <= 0 || AnnotationOverlay.ActualHeight <= 0)
+        {
+            return;
+        }
+
+        var crop = GetCropPixelRect();
+        var rect = PixelToDisplayRect(new WpfRect(crop.X, crop.Y, crop.Width, crop.Height));
+        var maskGeometry = new GeometryGroup { FillRule = FillRule.EvenOdd };
+        maskGeometry.Children.Add(new RectangleGeometry(new WpfRect(0, 0, AnnotationOverlay.ActualWidth, AnnotationOverlay.ActualHeight)));
+        maskGeometry.Children.Add(new RectangleGeometry(rect));
+        _cropPreviewMask = new WpfPath
+        {
+            Data = maskGeometry,
+            Fill = new SolidColorBrush(WpfColor.FromArgb(150, 8, 15, 15)),
+            IsHitTestVisible = false
+        };
+        _cropPreviewFrame = new WpfRectangle
+        {
+            Width = Math.Max(1, rect.Width),
+            Height = Math.Max(1, rect.Height),
+            Stroke = new SolidColorBrush(WpfColor.FromRgb(94, 234, 212)),
+            StrokeThickness = 1.5,
+            Fill = WpfBrushes.Transparent,
+            IsHitTestVisible = false
+        };
+        Canvas.SetLeft(_cropPreviewFrame, rect.Left);
+        Canvas.SetTop(_cropPreviewFrame, rect.Top);
+        AnnotationOverlay.Children.Add(_cropPreviewMask);
+        AnnotationOverlay.Children.Add(_cropPreviewFrame);
+    }
+
+    private void RenderPixelSelectionFrame()
+    {
+        _pixelSelectionFrame = null;
+        if (_pixelSelection is not { } selection || _editableImage is null)
+        {
+            return;
+        }
+
+        var rect = PixelToDisplayRect(new WpfRect(selection.X, selection.Y, selection.Width, selection.Height));
+        _pixelSelectionFrame = new WpfRectangle
+        {
+            Width = Math.Max(1, rect.Width),
+            Height = Math.Max(1, rect.Height),
+            Stroke = new SolidColorBrush(WpfColor.FromRgb(37, 99, 235)),
+            StrokeThickness = 1.5,
+            StrokeDashArray = new DoubleCollection { 4, 3 },
+            Fill = WpfBrushes.Transparent,
+            IsHitTestVisible = false
+        };
+        Canvas.SetLeft(_pixelSelectionFrame, rect.Left);
+        Canvas.SetTop(_pixelSelectionFrame, rect.Top);
+        AnnotationOverlay.Children.Add(_pixelSelectionFrame);
     }
 
     private void RenderAnnotation(EditableAnnotation annotation)
@@ -2578,6 +3085,18 @@ public partial class ViewerWindow : Window
         return shape;
     }
 
+    private static WpfRectangle CreatePixelSelectionPreview()
+    {
+        return new WpfRectangle
+        {
+            Stroke = new SolidColorBrush(WpfColor.FromRgb(37, 99, 235)),
+            StrokeThickness = 1.5,
+            StrokeDashArray = new DoubleCollection { 4, 3 },
+            Fill = new SolidColorBrush(WpfColor.FromArgb(30, 37, 99, 235)),
+            IsHitTestVisible = false
+        };
+    }
+
     private void UpdatePreviewShape(WpfPoint currentPoint)
     {
         if (_previewShape is null)
@@ -3036,11 +3555,23 @@ public partial class ViewerWindow : Window
                     {
                         OnCopyPathClick(sender, new RoutedEventArgs());
                     }
+                    else if (_pixelSelection is not null)
+                    {
+                        CopyPixelSelection();
+                    }
                     else
                     {
                         OnCopyImageClick(sender, new RoutedEventArgs());
                     }
 
+                    e.Handled = true;
+                    return;
+                case Key.X:
+                    CutPixelSelection();
+                    e.Handled = true;
+                    return;
+                case Key.V:
+                    PasteIntoPixelSelection();
                     e.Handled = true;
                     return;
                 case Key.Z:
@@ -3203,12 +3734,14 @@ public partial class ViewerWindow : Window
     {
         SetViewButtonState(PanToolButton, _editTool == ViewerEditTool.Pan || _spacePanActive);
         SetViewButtonState(SelectToolButton, _editTool == ViewerEditTool.Select && !_spacePanActive);
+        SetViewButtonState(PixelSelectToolButton, _editTool == ViewerEditTool.PixelSelect && !_spacePanActive);
         SetViewButtonState(RectangleToolButton, _editTool == ViewerEditTool.Rectangle);
         SetViewButtonState(EllipseToolButton, _editTool == ViewerEditTool.Ellipse);
         SetViewButtonState(MosaicToolButton, _editTool == ViewerEditTool.Mosaic);
         SetViewButtonState(TextToolButton, _editTool == ViewerEditTool.Text);
         SetViewButtonState(PenToolButton, _editTool == ViewerEditTool.Pen);
         SetViewButtonState(ArrowToolButton, _editTool == ViewerEditTool.Arrow);
+        SetViewButtonState(CropToolButton, _isCropMode);
         UpdateToolContext();
         AnnotationOverlay.Cursor = _editTool switch
         {

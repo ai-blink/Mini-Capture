@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -31,6 +32,41 @@ internal static class NativeWindowApi
     {
         GetWindowThreadProcessId(hwnd, out var processId);
         return unchecked((int)processId);
+    }
+
+    public static WindowProcessInfo GetProcessInfo(IntPtr hwnd)
+    {
+        var processId = GetProcessId(hwnd);
+        if (processId <= 0)
+        {
+            return default;
+        }
+
+        try
+        {
+            using var process = Process.GetProcessById(processId);
+            var processName = process.ProcessName;
+            try
+            {
+                return new WindowProcessInfo(processName, process.MainModule?.FileName ?? string.Empty);
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                return new WindowProcessInfo(processName, string.Empty);
+            }
+        }
+        catch (ArgumentException)
+        {
+            return default;
+        }
+        catch (InvalidOperationException)
+        {
+            return default;
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            return default;
+        }
     }
 
     public static bool IsMinimized(IntPtr hwnd)
@@ -170,3 +206,5 @@ internal static class NativeWindowApi
         public readonly int Bottom;
     }
 }
+
+internal readonly record struct WindowProcessInfo(string Name, string ExecutablePath);
