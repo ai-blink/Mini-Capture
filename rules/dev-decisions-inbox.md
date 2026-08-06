@@ -2,6 +2,7 @@
 
 | ID | Date | One-liner | Section | Status |
 |---|---|---|---|---|
+| D-013 | 2026-08-06 | Mosaic tool: 2 types (block/Gaussian blur) + adjustable block-size slider, not a fixed constant. | UX | integrated |
 | D-009 | 2026-07-02 | Manual Windows validation gates overlay/capture behavior. | Validation | integrated |
 | D-008 | 2026-07-02 | V1 excludes OCR/upload/scrolling/video/heavy editing/general file management. | Scope | integrated |
 | D-007 | 2026-07-02 | Browser/viewer/capture services remain separated by responsibility. | Architecture | integrated |

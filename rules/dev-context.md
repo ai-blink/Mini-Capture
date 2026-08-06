@@ -10,14 +10,17 @@
 - Viewer toolbar now includes pixel-area selection, copy/cut/paste, and crop entry; the crop panel expands below the left file list in two rows.
 - Normal-width viewer toolbars wrap command groups instead of showing a horizontal scrollbar; the crop command uses the Windows four-corner crop glyph.
 - Settings now let users exclude target windows by registered executable path.
+- The mosaic edit tool exposes a block-size slider (6-64px) and a block/Gaussian-blur type toggle; `ApplyMosaic` branches on type.
 - Build passes with 0 warnings/errors; 15 regression cases pass.
+- `ViewerWindow.xaml.cs` (4013 lines) is mid deep-refactor split into partial-class files by responsibility (Phase 1 impact scan in progress; no code changes yet).
 
 ## Immediate Next Step
 
+- Continue the `ViewerWindow.xaml.cs` deep-refactor: Phase 1 impact scan running, then Phase 2 split design, Phase 3 stepwise apply, Phase 4 regression analysis, Phase 5 verify.
+- Manually verify the mosaic size slider and block/blur type buttons on a real capture.
 - Manually validate refresh/F5 and all four sort toggles on the interactive desktop.
 - Manually select an image area, verify Ctrl+C/Ctrl+X/Ctrl+V, then crop with left/right and top/bottom slider and numeric values before applying.
 - Confirm a normal-width viewer wraps its toolbar without clipping, and verify a registered `창 제외` process cannot be selected.
-- Confirm capture UI tooltips do not appear in screenshots where Windows capture exclusion is supported.
 - Re-run the outstanding repeated-association, sibling-navigation, and high-resolution external-image workflow.
 - Keep true multi-monitor validation and installer/default-app packaging as follow-ups.
 

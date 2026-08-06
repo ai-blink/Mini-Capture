@@ -10,6 +10,7 @@
 | done | Viewer performance and activation | async folders/thumbnails, virtualized guards, single-instance handoff, sibling navigation, background full-resolution decode |
 | done | Settings and image-extension entry | extension status/request UI, Windows default-app handoff, PNG/JPG/JPEG launch arguments |
 | done | P4 validation and portable release | DPI/capture/viewer/tray smoke, framework-dependent publish, V0.1.x portable release |
-| follow_up | Interactive viewer/capture validation | refresh/F5, sort headers, tooltip exclusion, repeated association launch, high-resolution external image |
+| done | Mosaic block-size/type controls | adjustable block-size slider (6-64px) + block/Gaussian-blur type toggle in the viewer mosaic tool, build + 15 regression cases |
+| follow_up | Interactive viewer/capture validation | refresh/F5, sort headers, tooltip exclusion, repeated association launch, high-resolution external image, mosaic size/type buttons |
 | follow_up | Multi-monitor hardware validation | true multi-display region/window/full/timer coverage |
 | follow_up | Installer/default-app packaging if needed | versioned ProgIDs and quoted `%1` registration outside direct app mutation |

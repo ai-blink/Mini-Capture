@@ -17,6 +17,8 @@ var tests = new (string Name, Action Run)[]
     ("RequiresDetailsView_ForLargeFolder", RequiresDetailsView_ForLargeFolder),
     ("SortFiles_UsesRequestedColumnAndDirection", SortFiles_UsesRequestedColumnAndDirection),
     ("CalculateCropRectangle_ClampsMarginsAndPreservesOnePixel", CalculateCropRectangle_ClampsMarginsAndPreservesOnePixel),
+    ("BuildGaussianKernel_NormalizesAndIsSymmetric", BuildGaussianKernel_NormalizesAndIsSymmetric),
+    ("ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge", ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge),
     ("DecodeImageFile_AllowsBackgroundDecode", DecodeImageFile_AllowsBackgroundDecode),
     ("SingleInstance_ForwardsArgumentsToPrimary", SingleInstance_ForwardsArgumentsToPrimary)
 };
@@ -235,6 +237,72 @@ static void CalculateCropRectangle_ClampsMarginsAndPreservesOnePixel()
     AssertIntEqual(7, constrainedCrop.Y, "constrained crop y");
     AssertIntEqual(1, constrainedCrop.Width, "constrained crop width");
     AssertIntEqual(1, constrainedCrop.Height, "constrained crop height");
+}
+
+static void BuildGaussianKernel_NormalizesAndIsSymmetric()
+{
+    var kernel = ViewerWindow.BuildGaussianKernel(5, 2.5);
+    AssertIntEqual(11, kernel.Length, "kernel length for radius 5");
+
+    var sum = 0.0;
+    foreach (var weight in kernel)
+    {
+        sum += weight;
+    }
+
+    AssertTrue(Math.Abs(sum - 1.0) < 0.0001, $"kernel weights should normalize to 1.0, got {sum}");
+
+    for (var i = 0; i < kernel.Length / 2; i++)
+    {
+        AssertTrue(
+            Math.Abs(kernel[i] - kernel[kernel.Length - 1 - i]) < 0.0000001,
+            "kernel should be symmetric around its center");
+    }
+}
+
+static void ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge()
+{
+    const int width = 20;
+    const int height = 20;
+    const int stride = width * 4;
+
+    var uniformPixels = new byte[stride * height];
+    for (var i = 0; i < uniformPixels.Length; i += 4)
+    {
+        uniformPixels[i] = 100;
+        uniformPixels[i + 1] = 150;
+        uniformPixels[i + 2] = 200;
+        uniformPixels[i + 3] = 255;
+    }
+
+    ViewerWindow.ApplyGaussianBlurRegion(uniformPixels, stride, 2, 2, 18, 18, 4.0);
+
+    var centerOffset = (10 * stride) + (10 * 4);
+    AssertIntEqual(100, uniformPixels[centerOffset], "uniform region blue after blur");
+    AssertIntEqual(150, uniformPixels[centerOffset + 1], "uniform region green after blur");
+    AssertIntEqual(200, uniformPixels[centerOffset + 2], "uniform region red after blur");
+    AssertIntEqual(255, uniformPixels[centerOffset + 3], "uniform region alpha after blur");
+
+    var splitPixels = new byte[stride * height];
+    for (var y = 0; y < height; y++)
+    {
+        for (var x = 0; x < width; x++)
+        {
+            var offset = (y * stride) + (x * 4);
+            var value = (byte)(x < width / 2 ? 0 : 255);
+            splitPixels[offset] = value;
+            splitPixels[offset + 1] = value;
+            splitPixels[offset + 2] = value;
+            splitPixels[offset + 3] = 255;
+        }
+    }
+
+    ViewerWindow.ApplyGaussianBlurRegion(splitPixels, stride, 0, 0, width, height, 4.0);
+
+    var edgeOffset = (10 * stride) + ((width / 2) * 4);
+    AssertTrue(
+        splitPixels[edgeOffset] > 0 && splitPixels[edgeOffset] < 255,
+        $"blurred edge pixel should sit strictly between 0 and 255, got {splitPixels[edgeOffset]}");
 }
 
 static void DecodeImageFile_AllowsBackgroundDecode()

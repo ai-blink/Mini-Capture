@@ -10,6 +10,7 @@
 - D-003: The persistent entrypoint is a transparent always-on-top capture button.
 - D-004: The file browser follows Windows Explorer conventions: tree, address/search, details and icon views.
 - D-005: Image icon views support small, medium, and large thumbnail sizes.
+- D-013: The partial mosaic tool offers exactly two types — sharp block averaging (existing) and Gaussian blur — chosen by the user over a wider 3-type option (adding circular blocks); block size is user-adjustable via a slider (6-64px) instead of a fixed constant.
 
 ## Architecture
 

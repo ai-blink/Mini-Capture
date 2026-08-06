@@ -865,6 +865,51 @@
                                      Text="텍스트"
                                      VerticalContentAlignment="Center" />
                             </StackPanel>
+                            <StackPanel x:Name="MosaicContextGroup"
+                                        AutomationProperties.AutomationId="ViewerMosaicContextGroup"
+                                        Orientation="Horizontal"
+                                        Visibility="Collapsed">
+                            <TextBlock Style="{StaticResource ToolbarPropertyLabelStyle}"
+                                       Margin="8,0,6,0"
+                                       Text="크기" />
+                            <Slider x:Name="MosaicSizeSlider"
+                                    Width="86"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.AutomationId="ViewerMosaicSizeSlider"
+                                    AutomationProperties.Name="모자이크 크기"
+                                    Minimum="6"
+                                    Maximum="64"
+                                    TickFrequency="2"
+                                    IsSnapToTickEnabled="True"
+                                    Value="14"
+                                    ValueChanged="OnMosaicSizeSliderChanged" />
+                            <TextBlock x:Name="MosaicSizeText"
+                                       Width="32"
+                                       VerticalAlignment="Center"
+                                       FontSize="12"
+                                       Foreground="{StaticResource ViewerMutedTextBrush}"
+                                       Text="14px" />
+                            <TextBlock Style="{StaticResource ToolbarPropertyLabelStyle}"
+                                       Margin="8,0,6,0"
+                                       Text="종류" />
+                            <Button x:Name="MosaicTypeBlockButton"
+                                    AutomationProperties.AutomationId="ViewerMosaicTypeBlockButton"
+                                    AutomationProperties.Name="블록 모자이크"
+                                    Click="OnMosaicTypeButtonClick"
+                                    Content="블록"
+                                    ToolTip="사각형 블록 모자이크"
+                                    Style="{StaticResource RibbonTextButtonStyle}"
+                                    Tag="Block" />
+                            <Button x:Name="MosaicTypeBlurButton"
+                                    AutomationProperties.AutomationId="ViewerMosaicTypeBlurButton"
+                                    AutomationProperties.Name="흐림 모자이크"
+                                    Click="OnMosaicTypeButtonClick"
+                                    Content="흐림"
+                                    ToolTip="가우시안 흐림"
+                                    Style="{StaticResource RibbonTextButtonStyle}"
+                                    Tag="Blur" />
+                            </StackPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>

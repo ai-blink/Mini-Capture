@@ -41,6 +41,12 @@ internal enum ViewerEditTool
     Arrow
 }
 
+internal enum ViewerMosaicType
+{
+    Block,
+    Blur
+}
+
 internal enum ViewerAnnotationKind
 {
     Rectangle,
@@ -140,6 +146,9 @@ public partial class ViewerWindow : Window
     private double _panStartVerticalOffset;
     private WpfColor _selectedColor = WpfColor.FromRgb(239, 68, 68);
     private double _strokeThickness = 4.0;
+    private int _mosaicBlockSize = 14;
+    private ViewerMosaicType _mosaicType = ViewerMosaicType.Block;
+    private bool _isApplyingMosaic;
     private double _zoom = 1.0;
     private ExplorerViewMode _viewMode = ExplorerViewMode.Details;
     private ViewerFileSortColumn _fileSortColumn = ViewerFileSortColumn.ModifiedDate;
@@ -1234,6 +1243,27 @@ public partial class ViewerWindow : Window
         {
             StrokeText.Text = $"{_strokeThickness:0}px";
         }
+    }
+
+    private void OnMosaicSizeSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        _mosaicBlockSize = Math.Clamp((int)Math.Round(e.NewValue), 6, 64);
+        if (MosaicSizeText is not null)
+        {
+            MosaicSizeText.Text = $"{_mosaicBlockSize}px";
+        }
+    }
+
+    private void OnMosaicTypeButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button { Tag: string tag } ||
+            !Enum.TryParse<ViewerMosaicType>(tag, out var mosaicType))
+        {
+            return;
+        }
+
+        _mosaicType = mosaicType;
+        UpdateToolContext();
     }
 
     private void OnToolButtonClick(object sender, RoutedEventArgs e)
@@ -2818,40 +2848,59 @@ public partial class ViewerWindow : Window
         SetEditableImage(RenderBitmap(visual, source.PixelWidth, source.PixelHeight), "텍스트를 입력했습니다.");
     }
 
-    private void ApplyMosaic(Int32Rect pixelRect)
+    private async void ApplyMosaic(Int32Rect pixelRect)
     {
-        if (_editableImage is null)
+        if (_editableImage is null || _isApplyingMosaic)
         {
             return;
         }
 
-        CommitAnnotationsToBitmap("모자이크 전 주석을 이미지에 적용했습니다.", pushUndo: true);
-        PushUndoSnapshot();
-        var source = ConvertToBgra32(_editableImage);
-        var width = source.PixelWidth;
-        var height = source.PixelHeight;
-        var stride = width * 4;
-        var pixels = new byte[stride * height];
-        source.CopyPixels(pixels, stride, 0);
-
-        var blockSize = Math.Clamp((int)Math.Round(14 / Math.Max(_zoom, MinZoom)), 6, 64);
-        var right = Math.Min(width, pixelRect.X + pixelRect.Width);
-        var bottom = Math.Min(height, pixelRect.Y + pixelRect.Height);
-
-        for (var y = pixelRect.Y; y < bottom; y += blockSize)
+        _isApplyingMosaic = true;
+        try
         {
-            for (var x = pixelRect.X; x < right; x += blockSize)
-            {
-                var blockRight = Math.Min(right, x + blockSize);
-                var blockBottom = Math.Min(bottom, y + blockSize);
-                ApplyMosaicBlock(pixels, stride, x, y, blockRight, blockBottom);
-            }
-        }
+            CommitAnnotationsToBitmap("모자이크 전 주석을 이미지에 적용했습니다.", pushUndo: true);
+            PushUndoSnapshot();
+            var source = ConvertToBgra32(_editableImage);
+            var width = source.PixelWidth;
+            var height = source.PixelHeight;
+            var stride = width * 4;
+            var pixels = new byte[stride * height];
+            source.CopyPixels(pixels, stride, 0);
 
-        var bitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, null);
-        bitmap.WritePixels(new Int32Rect(0, 0, width, height), pixels, stride, 0);
-        bitmap.Freeze();
-        SetEditableImage(bitmap, "모자이크를 적용했습니다.");
+            var blockSize = Math.Clamp((int)Math.Round(_mosaicBlockSize / Math.Max(_zoom, MinZoom)), 6, 64);
+            var right = Math.Min(width, pixelRect.X + pixelRect.Width);
+            var bottom = Math.Min(height, pixelRect.Y + pixelRect.Height);
+            var mosaicType = _mosaicType;
+
+            await Task.Run(() =>
+            {
+                if (mosaicType == ViewerMosaicType.Blur)
+                {
+                    ApplyGaussianBlurRegion(pixels, stride, pixelRect.X, pixelRect.Y, right, bottom, blockSize / 2.0);
+                }
+                else
+                {
+                    for (var y = pixelRect.Y; y < bottom; y += blockSize)
+                    {
+                        for (var x = pixelRect.X; x < right; x += blockSize)
+                        {
+                            var blockRight = Math.Min(right, x + blockSize);
+                            var blockBottom = Math.Min(bottom, y + blockSize);
+                            ApplyMosaicBlock(pixels, stride, x, y, blockRight, blockBottom);
+                        }
+                    }
+                }
+            });
+
+            var bitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, null);
+            bitmap.WritePixels(new Int32Rect(0, 0, width, height), pixels, stride, 0);
+            bitmap.Freeze();
+            SetEditableImage(bitmap, mosaicType == ViewerMosaicType.Blur ? "흐림 모자이크를 적용했습니다." : "모자이크를 적용했습니다.");
+        }
+        finally
+        {
+            _isApplyingMosaic = false;
+        }
     }
 
     private void ApplyPen(IReadOnlyList<WpfPoint> displayPoints)
@@ -2984,6 +3033,97 @@ public partial class ViewerWindow : Window
                 pixels[offset + 3] = averageAlpha;
             }
         }
+    }
+
+    internal static void ApplyGaussianBlurRegion(byte[] pixels, int stride, int left, int top, int right, int bottom, double radius)
+    {
+        if (right <= left || bottom <= top)
+        {
+            return;
+        }
+
+        var sigma = Math.Max(1.0, radius / 2.0);
+        var kernelRadius = Math.Max(1, (int)Math.Ceiling(radius));
+        var kernel = BuildGaussianKernel(kernelRadius, sigma);
+        var regionWidth = right - left;
+        var regionHeight = bottom - top;
+        var horizontal = new byte[regionWidth * regionHeight * 4];
+
+        for (var y = 0; y < regionHeight; y++)
+        {
+            var sourceRow = (top + y) * stride;
+            var destRow = y * regionWidth * 4;
+            for (var x = 0; x < regionWidth; x++)
+            {
+                double blue = 0;
+                double green = 0;
+                double red = 0;
+                double alpha = 0;
+                for (var k = -kernelRadius; k <= kernelRadius; k++)
+                {
+                    var sampleX = Math.Clamp(x + k, 0, regionWidth - 1) + left;
+                    var offset = sourceRow + (sampleX * 4);
+                    var weight = kernel[k + kernelRadius];
+                    blue += pixels[offset] * weight;
+                    green += pixels[offset + 1] * weight;
+                    red += pixels[offset + 2] * weight;
+                    alpha += pixels[offset + 3] * weight;
+                }
+
+                var destOffset = destRow + (x * 4);
+                horizontal[destOffset] = (byte)Math.Clamp(Math.Round(blue), 0, 255);
+                horizontal[destOffset + 1] = (byte)Math.Clamp(Math.Round(green), 0, 255);
+                horizontal[destOffset + 2] = (byte)Math.Clamp(Math.Round(red), 0, 255);
+                horizontal[destOffset + 3] = (byte)Math.Clamp(Math.Round(alpha), 0, 255);
+            }
+        }
+
+        for (var y = 0; y < regionHeight; y++)
+        {
+            var destRow = (top + y) * stride;
+            for (var x = 0; x < regionWidth; x++)
+            {
+                double blue = 0;
+                double green = 0;
+                double red = 0;
+                double alpha = 0;
+                for (var k = -kernelRadius; k <= kernelRadius; k++)
+                {
+                    var sampleY = Math.Clamp(y + k, 0, regionHeight - 1);
+                    var offset = (sampleY * regionWidth * 4) + (x * 4);
+                    var weight = kernel[k + kernelRadius];
+                    blue += horizontal[offset] * weight;
+                    green += horizontal[offset + 1] * weight;
+                    red += horizontal[offset + 2] * weight;
+                    alpha += horizontal[offset + 3] * weight;
+                }
+
+                var destOffset = destRow + ((left + x) * 4);
+                pixels[destOffset] = (byte)Math.Clamp(Math.Round(blue), 0, 255);
+                pixels[destOffset + 1] = (byte)Math.Clamp(Math.Round(green), 0, 255);
+                pixels[destOffset + 2] = (byte)Math.Clamp(Math.Round(red), 0, 255);
+                pixels[destOffset + 3] = (byte)Math.Clamp(Math.Round(alpha), 0, 255);
+            }
+        }
+    }
+
+    internal static double[] BuildGaussianKernel(int radius, double sigma)
+    {
+        var kernel = new double[(radius * 2) + 1];
+        var sum = 0.0;
+        for (var i = -radius; i <= radius; i++)
+        {
+            var value = Math.Exp(-(i * i) / (2 * sigma * sigma));
+            kernel[i + radius] = value;
+            sum += value;
+        }
+
+        for (var i = 0; i < kernel.Length; i++)
+        {
+            kernel[i] /= sum;
+        }
+
+        return kernel;
     }
 
     private void SetEditableImage(BitmapSource bitmap, string status, bool markDirty = true)
@@ -3759,8 +3899,9 @@ public partial class ViewerWindow : Window
             ViewerEditTool.Rectangle or
             ViewerEditTool.Ellipse;
         var showsText = _editTool == ViewerEditTool.Text;
+        var showsMosaic = _editTool == ViewerEditTool.Mosaic;
 
-        ContextToolbar.Visibility = showsStroke || showsText
+        ContextToolbar.Visibility = showsStroke || showsText || showsMosaic
             ? Visibility.Visible
             : Visibility.Collapsed;
         ColorContextGroup.Visibility = showsStroke || showsText
@@ -3772,6 +3913,15 @@ public partial class ViewerWindow : Window
         TextContextGroup.Visibility = showsText
             ? Visibility.Visible
             : Visibility.Collapsed;
+        MosaicContextGroup.Visibility = showsMosaic
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        if (showsMosaic)
+        {
+            SetViewButtonState(MosaicTypeBlockButton, _mosaicType == ViewerMosaicType.Block);
+            SetViewButtonState(MosaicTypeBlurButton, _mosaicType == ViewerMosaicType.Blur);
+        }
+
         ContextToolName.Text = _editTool switch
         {
             ViewerEditTool.Pen => "펜 설정",
@@ -3779,6 +3929,7 @@ public partial class ViewerWindow : Window
             ViewerEditTool.Rectangle => "네모 설정",
             ViewerEditTool.Ellipse => "원 설정",
             ViewerEditTool.Text => "텍스트 설정",
+            ViewerEditTool.Mosaic => "모자이크 설정",
             _ => string.Empty
         };
     }
