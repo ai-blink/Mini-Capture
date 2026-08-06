@@ -2,23 +2,20 @@
 
 ## Current Status
 
-- Older entries before 2026-07-04 archived to `memory/archive-2026-07.md` (Step 7 threshold).
-- 2026-07-04: Overlay-free selection, editable raster markup, toolbar/shell redesign, and P4 package checks completed.
-- 2026-07-05: Async viewer indexing/thumbnails, command-line image opening, extension settings, and selectable annotations completed.
-- 2026-07-08: Viewer layout persistence, frozen timer selection, and frontmost window targeting completed.
-- 2026-07-16: Single-instance file activation, external-folder browsing guards, sibling navigation, and background full-resolution decode completed.
+- Older entries before 2026-07-31 archived to `memory/archive-2026-07.md` (Step 7 threshold).
 - 2026-07-31: Current-folder refresh and sortable Details columns completed with build and 12 regression cases.
 - 2026-07-31: Floating/radial tooltip windows now receive best-effort capture exclusion through their HWND.
 - 2026-07-31: Viewer pixel-area selection, clipboard copy/cut/paste, and left-sidebar crop preview/apply controls completed with build and 13 regression cases.
 - 2026-08-03: Configurable executable-path exclusions for window targeting completed with build and 15 regression cases.
 - 2026-08-03: Viewer toolbar now wraps command groups at normal window widths; the crop command uses a four-corner crop icon.
 - 2026-08-06: Partial mosaic tool now exposes an adjustable block-size slider (6-64px) and a block/Gaussian-blur type toggle in the mosaic context group; `ApplyMosaic` branches on the selected type.
+- 2026-08-06: `ViewerWindow.xaml.cs` split refactor S0-S7 complete (dead-code removal plus 12 new partial-class files: Keyboard, ExplorerView, UiState, FileBrowser, Viewport, Commands, EditTools, PixelSelection, EditHistory, Annotations, AnnotationInteraction). Anchor is down to 837 lines from 4013. Each stage is an independent commit on `main`; `backup/pre-viewer-split` branch preserves the pre-split state. Only S8 (Raster + Graphics) remains.
 
 ## Current Work
 
 - The viewer refresh/sorting, tooltip capture-exclusion, pixel-area editing/crop, and configurable window-exclusion slices are code-complete and regression-tested. Interactive desktop validation remains pending alongside the earlier high-resolution external-image validation.
 - Mosaic block-size/type controls are code-complete and regression-tested; interactive desktop validation of the new slider/type buttons is pending.
-- `ViewerWindow.xaml.cs` (4013 lines) is undergoing a deep-refactor split into multiple partial-class files by responsibility; Phase 1 (impact scan) is in progress, no code changes applied yet.
+- `ViewerWindow.xaml.cs` deep-refactor split: S0-S7 committed and automated-verified (build 0/0, 17/17 tests, XAML-handler cross-check) after every stage; S8 (Raster + Graphics, the last stage) is next. No stage has had its manual-GUI-regression checklist run yet (see `notes/subagents/deep-refactor/20260806_170229_design.md` §6 per-stage list) — that remains entirely a user follow-up since the assistant has no interactive-desktop control for this native WPF app.
 
 ## Next Actions
 
@@ -26,7 +23,8 @@
 - Manually verify selected-area Ctrl+C/Ctrl+X/Ctrl+V plus 2-row left-sidebar crop sliders/numeric inputs and preview/apply behavior.
 - Manually verify toolbar wrapping/crop icon and register a visible process through `창 제외` before checking it cannot be selected.
 - Manually verify the mosaic size slider and block/blur type buttons produce visually distinct results on a real capture.
-- Complete the `ViewerWindow.xaml.cs` split refactor (Phases 2-5) once impact scan and design land.
+- Complete S8 (Raster + Graphics) of the `ViewerWindow.xaml.cs` split, then run Phase 4 (regression risk analysis) and Phase 5 (final verify) of the deep-refactor pipeline.
+- Run the full manual-GUI regression checklist per stage (`notes/subagents/deep-refactor/20260806_170229_design.md` §6) — every tool (pan/select/pixel-select/rectangle/ellipse/mosaic/text/pen/arrow), undo/redo, crop, annotation drag/resize/delete, and keyboard shortcuts, since no automated coverage exists for the WPF UI wiring itself.
 - Run a true multi-monitor hardware pass when a multi-display setup is available.
 - Manually open a high-resolution external image repeatedly through the Windows association, then verify no duplicate MiniCapture process, responsive window interaction, and left/right sibling navigation.
 - Decide later whether V1 needs an installer or self-contained package; the current baseline is a framework-dependent `win-x64` publish folder.
@@ -99,3 +97,4 @@
 - Window exclusions and responsive toolbar build/check: `dotnet build MiniCapture.slnx --artifacts-path artifacts\verify-crop-icon -p:UseAppHost=false` passed with 0 warnings and 0 errors; `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --no-build --artifacts-path artifacts\verify-crop-labels -p:UseAppHost=false` passed 15 cases; `git diff --check` passed with only existing CRLF-conversion warnings.
 - Mosaic size/type controls build/check: `dotnet build MiniCapture.slnx` passed with 0 warnings and 0 errors; `dotnet run --project tests/MiniCapture.Tests/MiniCapture.Tests.csproj --no-build` passed 15 cases; `git diff --check` passed with only existing CRLF-conversion warnings.
 - Mosaic review fix: code-reviewer flagged a UI-thread freeze risk on large blur regions at max block size; `ApplyMosaic` now offloads the block/blur pixel loop to `Task.Run` with an `_isApplyingMosaic` re-entrancy guard, and a truncating-cast rounding bug in `ApplyGaussianBlurRegion` was fixed. Two new tests (`BuildGaussianKernel_NormalizesAndIsSymmetric`, `ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge`) caught the rounding bug directly. `dotnet build MiniCapture.slnx` passed with 0 warnings/errors; 17/17 regression cases pass; `git diff --check` passed with only existing CRLF-conversion warnings.
+- ViewerWindow split S0-S7: each stage verified independently — `dotnet build MiniCapture.slnx` 0 warnings/0 errors, `dotnet run --project tests/MiniCapture.Tests/MiniCapture.Tests.csproj --no-build` 17/17 PASS, every moved member confirmed to have exactly one declaration across `ViewerWindow*.cs` (grep-based member-inventory check), and every XAML-bound event handler (44 total) plus code-wired annotation mouse handlers confirmed to resolve, after every stage. S0 removed 138 lines of dead raster-apply code (`ApplyShape`/`ApplyText`/`ApplyPen`/`ApplyArrow` and their cascade-only dependents). S1-S7 moved responsibility groups into `ViewerWindow.Keyboard.cs`, `ViewerWindow.ExplorerView.cs`, `ViewerWindow.UiState.cs`, `ViewerWindow.FileBrowser.cs`, `ViewerWindow.Viewport.cs`, `ViewerWindow.Commands.cs`, `ViewerWindow.EditTools.cs`, `ViewerWindow.PixelSelection.cs`, `ViewerWindow.EditHistory.cs`, `ViewerWindow.Annotations.cs`, `ViewerWindow.AnnotationInteraction.cs`. Anchor: 4013 → 837 lines. Design doc: `notes/subagents/deep-refactor/20260806_170229_design.md`. Rollback branch: `backup/pre-viewer-split`.

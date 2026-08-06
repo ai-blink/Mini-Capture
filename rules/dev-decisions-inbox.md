@@ -2,6 +2,7 @@
 
 | ID | Date | One-liner | Section | Status |
 |---|---|---|---|---|
+| D-014 | 2026-08-06 | ViewerWindow.xaml.cs split into 13 partial files by responsibility; fields stay in anchor; internal static test-exposed helpers keep accessibility. | Architecture | integrated |
 | D-013 | 2026-08-06 | Mosaic tool: 2 types (block/Gaussian blur) + adjustable block-size slider, not a fixed constant. | UX | integrated |
 | D-009 | 2026-07-02 | Manual Windows validation gates overlay/capture behavior. | Validation | integrated |
 | D-008 | 2026-07-02 | V1 excludes OCR/upload/scrolling/video/heavy editing/general file management. | Scope | integrated |
