@@ -12,12 +12,11 @@
 - Settings now let users exclude target windows by registered executable path.
 - The mosaic edit tool exposes a block-size slider (6-64px) and a block/Gaussian-blur type toggle; `ApplyMosaic` branches on type.
 - Build passes with 0 warnings/errors; 17 regression cases pass.
-- `ViewerWindow.xaml.cs` deep-refactor split (design: 13 partial files, 9 stages S0-S8) is at S7 of 9, all committed individually on `main`. Anchor is 837 lines (from 4013). New sibling files: Keyboard/ExplorerView/UiState/FileBrowser/Viewport/Commands/EditTools/PixelSelection/EditHistory/Annotations/AnnotationInteraction. Only S8 (Raster + Graphics) remains before Phase 4 (regression risk analysis) and Phase 5 (final verify). Rollback branch `backup/pre-viewer-split` points at the pre-split commit.
+- `ViewerWindow.xaml.cs` deep-refactor split is DONE (all 9 stages S0-S8 committed on `main`). Anchor is 203 lines (from 4013), holding only using-header/4 enums/2 nested types/consts/53 fields/constructor/`OpenImage`/`OnLoaded`/`OnClosing`/`OnClosed`. 13 sibling files: Keyboard/ExplorerView/UiState/FileBrowser/Viewport/Commands/EditTools/PixelSelection/EditHistory/Annotations/AnnotationInteraction/Raster/Graphics. Phase 4 (independent regression-risk audit) returned PASS; a multiset line-comparison against the pre-split commit confirmed zero content lines lost. Rollback branch `backup/pre-viewer-split` points at the pre-split commit if ever needed.
 
 ## Immediate Next Step
 
-- Continue the `ViewerWindow.xaml.cs` deep-refactor: run S8 (split Raster + Graphics into `ViewerWindow.Raster.cs`/`ViewerWindow.Graphics.cs`), then Phase 4 regression-risk analysis and Phase 5 final verify. Design doc: `notes/subagents/deep-refactor/20260806_170229_design.md`.
-- Run the full manual-GUI regression checklist per split stage (design doc §6) — no automated coverage exists for the WPF UI wiring, only build/tests/member-inventory/XAML-handler-resolution checks were run per stage.
+- **Only remaining step for the ViewerWindow split**: run the full manual-GUI regression checklist (design doc `notes/subagents/deep-refactor/20260806_170229_design.md` §6, or Phase 4's consolidated priority order — edit tools first, then annotation select/move/resize/delete, then restart-and-restore-layout, then navigation/toolbar, then keyboard) since the assistant has no interactive-desktop control for this native WPF app and no automated test exercises the actual XAML wiring/click paths.
 - Manually verify the mosaic size slider and block/blur type buttons on a real capture.
 - Manually validate refresh/F5 and all four sort toggles on the interactive desktop.
 - Manually select an image area, verify Ctrl+C/Ctrl+X/Ctrl+V, then crop with left/right and top/bottom slider and numeric values before applying.
