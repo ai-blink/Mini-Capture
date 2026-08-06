@@ -2783,71 +2783,6 @@ public partial class ViewerWindow : Window
         }
     }
 
-    private void ApplyShape(Int32Rect pixelRect, bool ellipse)
-    {
-        if (_editableImage is null)
-        {
-            return;
-        }
-
-        PushUndoSnapshot();
-        var source = ConvertToPbgra32(_editableImage);
-        var visual = new DrawingVisual();
-        using (var drawing = visual.RenderOpen())
-        {
-            drawing.DrawImage(source, new WpfRect(0, 0, source.PixelWidth, source.PixelHeight));
-
-            var brush = new SolidColorBrush(_selectedColor);
-            var pen = new WpfPen(brush, GetPixelStrokeThickness());
-            var rect = new WpfRect(pixelRect.X, pixelRect.Y, pixelRect.Width, pixelRect.Height);
-            if (ellipse)
-            {
-                drawing.DrawEllipse(null, pen, new WpfPoint(rect.X + (rect.Width / 2), rect.Y + (rect.Height / 2)), rect.Width / 2, rect.Height / 2);
-            }
-            else
-            {
-                drawing.DrawRectangle(null, pen, rect);
-            }
-        }
-
-        SetEditableImage(RenderBitmap(visual, source.PixelWidth, source.PixelHeight), ellipse ? "동그라미를 그렸습니다." : "네모를 그렸습니다.");
-    }
-
-    private void ApplyText(WpfPoint displayPoint)
-    {
-        if (_editableImage is null)
-        {
-            return;
-        }
-
-        PushUndoSnapshot();
-        var source = ConvertToPbgra32(_editableImage);
-        var pixelPoint = DisplayToPixel(displayPoint);
-        var text = string.IsNullOrWhiteSpace(AnnotationTextBox.Text)
-            ? "Text"
-            : AnnotationTextBox.Text.Trim();
-
-        var visual = new DrawingVisual();
-        using (var drawing = visual.RenderOpen())
-        {
-            drawing.DrawImage(source, new WpfRect(0, 0, source.PixelWidth, source.PixelHeight));
-            var formatted = new FormattedText(
-                text,
-                CultureInfo.CurrentCulture,
-                WpfFlowDirection.LeftToRight,
-                new Typeface("Segoe UI"),
-                Math.Clamp(22 / Math.Max(_zoom, MinZoom), 14, 96),
-                new SolidColorBrush(_selectedColor),
-                VisualTreeHelper.GetDpi(this).PixelsPerDip)
-            {
-                MaxTextWidth = Math.Max(1, source.PixelWidth - pixelPoint.X)
-            };
-            drawing.DrawText(formatted, pixelPoint);
-        }
-
-        SetEditableImage(RenderBitmap(visual, source.PixelWidth, source.PixelHeight), "텍스트를 입력했습니다.");
-    }
-
     private async void ApplyMosaic(Int32Rect pixelRect)
     {
         if (_editableImage is null || _isApplyingMosaic)
@@ -2901,66 +2836,6 @@ public partial class ViewerWindow : Window
         {
             _isApplyingMosaic = false;
         }
-    }
-
-    private void ApplyPen(IReadOnlyList<WpfPoint> displayPoints)
-    {
-        if (_editableImage is null || displayPoints.Count < 2)
-        {
-            return;
-        }
-
-        PushUndoSnapshot();
-        var source = ConvertToPbgra32(_editableImage);
-        var visual = new DrawingVisual();
-        using (var drawing = visual.RenderOpen())
-        {
-            drawing.DrawImage(source, new WpfRect(0, 0, source.PixelWidth, source.PixelHeight));
-            var pen = CreateDrawingPen();
-            var geometry = new StreamGeometry();
-            using (var context = geometry.Open())
-            {
-                var first = DisplayToPixel(displayPoints[0]);
-                context.BeginFigure(first, isFilled: false, isClosed: false);
-                for (var i = 1; i < displayPoints.Count; i++)
-                {
-                    context.LineTo(DisplayToPixel(displayPoints[i]), isStroked: true, isSmoothJoin: true);
-                }
-            }
-
-            geometry.Freeze();
-            drawing.DrawGeometry(null, pen, geometry);
-        }
-
-        SetEditableImage(RenderBitmap(visual, source.PixelWidth, source.PixelHeight), "펜 선을 그렸습니다.");
-    }
-
-    private void ApplyArrow(WpfPoint displayStart, WpfPoint displayEnd)
-    {
-        if (_editableImage is null)
-        {
-            return;
-        }
-
-        PushUndoSnapshot();
-        var source = ConvertToPbgra32(_editableImage);
-        var start = DisplayToPixel(displayStart);
-        var end = DisplayToPixel(displayEnd);
-        var visual = new DrawingVisual();
-        using (var drawing = visual.RenderOpen())
-        {
-            drawing.DrawImage(source, new WpfRect(0, 0, source.PixelWidth, source.PixelHeight));
-            var pen = CreateDrawingPen();
-            drawing.DrawLine(pen, start, end);
-            DrawArrowHead(drawing, start, end, pen.Brush);
-        }
-
-        SetEditableImage(RenderBitmap(visual, source.PixelWidth, source.PixelHeight), "화살표를 그렸습니다.");
-    }
-
-    private void DrawArrowHead(DrawingContext drawing, WpfPoint start, WpfPoint end, System.Windows.Media.Brush brush)
-    {
-        DrawArrowHead(drawing, start, end, brush, GetPixelStrokeThickness());
     }
 
     private static void DrawArrowHead(DrawingContext drawing, WpfPoint start, WpfPoint end, System.Windows.Media.Brush brush, double strokeThickness)
@@ -3150,19 +3025,6 @@ public partial class ViewerWindow : Window
         SetViewerStatus(status);
         UpdateDirtyIndicator();
         UpdateEditButtons();
-    }
-
-    private WpfPen CreateDrawingPen()
-    {
-        var brush = new SolidColorBrush(_selectedColor);
-        var pen = new WpfPen(brush, GetPixelStrokeThickness())
-        {
-            StartLineCap = PenLineCap.Round,
-            EndLineCap = PenLineCap.Round,
-            LineJoin = PenLineJoin.Round
-        };
-        pen.Freeze();
-        return pen;
     }
 
     private static BitmapSource ConvertToPbgra32(BitmapSource source)
