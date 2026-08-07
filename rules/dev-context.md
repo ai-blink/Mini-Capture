@@ -10,7 +10,7 @@
 - Viewer toolbar now includes pixel-area selection, copy/cut/paste, and crop entry; the crop panel expands below the left file list in two rows.
 - Normal-width viewer toolbars wrap command groups instead of showing a horizontal scrollbar; the crop command uses the Windows four-corner crop glyph.
 - Settings now let users exclude target windows by registered executable path.
-- The mosaic edit tool exposes a block-size slider (6-64px) and a block/Gaussian-blur type toggle; `ApplyMosaic` branches on type.
+- The mosaic edit tool exposes a block-size slider (6-64px) and a block/Gaussian-blur type toggle; `ApplyMosaic` branches on type. `ContextToolbar` height changed from fixed `Height="42"` to `MinHeight="42"` after real-app usage showed the mosaic type buttons clipping (found by launching the built exe, not by code review).
 - Build passes with 0 warnings/errors; 17 regression cases pass.
 - `ViewerWindow.xaml.cs` deep-refactor split is DONE (all 9 stages S0-S8 committed on `main`). Anchor is 203 lines (from 4013), holding only using-header/4 enums/2 nested types/consts/53 fields/constructor/`OpenImage`/`OnLoaded`/`OnClosing`/`OnClosed`. 13 sibling files: Keyboard/ExplorerView/UiState/FileBrowser/Viewport/Commands/EditTools/PixelSelection/EditHistory/Annotations/AnnotationInteraction/Raster/Graphics. Phase 4 (independent regression-risk audit) returned PASS; a multiset line-comparison against the pre-split commit confirmed zero content lines lost. Rollback branch `backup/pre-viewer-split` points at the pre-split commit if ever needed.
 

@@ -730,7 +730,7 @@
 
         <Border x:Name="ContextToolbar"
                 Grid.Row="2"
-                Height="42"
+                MinHeight="42"
                 Visibility="Collapsed"
                 AutomationProperties.AutomationId="ViewerContextToolbar"
                 AutomationProperties.Name="선택 도구 설정"
