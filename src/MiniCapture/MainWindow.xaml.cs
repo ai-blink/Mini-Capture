@@ -733,6 +733,7 @@ public partial class MainWindow : Window
             _viewerWindow = new ViewerWindow(path);
             _viewerWindow.Closed += (_, _) => _viewerWindow = null;
             _viewerWindow.Show();
+            _viewerWindow.RestoreAndActivate();
             return;
         }
 

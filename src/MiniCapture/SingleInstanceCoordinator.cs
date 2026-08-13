@@ -1,5 +1,6 @@
 using System.IO;
 using System.IO.Pipes;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 
@@ -9,6 +10,7 @@ internal sealed class SingleInstanceCoordinator : IDisposable
 {
     private const string MutexName = "Local\\MiniCapture.SingleInstance.0A4EDC11";
     private const string PipeName = "MiniCapture.SingleInstance.0A4EDC11";
+    private const uint AllowAnyForegroundProcess = 0xFFFFFFFF;
     private readonly Mutex _mutex;
     private readonly string _pipeName;
     private readonly CancellationTokenSource _cancellation = new();
@@ -42,6 +44,23 @@ internal sealed class SingleInstanceCoordinator : IDisposable
     public static bool NotifyPrimary(string[] arguments)
     {
         return NotifyPrimary(PipeName, arguments);
+    }
+
+    public static void GrantForegroundActivationToPrimary()
+    {
+        try
+        {
+            // The shell starts this secondary instance from an explicit open action.
+            // Preserve that short-lived foreground permission while the image path is
+            // handed to the already-running primary instance through the named pipe.
+            _ = AllowSetForegroundWindow(AllowAnyForegroundProcess);
+        }
+        catch (EntryPointNotFoundException)
+        {
+        }
+        catch (DllNotFoundException)
+        {
+        }
     }
 
     internal static bool NotifyPrimary(string pipeName, string[] arguments)
@@ -115,4 +134,7 @@ internal sealed class SingleInstanceCoordinator : IDisposable
             }
         }
     }
+
+    [DllImport("user32.dll")]
+    private static extern bool AllowSetForegroundWindow(uint dwProcessId);
 }

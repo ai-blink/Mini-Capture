@@ -11,6 +11,7 @@ public static class Program
 
         if (!SingleInstanceCoordinator.TryCreatePrimary(out var instance))
         {
+            SingleInstanceCoordinator.GrantForegroundActivationToPrimary();
             SingleInstanceCoordinator.NotifyPrimary(args);
             return;
         }

@@ -1363,3 +1363,38 @@ Allow users to exclude a window-selection target by choosing a running process o
 ### Follow-ups
 
 - Interactive checks for toolbar wrapping, crop, and window-exclusion behavior remain part of the hardware validation follow-up.
+
+## 파일 연결 뷰어 전면 활성화
+
+### Finish Line
+
+탐색기에서 이미지 파일을 열어 이미 실행 중인 Mini Capture에 전달해도 뷰어가 최소화 상태에서 복원되어 즉시 활성화된다.
+
+### Scope Limit
+
+- 파일 연결 등록, 캡처 버튼의 항상 위 표시, 뷰어 편집·탐색 기능은 변경하지 않는다.
+- Windows의 전면 창 정책을 우회하는 상시 Topmost 처리나 새 단일 인스턴스 구조는 추가하지 않는다.
+
+### Changes
+
+- 보조 인스턴스가 이미지 경로를 named pipe로 전달하기 직전에, 탐색기의 명시적 열기 동작에서 받은 짧은 포그라운드 권한을 기존 주 인스턴스가 사용할 수 있도록 전달했다.
+- 뷰어를 열거나 기존 뷰어에 새 이미지를 전달할 때 최소화 상태를 정상 크기로 복원한 뒤 활성화한다.
+
+### Verification
+
+- `dotnet build .\MiniCapture.slnx -c Debug --no-restore`: 경고 0개, 오류 0개.
+- `dotnet run --project .\tests\MiniCapture.Tests\MiniCapture.Tests.csproj -c Debug --no-build`: 17/17 회귀 검사 통과. 단일 인스턴스 인수 전달 검사 포함.
+- `git diff --check`: 통과. 기존 CRLF 변환 경고만 발생.
+
+### Release Package
+
+- 앱 메타데이터와 README의 포터블 버전을 `v0.1.3`으로 갱신했다.
+- `dotnet build .\MiniCapture.slnx -c Release --no-restore`: 경고 0개, 오류 0개.
+- `dotnet run --project .\tests\MiniCapture.Tests\MiniCapture.Tests.csproj -c Release --no-build`: 17/17 회귀 검사 통과.
+- `dotnet publish .\src\MiniCapture\MiniCapture.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None`: `artifacts/publish/MiniCapture-v0.1.3-win-x64-portable/MiniCapture.exe` 생성.
+- `artifacts/MiniCapture-v0.1.3-win-x64-portable.zip`에 `MiniCapture.exe`가 포함됨을 확인했다.
+
+### Follow-ups
+
+- NEEDS_USER_UI_CHECK: 실행 중인 앱이 있을 때 탐색기에서 PNG/JPG/JPEG를 더블클릭해 뷰어가 즉시 앞으로 오는지, 최소화된 뷰어도 복원되는지 확인한다.
+- NO_ROADMAP_CHANGE: 기존 `반복 파일 연결 실행` 수동 검증 항목의 범위다.

@@ -173,6 +173,16 @@ public partial class ViewerWindow : Window
     {
         _pendingPath = imagePath;
         _ = RefreshIndexAsync();
+        RestoreAndActivate();
+    }
+
+    public void RestoreAndActivate()
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
         Activate();
     }
 
