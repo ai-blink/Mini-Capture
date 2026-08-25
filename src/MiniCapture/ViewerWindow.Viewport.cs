@@ -70,7 +70,16 @@ public partial class ViewerWindow
         BitmapSource image;
         try
         {
-            image = await Task.Run(() => DecodeImageFile(file.Path), load.Token);
+            await ImageDecodeGate.WaitAsync(load.Token);
+            try
+            {
+                load.Token.ThrowIfCancellationRequested();
+                image = await Task.Run(() => DecodeImageFile(file.Path), load.Token);
+            }
+            finally
+            {
+                ImageDecodeGate.Release();
+            }
         }
         catch (OperationCanceledException)
         {

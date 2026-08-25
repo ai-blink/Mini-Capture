@@ -1398,3 +1398,79 @@ Allow users to exclude a window-selection target by choosing a running process o
 
 - NEEDS_USER_UI_CHECK: 실행 중인 앱이 있을 때 탐색기에서 PNG/JPG/JPEG를 더블클릭해 뷰어가 즉시 앞으로 오는지, 최소화된 뷰어도 복원되는지 확인한다.
 - NO_ROADMAP_CHANGE: 기존 `반복 파일 연결 실행` 수동 검증 항목의 범위다.
+
+## 뷰어 이미지 전환 리소스 급증
+
+### Finish Line
+
+이미지가 열린 상태에서 다른 이미지를 열어도 원본 디코딩과 폴더 인덱싱이 중복·동시 실행되어 CPU나 메모리가 급증하지 않는다.
+
+### Root Cause
+
+- 요청 이미지는 파일 목록을 채우기 전과 후에 각각 원본 해상도로 디코딩되어, 한 번의 열기에도 두 개의 백그라운드 디코드가 시작됐다.
+- 취소된 WPF 이미지 디코더는 이미 시작된 동기 디코드를 중단하지 못해, 다음 이미지 요청의 디코드와 동시에 실행될 수 있었다.
+- 같은 폴더의 다른 이미지도 전체 파일 인덱스와 폴더 트리를 다시 만들었다.
+
+### Changes
+
+- 파일 목록이 준비된 뒤 선택된 요청 이미지만 한 번 로드하도록 중복 호출을 제거했다.
+- 현재 파일 목록에 있는 같은 폴더의 이미지는 인덱스 새로고침 없이 바로 선택한다.
+- 원본 이미지 디코드는 전역 게이트로 한 번에 하나만 실행한다. 취소된 요청은 대기 중이면 디코드 전에 종료된다.
+
+### Verification
+
+- `dotnet build .\MiniCapture.slnx -c Debug --no-restore`: 경고 0개, 오류 0개.
+- `dotnet run --project .\tests\MiniCapture.Tests\MiniCapture.Tests.csproj -c Debug --no-build`: 17/17 회귀 검사 통과.
+- `git diff --check`: 통과. 기존 CRLF 변환 경고만 발생.
+
+### Follow-ups
+
+- NEEDS_USER_UI_CHECK: 큰 PNG/JPG를 연 상태에서 같은 폴더와 다른 폴더의 이미지를 연속으로 열어 CPU·메모리 급증 없이 최종 요청 이미지만 표시되는지 확인한다.
+- NO_ROADMAP_CHANGE: 기존 뷰어 성능·대용량 외부 이미지 수동 검증의 보완이다.
+
+## v0.1.4 안정성 릴리스
+
+### Finish Line
+
+뷰어 이미지 전환 리소스 급증과 경로 복사 클립보드 충돌을 하나의 검증된 포터블 릴리스로 배포한다.
+
+### Root Cause
+
+- 뷰어는 요청 이미지를 파일 목록 구성 전후에 중복 디코딩하고, 취소된 동기 디코드가 다음 요청과 겹칠 수 있었다.
+- 완료 팝업과 뷰어의 경로 복사는 Windows 공용 클립보드를 한 번만 열어 `CLIPBRD_E_CANT_OPEN` 발생 시 즉시 실패했다.
+- 실제 환경의 `copy-manager`가 변경 알림과 250ms 폴링으로 클립보드를 읽어 충돌 가능성을 높였지만, Mini Capture는 특정 외부 프로그램에 의존하지 않고 관측된 HRESULT만 제한적으로 재시도한다.
+
+### Changes
+
+- 같은 폴더의 이미지는 기존 파일 인덱스를 재사용하고, 원본 이미지 디코드를 전역 게이트로 직렬화했다.
+- 완료 팝업과 뷰어의 경로 복사를 공통 `ClipboardService`로 통합하고 `0x800401D0`에만 최대 5회 비동기 재시도를 적용했다.
+- 앱·어셈블리·파일·정보 버전과 README 포터블 경로를 `0.1.4`로 갱신했다.
+
+### Verification
+
+- `dotnet build .\MiniCapture.slnx -c Release`: 경고 0개, 오류 0개.
+- `dotnet run --project .\tests\MiniCapture.Tests\MiniCapture.Tests.csproj -c Release --no-build`: 18/18 회귀 검사 통과.
+- 실행 중인 v0.1.2를 백업하고 새 단일 파일을 `C:\app\MiniCapture.exe`에 교체한 뒤 게시본과 설치본 SHA-256 일치를 확인했다.
+- 설치본 완료 팝업에서 클립보드를 180ms 강제 점유한 상태로 경로 복사를 한 번 호출해 잠금 해제 후 정확한 경로가 복사됨을 확인했다.
+- `git diff --check`: 기존 CRLF 변환 경고 외 오류 없음.
+
+### Release Package
+
+- `artifacts/publish/MiniCapture-v0.1.4-win-x64-portable/MiniCapture.exe`
+- `artifacts/MiniCapture-v0.1.4-win-x64-portable.zip`
+- 실행 파일 SHA-256: `8522D8DA6CC7413815A19BD8F4DF1093F523B15758424A1F5D0954054818D644`
+- ZIP SHA-256: `73A5351C69773640C343F4C90133A0FDFDA5FC1ACAAEA927C5F24972FB9E921B`
+- GitHub 릴리스: `https://github.com/ai-blink/Mini-Capture/releases/tag/v0.1.4`
+
+### Follow-ups
+
+- FOLLOW_UP: 큰 PNG/JPG를 같은 폴더와 다른 폴더에서 연속으로 여는 실제 CPU·메모리 수동 검증은 기존 대용량 이미지 체크에 포함한다.
+- FOLLOW_UP: 전체 ViewerWindow XAML 수동 회귀와 실제 다중 모니터 검증은 기존 로드맵 항목으로 유지한다.
+- Reuse capture: `skip` — 이번 결과는 Mini Capture와 로컬 클립보드 관리자 조합에 특화된 수정이다.
+
+### Next Session
+
+- scope_mode: `patch`
+- answer_shape: `patch-first`
+- active_constraints: 기존 dirty 파일을 되돌리지 말고, 남은 수동 UI·다중 모니터 항목만 후속으로 취급한다.
+- stale_constraints: v0.1.4 버전 갱신·패키징·배포 작업은 릴리스 게시 후 이어받지 않는다.

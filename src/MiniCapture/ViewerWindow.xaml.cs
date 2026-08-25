@@ -66,6 +66,7 @@ internal enum ViewerFileSortColumn
 
 public partial class ViewerWindow : Window
 {
+    private static readonly SemaphoreSlim ImageDecodeGate = new(1, 1);
     private const double MinZoom = 0.1;
     private const double MaxZoom = 8.0;
     private const double ZoomStep = 1.25;
@@ -171,6 +172,12 @@ public partial class ViewerWindow : Window
 
     public void OpenImage(string? imagePath)
     {
+        if (TryOpenImageFromCurrentFolder(imagePath))
+        {
+            RestoreAndActivate();
+            return;
+        }
+
         _pendingPath = imagePath;
         _ = RefreshIndexAsync();
         RestoreAndActivate();
@@ -184,6 +191,23 @@ public partial class ViewerWindow : Window
         }
 
         Activate();
+    }
+
+    private bool TryOpenImageFromCurrentFolder(string? imagePath)
+    {
+        if (!CaptureFileIndex.IsImagePath(imagePath) ||
+            !IsSameFolderSelection(_currentFolderPath, IOPath.GetDirectoryName(imagePath)) ||
+            FindFile(imagePath) is not { } file)
+        {
+            return false;
+        }
+
+        if (!string.Equals(_currentFile?.Path, file.Path, StringComparison.OrdinalIgnoreCase))
+        {
+            SelectFile(file);
+        }
+
+        return true;
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)

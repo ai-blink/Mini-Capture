@@ -167,7 +167,6 @@ public partial class ViewerWindow
         if (CaptureFileIndex.TryCreateImageFile(preferredPath, out var preferredFile) && preferredFile is not null)
         {
             preferredIsInFolder = string.Equals(preferredFile.FolderPath, folderPath, StringComparison.OrdinalIgnoreCase);
-            LoadImage(preferredFile);
         }
 
         try

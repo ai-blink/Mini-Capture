@@ -678,7 +678,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnCopyPathClick(object sender, RoutedEventArgs e)
+    private async void OnCopyPathClick(object sender, RoutedEventArgs e)
     {
         if (_lastCapturePath is null)
         {
@@ -687,7 +687,7 @@ public partial class MainWindow : Window
 
         try
         {
-            WpfClipboard.SetText(_lastCapturePath);
+            await ClipboardService.SetTextAsync(_lastCapturePath);
             ShowStatus("파일 경로를 클립보드에 복사했습니다.");
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)

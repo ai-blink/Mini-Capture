@@ -20,6 +20,7 @@ var tests = new (string Name, Action Run)[]
     ("BuildGaussianKernel_NormalizesAndIsSymmetric", BuildGaussianKernel_NormalizesAndIsSymmetric),
     ("ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge", ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge),
     ("DecodeImageFile_AllowsBackgroundDecode", DecodeImageFile_AllowsBackgroundDecode),
+    ("ClipboardService_RetriesClipboardCannotOpen", ClipboardService_RetriesClipboardCannotOpen),
     ("SingleInstance_ForwardsArgumentsToPrimary", SingleInstance_ForwardsArgumentsToPrimary)
 };
 
@@ -326,6 +327,39 @@ static void DecodeImageFile_AllowsBackgroundDecode()
     {
         Directory.Delete(folder, recursive: true);
     }
+}
+
+static void ClipboardService_RetriesClipboardCannotOpen()
+{
+    const string expectedText = @"C:\captures\sample.png";
+    var attempts = 0;
+    var delays = new List<TimeSpan>();
+    string? copiedText = null;
+
+    ClipboardService.SetTextAsync(
+        expectedText,
+        text =>
+        {
+            attempts++;
+            if (attempts < 3)
+            {
+                throw new System.Runtime.InteropServices.COMException(
+                    "The clipboard is temporarily unavailable.",
+                    unchecked((int)0x800401D0));
+            }
+
+            copiedText = text;
+        },
+        delay =>
+        {
+            delays.Add(delay);
+            return Task.CompletedTask;
+        },
+        maxAttempts: 5).GetAwaiter().GetResult();
+
+    AssertIntEqual(3, attempts, "clipboard write attempts");
+    AssertIntEqual(2, delays.Count, "clipboard retry delays");
+    AssertTrue(copiedText == expectedText, "clipboard retry should eventually copy the requested path");
 }
 
 static void SingleInstance_ForwardsArgumentsToPrimary()

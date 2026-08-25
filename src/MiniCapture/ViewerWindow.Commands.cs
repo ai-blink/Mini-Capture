@@ -225,7 +225,7 @@ public partial class ViewerWindow
         SetViewerStatus($"폴더 열기: {path}");
     }
 
-    private void OnCopyPathClick(object sender, RoutedEventArgs e)
+    private async void OnCopyPathClick(object sender, RoutedEventArgs e)
     {
         var path = GetActiveFilePath();
         if (path is null)
@@ -236,7 +236,7 @@ public partial class ViewerWindow
 
         try
         {
-            WpfClipboard.SetText(path);
+            await ClipboardService.SetTextAsync(path);
             SetViewerStatus("파일 경로를 클립보드에 복사했습니다.");
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
