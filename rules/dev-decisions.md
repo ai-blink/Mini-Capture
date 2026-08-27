@@ -11,6 +11,7 @@
 - D-004: The file browser follows Windows Explorer conventions: tree, address/search, details and icon views.
 - D-005: Image icon views support small, medium, and large thumbnail sizes.
 - D-013: The partial mosaic tool offers exactly two types — sharp block averaging (existing) and Gaussian blur — chosen by the user over a wider 3-type option (adding circular blocks); block size is user-adjustable via a slider (6-64px) instead of a fixed constant.
+- D-015: `창 제외`에서 실행 중인 대상을 선택하면 확인 가능한 실행 파일 경로와 프로세스명을 함께 저장한다. 파일 경로·프로세스명 적용 기준은 라디오 버튼으로만 전환하며, 전환 중 다른 값을 삭제하거나 자동으로 재선택하지 않는다.
 
 ## Architecture
 

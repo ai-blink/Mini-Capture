@@ -13,6 +13,7 @@ C# WPF for UI plus Win32 P/Invoke for overlays and window picking. Current captu
 - `ScreenCaptureService`: virtual-screen, region, and selected-window PNG capture.
 - `NativeWindowApi`: top-level window enumeration, DWM visible bounds, and capture-exclusion hints.
 - `WindowPickerService`: topmost visible non-app window selection under cursor.
+- `Window-exclusion settings`: persists a selected process's executable path and process name as one target record; UI radio state selects which retained key the picker uses, without mutating the stored target.
 - `SaveService`: PNG path, filename, path validation, save result. Currently folded into `ScreenCaptureService` until the save flow grows.
 - `ShellService`: open file, open folder, select file in Explorer.
 - `MiniViewer`: image loading, zoom, fit, 100%, previous/next.

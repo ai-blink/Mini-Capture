@@ -2,6 +2,7 @@
 
 | ID | Date | One-liner | Section | Status |
 |---|---|---|---|---|
+| D-015 | 2026-08-28 | 창 제외 프로세스 선택은 실행 파일 경로와 프로세스명을 함께 저장하며, 적용 기준은 값을 삭제·자동 전환하지 않는 라디오 토글로만 바꾼다. | UX | integrated |
 | D-014 | 2026-08-06 | ViewerWindow.xaml.cs split into 13 partial files by responsibility; fields stay in anchor; internal static test-exposed helpers keep accessibility. | Architecture | integrated |
 | D-013 | 2026-08-06 | Mosaic tool: 2 types (block/Gaussian blur) + adjustable block-size slider, not a fixed constant. | UX | integrated |
 | D-009 | 2026-07-02 | Manual Windows validation gates overlay/capture behavior. | Validation | integrated |

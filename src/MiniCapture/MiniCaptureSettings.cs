@@ -15,7 +15,11 @@ public sealed class MiniCaptureSettings
 
     public bool CaptureUiExcludedFromCapture { get; set; } = true;
 
-    public List<string> WindowCaptureExcludedExecutablePaths { get; set; } = [];
+    public List<WindowCaptureExclusionTarget> WindowCaptureExclusionTargets { get; set; } = [];
+
+    [JsonPropertyName("WindowCaptureExcludedExecutablePaths")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<string>? LegacyWindowCaptureExcludedExecutablePaths { get; set; }
 
     public double? QuickButtonLeft { get; set; }
 
@@ -62,7 +66,12 @@ public sealed class MiniCaptureSettings
             ShortcutTimerDelaySeconds = ShortcutTimerDelaySeconds,
             QuickButtonVisible = QuickButtonVisible,
             CaptureUiExcludedFromCapture = CaptureUiExcludedFromCapture,
-            WindowCaptureExcludedExecutablePaths = NormalizeWindowCaptureExcludedExecutablePaths(WindowCaptureExcludedExecutablePaths).ToList(),
+            WindowCaptureExclusionTargets = NormalizeWindowCaptureExclusionTargets(
+                    WindowCaptureExclusionTargets,
+                    LegacyWindowCaptureExcludedExecutablePaths)
+                .Select(target => target.Clone())
+                .ToList(),
+            LegacyWindowCaptureExcludedExecutablePaths = null,
             QuickButtonLeft = QuickButtonLeft,
             QuickButtonTop = QuickButtonTop,
             WindowCaptureHotkey = WindowCaptureHotkey,
@@ -139,6 +148,74 @@ public sealed class MiniCaptureSettings
         return paths.OrderBy(path => path, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
+    internal static IReadOnlyList<WindowCaptureExclusionTarget> NormalizeWindowCaptureExclusionTargets(
+        IReadOnlyList<WindowCaptureExclusionTarget>? targets,
+        IReadOnlyList<string>? legacyExecutablePaths)
+    {
+        var normalizedTargets = new List<WindowCaptureExclusionTarget>();
+
+        void AddTarget(WindowCaptureExclusionTarget candidate)
+        {
+            var hasExecutablePath = TryNormalizeWindowCaptureExcludedExecutablePath(
+                candidate.ExecutablePath,
+                out var executablePath);
+            var hasProcessName = TryNormalizeWindowCaptureExcludedProcessName(
+                candidate.ProcessName,
+                out var processName);
+            if (!hasProcessName && hasExecutablePath)
+            {
+                hasProcessName = TryNormalizeWindowCaptureExcludedProcessName(
+                    Path.GetFileNameWithoutExtension(executablePath),
+                    out processName);
+            }
+
+            if (!hasProcessName)
+            {
+                return;
+            }
+
+            var normalized = new WindowCaptureExclusionTarget
+            {
+                ExecutablePath = hasExecutablePath ? executablePath : string.Empty,
+                ProcessName = processName,
+                MatchMode = hasExecutablePath && candidate.MatchMode == WindowCaptureExclusionMatchMode.FilePath
+                    ? WindowCaptureExclusionMatchMode.FilePath
+                    : WindowCaptureExclusionMatchMode.ProcessName
+            };
+            var existing = normalizedTargets.FirstOrDefault(target => target.HasSameIdentity(normalized));
+            if (existing is null)
+            {
+                normalizedTargets.Add(normalized);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(existing.ExecutablePath) && !string.IsNullOrWhiteSpace(normalized.ExecutablePath))
+            {
+                existing.ExecutablePath = normalized.ExecutablePath;
+            }
+        }
+
+        foreach (var target in targets ?? [])
+        {
+            AddTarget(target);
+        }
+
+        foreach (var executablePath in NormalizeWindowCaptureExcludedExecutablePaths(legacyExecutablePaths))
+        {
+            AddTarget(new WindowCaptureExclusionTarget
+            {
+                ExecutablePath = executablePath,
+                ProcessName = Path.GetFileNameWithoutExtension(executablePath),
+                MatchMode = WindowCaptureExclusionMatchMode.FilePath
+            });
+        }
+
+        return normalizedTargets
+            .OrderBy(target => target.ProcessName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(target => target.ExecutablePath, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
     internal static bool TryNormalizeWindowCaptureExcludedExecutablePath(string? executablePath, out string normalizedPath)
     {
         normalizedPath = string.Empty;
@@ -161,6 +238,17 @@ public sealed class MiniCaptureSettings
         }
     }
 
+    internal static bool TryNormalizeWindowCaptureExcludedProcessName(string? processName, out string normalizedProcessName)
+    {
+        normalizedProcessName = processName?.Trim() ?? string.Empty;
+        if (normalizedProcessName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            normalizedProcessName = normalizedProcessName[..^4];
+        }
+
+        return !string.IsNullOrWhiteSpace(normalizedProcessName);
+    }
+
     private static IReadOnlyList<string> NormalizeHotkeySlots(IReadOnlyList<string>? hotkeys, string fallback)
     {
         var slots = new List<string>();
@@ -180,6 +268,39 @@ public sealed class MiniCaptureSettings
         }
 
         return slots;
+    }
+}
+
+public enum WindowCaptureExclusionMatchMode
+{
+    FilePath,
+    ProcessName
+}
+
+public sealed class WindowCaptureExclusionTarget
+{
+    public string ExecutablePath { get; set; } = string.Empty;
+
+    public string ProcessName { get; set; } = string.Empty;
+
+    public WindowCaptureExclusionMatchMode MatchMode { get; set; } = WindowCaptureExclusionMatchMode.FilePath;
+
+    public WindowCaptureExclusionTarget Clone() =>
+        new()
+        {
+            ExecutablePath = ExecutablePath,
+            ProcessName = ProcessName,
+            MatchMode = MatchMode
+        };
+
+    public bool HasSameIdentity(WindowCaptureExclusionTarget other)
+    {
+        if (!string.IsNullOrWhiteSpace(ExecutablePath) && !string.IsNullOrWhiteSpace(other.ExecutablePath))
+        {
+            return string.Equals(ExecutablePath, other.ExecutablePath, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return string.Equals(ProcessName, other.ProcessName, StringComparison.OrdinalIgnoreCase);
     }
 }
 
@@ -273,8 +394,12 @@ public static class MiniCaptureSettingsStore
         settings.SetHotkeySlots(CaptureHotkeyKind.Region, settings.GetHotkeySlots(CaptureHotkeyKind.Region));
         settings.SetHotkeySlots(CaptureHotkeyKind.FullScreen, settings.GetHotkeySlots(CaptureHotkeyKind.FullScreen));
         settings.SetHotkeySlots(CaptureHotkeyKind.Timer, settings.GetHotkeySlots(CaptureHotkeyKind.Timer));
-        settings.WindowCaptureExcludedExecutablePaths = MiniCaptureSettings.NormalizeWindowCaptureExcludedExecutablePaths(
-            settings.WindowCaptureExcludedExecutablePaths).ToList();
+        settings.WindowCaptureExclusionTargets = MiniCaptureSettings.NormalizeWindowCaptureExclusionTargets(
+                settings.WindowCaptureExclusionTargets,
+                settings.LegacyWindowCaptureExcludedExecutablePaths)
+            .Select(target => target.Clone())
+            .ToList();
+        settings.LegacyWindowCaptureExcludedExecutablePaths = null;
         return settings;
     }
 }

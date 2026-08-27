@@ -31,12 +31,11 @@ public static class WindowPickerService
     public static IReadOnlyList<WindowCaptureTarget> GetSelectableTargetsInZOrder(int currentProcessId)
     {
         var targets = new List<WindowCaptureTarget>();
-        var excludedExecutablePaths = MiniCaptureSettingsStore.Load()
-            .WindowCaptureExcludedExecutablePaths
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var excludedTargets = MiniCaptureSettingsStore.Load()
+            .WindowCaptureExclusionTargets;
         foreach (var hwnd in NativeWindowApi.EnumerateTopLevelWindows())
         {
-            if (!TryCreateTarget(hwnd, currentProcessId, excludedExecutablePaths, out var target))
+            if (!TryCreateTarget(hwnd, currentProcessId, excludedTargets, out var target))
             {
                 continue;
             }
@@ -70,11 +69,11 @@ public static class WindowPickerService
     private static bool TryCreateTarget(
         IntPtr hwnd,
         int currentProcessId,
-        ISet<string> excludedExecutablePaths,
+        IReadOnlyList<WindowCaptureExclusionTarget> excludedTargets,
         out WindowCaptureTarget target)
     {
         target = default;
-        if (!IsCandidate(hwnd, currentProcessId, excludedExecutablePaths))
+        if (!IsCandidate(hwnd, currentProcessId, excludedTargets))
         {
             return false;
         }
@@ -99,7 +98,10 @@ public static class WindowPickerService
         return true;
     }
 
-    private static bool IsCandidate(IntPtr hwnd, int currentProcessId, ISet<string> excludedExecutablePaths)
+    private static bool IsCandidate(
+        IntPtr hwnd,
+        int currentProcessId,
+        IReadOnlyList<WindowCaptureExclusionTarget> excludedTargets)
     {
         if (!NativeWindowApi.IsVisible(hwnd))
         {
@@ -117,7 +119,8 @@ public static class WindowPickerService
         }
 
         var process = NativeWindowApi.GetProcessInfo(hwnd);
-        if (IsIgnoredProcessName(process.Name) || IsExcludedExecutablePath(process.ExecutablePath, excludedExecutablePaths))
+        if (IsIgnoredProcessName(process.Name) ||
+            IsExcludedWindowTarget(process.ExecutablePath, process.Name, excludedTargets))
         {
             return false;
         }
@@ -140,6 +143,31 @@ public static class WindowPickerService
     {
         return MiniCaptureSettings.TryNormalizeWindowCaptureExcludedExecutablePath(executablePath, out var normalizedPath) &&
             excludedExecutablePaths.Contains(normalizedPath);
+    }
+
+    internal static bool IsExcludedWindowTarget(
+        string? executablePath,
+        string? processName,
+        IReadOnlyList<WindowCaptureExclusionTarget> excludedTargets)
+    {
+        foreach (var target in excludedTargets)
+        {
+            if (target.MatchMode == WindowCaptureExclusionMatchMode.FilePath &&
+                MiniCaptureSettings.TryNormalizeWindowCaptureExcludedExecutablePath(executablePath, out var normalizedPath) &&
+                string.Equals(target.ExecutablePath, normalizedPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (target.MatchMode == WindowCaptureExclusionMatchMode.ProcessName &&
+                MiniCaptureSettings.TryNormalizeWindowCaptureExcludedProcessName(processName, out var normalizedProcessName) &&
+                string.Equals(target.ProcessName, normalizedProcessName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }

@@ -1347,6 +1347,46 @@ Allow users to exclude a window-selection target by choosing a running process o
 - FOLLOW_UP: restart the interactive app, register a visible process from `창 제외`, and confirm its window is no longer highlighted or selectable. Repeat with the same process's direct `.exe` path.
 - NO_ROADMAP_CHANGE: this is a bounded extension of the completed P2 window-targeting behavior, not a new milestone.
 
+## 창 제외 기준 토글 및 설정 테두리 복구
+
+### Finish Line
+
+실행 중인 프로세스 선택 결과가 확인 가능한 실행 파일 경로와 프로세스명을 함께 보존하고, 사용자가 라디오 버튼으로만 적용 기준을 전환할 수 있다. Mini Capture와 `C:\ai\projects\new-alt` 설정 화면의 해당 입력 표면은 오른쪽 테두리까지 온전히 표시한다.
+
+### Scope Limit
+
+- 새 캡처 모드, 제외 매칭 규칙, 설정 정보 구조의 범용 재설계는 추가하지 않는다.
+- 라디오 전환은 저장된 경로·프로세스명 값을 삭제하거나 자동으로 다른 기준을 선택하지 않는다.
+
+### Acceptance Checks
+
+- Mini Capture: 선택한 프로세스에서 얻은 경로와 프로세스명이 모두 저장되고, 라디오 토글이 적용 기준만 바꾼다.
+- Mini Capture 및 `new-alt`: 관련 설정 표면의 오른쪽 테두리가 지원 창 너비에서 잘리지 않는다.
+- 각 프로젝트의 표준 빌드와 관련 자동 검사를 통과한다. 공유 데스크톱의 UI 조작이 안전하지 않으면 실제 화면 확인은 `NEEDS_USER_UI_CHECK`로 남긴다.
+
+### Review Budget And Stop Rule
+
+- 구현 뒤 최대 두 번의 수정/검토 루프만 사용한다.
+- 위 확인을 통과하면 종료하고, 관련 없는 발견은 `FOLLOW_UP`으로 기록한다.
+
+### Changes
+
+- 기존 `WindowCaptureExcludedExecutablePaths` JSON은 읽을 때 새 대상 레코드로 옮겨 기존 설정을 보존한다. 새 레코드는 실행 파일 경로, 프로세스명, 현재 적용 기준을 함께 저장한다.
+- 실행 중인 프로세스에서 경로를 얻으면 파일 경로 기준으로 추가하면서 프로세스명도 저장한다. 경로를 얻지 못한 프로세스는 프로세스명 기준으로 추가하며, 이후 기준 변경은 선택한 항목의 라디오 버튼으로만 수행한다.
+- 파일 경로 기준과 프로세스명 기준의 매칭을 분리해, 라디오 전환이 반대 값을 지우거나 암묵적으로 fallback하지 않도록 했다.
+- Mini Capture `창 제외`와 `new-alt` 전역 설정의 세로 스크롤 본문은 뷰포트 폭을 유지하고, 내부 입력만 축소 가능하게 바꿨다. 따라서 긴 경로가 카드 외곽의 오른쪽 테두리를 밀어 화면 밖으로 내보내지 않는다.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx --nologo`: 경고 0개, 오류 0개.
+- `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --no-build`: 20/20 통과. 경로 기준 매칭, 프로세스명 기준 전환, 두 식별자 보존 검사를 포함한다.
+- `dotnet build C:\ai\projects\new-alt\next\AltController.Next.slnx --nologo`: 경고 0개, 오류 0개.
+- 두 작업공간의 변경 범위 `git diff --check`: Mini Capture는 오류 없음. `new-alt` 전체 검사에는 보호 대상 사용자 파일 `notes/transfers/new-alt/latest_context.md`의 기존 trailing whitespace만 보고됐다.
+
+### Follow-ups
+
+- NEEDS_USER_UI_CHECK: 공유 데스크톱은 조작하지 않았다. Mini Capture의 최소 창 너비에서 파일 경로 카드의 오른쪽 테두리와 라디오 전환을, `new-alt` 전역 설정 최소 너비에서 카드 오른쪽 테두리를 실제로 확인한다.
+
 ## v0.1.2 Release Preparation
 
 ### Changes

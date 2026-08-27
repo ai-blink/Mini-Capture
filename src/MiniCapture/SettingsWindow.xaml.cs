@@ -24,6 +24,7 @@ public partial class SettingsWindow : Window
 {
     private readonly DispatcherTimer _associationRefreshTimer;
     private MiniCaptureSettings _captureSettings;
+    private bool _isUpdatingWindowExclusionRule;
 
     public ObservableCollection<ExtensionAssociationItem> ExtensionItems { get; } =
     [
@@ -224,10 +225,13 @@ public partial class SettingsWindow : Window
     {
         _captureSettings = MiniCaptureSettingsStore.Load();
         WindowExclusionItems.Clear();
-        foreach (var executablePath in _captureSettings.WindowCaptureExcludedExecutablePaths)
+        foreach (var target in _captureSettings.WindowCaptureExclusionTargets)
         {
-            WindowExclusionItems.Add(new WindowExclusionItem(executablePath));
+            WindowExclusionItems.Add(new WindowExclusionItem(target));
         }
+
+        WindowExclusionList.SelectedIndex = WindowExclusionItems.Count > 0 ? 0 : -1;
+        SyncWindowExclusionRuleSelector();
     }
 
     private void OnRefreshWindowExclusionProcessesClick(object sender, RoutedEventArgs e)
@@ -244,7 +248,7 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        AddWindowExclusion(process.ExecutablePath);
+        AddWindowExclusion(process.ExecutablePath, process.ProcessName);
     }
 
     private void OnBrowseWindowExclusionPathClick(object sender, RoutedEventArgs e)
@@ -263,7 +267,17 @@ public partial class SettingsWindow : Window
 
     private void OnAddWindowExclusionPathClick(object sender, RoutedEventArgs e)
     {
-        AddWindowExclusion(WindowExclusionPathBox.Text);
+        if (!MiniCaptureSettings.TryNormalizeWindowCaptureExcludedExecutablePath(
+                WindowExclusionPathBox.Text,
+                out _))
+        {
+            SetStatus("존재하는 .exe 파일의 절대 경로를 입력하거나 파일 선택을 사용하세요.");
+            return;
+        }
+
+        AddWindowExclusion(
+            WindowExclusionPathBox.Text,
+            Path.GetFileNameWithoutExtension(WindowExclusionPathBox.Text.Trim()));
     }
 
     private void OnRemoveWindowExclusionClick(object sender, RoutedEventArgs e)
@@ -275,11 +289,11 @@ public partial class SettingsWindow : Window
         }
 
         var settings = MiniCaptureSettingsStore.Load();
-        var removed = settings.WindowCaptureExcludedExecutablePaths.RemoveAll(path =>
-            string.Equals(path, selected.ExecutablePath, StringComparison.OrdinalIgnoreCase));
+        var removed = settings.WindowCaptureExclusionTargets.RemoveAll(target =>
+            target.HasSameIdentity(selected.Target));
         if (removed == 0)
         {
-            SetStatus("선택한 실행 파일은 이미 목록에서 제거되었습니다.");
+            SetStatus("선택한 제외 대상은 이미 목록에서 제거되었습니다.");
             LoadWindowExclusionFields();
             return;
         }
@@ -290,20 +304,79 @@ public partial class SettingsWindow : Window
         SetStatus($"{selected.DisplayName}을(를) 창 지정 제외 목록에서 제거했습니다.");
     }
 
+    private void OnWindowExclusionSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        SyncWindowExclusionRuleSelector();
+    }
+
+    private void OnWindowExclusionRuleChanged(object sender, RoutedEventArgs e)
+    {
+        if (_isUpdatingWindowExclusionRule ||
+            WindowExclusionList.SelectedItem is not WindowExclusionItem selected ||
+            sender is not System.Windows.Controls.RadioButton { IsChecked: true })
+        {
+            return;
+        }
+
+        var matchMode = ReferenceEquals(sender, WindowExclusionFilePathRuleRadio)
+            ? WindowCaptureExclusionMatchMode.FilePath
+            : WindowCaptureExclusionMatchMode.ProcessName;
+        if (matchMode == WindowCaptureExclusionMatchMode.FilePath && string.IsNullOrWhiteSpace(selected.ExecutablePath))
+        {
+            SetStatus("실행 파일 경로를 확인할 수 없는 대상은 프로세스명 기준으로만 제외할 수 있습니다.");
+            SyncWindowExclusionRuleSelector();
+            return;
+        }
+
+        if (selected.MatchMode == matchMode)
+        {
+            return;
+        }
+
+        var settings = MiniCaptureSettingsStore.Load();
+        var target = settings.WindowCaptureExclusionTargets.FirstOrDefault(candidate =>
+            candidate.HasSameIdentity(selected.Target));
+        if (target is null)
+        {
+            SetStatus("선택한 제외 대상을 찾을 수 없어 목록을 새로고침했습니다.");
+            LoadWindowExclusionFields();
+            return;
+        }
+
+        target.MatchMode = matchMode;
+        _captureSettings = settings;
+        MiniCaptureSettingsStore.Save(settings);
+        LoadWindowExclusionFields();
+        WindowExclusionList.SelectedItem = WindowExclusionItems.FirstOrDefault(item =>
+            item.Target.HasSameIdentity(selected.Target));
+        SetStatus(matchMode == WindowCaptureExclusionMatchMode.FilePath
+            ? "파일 경로 기준으로 전환했습니다. 프로세스명도 계속 저장됩니다."
+            : "프로세스명 기준으로 전환했습니다. 실행 파일 경로도 계속 저장됩니다.");
+    }
+
     private void RefreshRunningProcesses()
     {
-        var selectedPath = (RunningProcessBox.SelectedItem as RunningProcessItem)?.ExecutablePath;
+        var selectedProcessId = (RunningProcessBox.SelectedItem as RunningProcessItem)?.ProcessId;
         var items = new List<RunningProcessItem>();
         foreach (var process in Process.GetProcesses())
         {
             try
             {
-                if (process.Id == Environment.ProcessId ||
-                    !MiniCaptureSettings.TryNormalizeWindowCaptureExcludedExecutablePath(
-                        process.MainModule?.FileName,
-                        out var executablePath))
+                if (process.Id == Environment.ProcessId)
                 {
                     continue;
+                }
+
+                var executablePath = string.Empty;
+                try
+                {
+                    MiniCaptureSettings.TryNormalizeWindowCaptureExcludedExecutablePath(
+                        process.MainModule?.FileName,
+                        out executablePath);
+                }
+                catch (Exception ex) when (ex is InvalidOperationException or Win32Exception or NotSupportedException)
+                {
+                    // The process remains selectable by its process name when Windows withholds the path.
                 }
 
                 items.Add(new RunningProcessItem(process.ProcessName, process.Id, executablePath));
@@ -326,36 +399,84 @@ public partial class SettingsWindow : Window
             RunningProcessItems.Add(item);
         }
 
-        if (!string.IsNullOrWhiteSpace(selectedPath))
+        if (selectedProcessId is int processId)
         {
             RunningProcessBox.SelectedItem = RunningProcessItems.FirstOrDefault(item =>
-                string.Equals(item.ExecutablePath, selectedPath, StringComparison.OrdinalIgnoreCase));
+                item.ProcessId == processId);
         }
     }
 
-    private void AddWindowExclusion(string? executablePath)
+    private void AddWindowExclusion(string? executablePath, string? processName)
     {
-        if (!MiniCaptureSettings.TryNormalizeWindowCaptureExcludedExecutablePath(executablePath, out var normalizedPath) ||
-            !File.Exists(normalizedPath))
+        var hasExecutablePath = MiniCaptureSettings.TryNormalizeWindowCaptureExcludedExecutablePath(
+            executablePath,
+            out var normalizedPath);
+        if (hasExecutablePath && !File.Exists(normalizedPath))
         {
             SetStatus("존재하는 .exe 파일의 절대 경로를 입력하거나 실행 중인 프로세스를 선택하세요.");
             return;
         }
 
-        var settings = MiniCaptureSettingsStore.Load();
-        if (settings.WindowCaptureExcludedExecutablePaths.Any(path =>
-            string.Equals(path, normalizedPath, StringComparison.OrdinalIgnoreCase)))
+        if (!MiniCaptureSettings.TryNormalizeWindowCaptureExcludedProcessName(processName, out var normalizedProcessName))
         {
-            SetStatus("해당 실행 파일은 이미 창 지정 제외 목록에 있습니다.");
+            SetStatus("프로세스명을 확인할 수 없어 제외 대상을 저장하지 못했습니다.");
             return;
         }
 
-        settings.WindowCaptureExcludedExecutablePaths.Add(normalizedPath);
+        var settings = MiniCaptureSettingsStore.Load();
+        var target = new WindowCaptureExclusionTarget
+        {
+            ExecutablePath = hasExecutablePath ? normalizedPath : string.Empty,
+            ProcessName = normalizedProcessName,
+            MatchMode = hasExecutablePath
+                ? WindowCaptureExclusionMatchMode.FilePath
+                : WindowCaptureExclusionMatchMode.ProcessName
+        };
+        if (settings.WindowCaptureExclusionTargets.Any(existing => existing.HasSameIdentity(target)))
+        {
+            SetStatus("해당 제외 대상은 이미 창 지정 제외 목록에 있습니다.");
+            return;
+        }
+
+        settings.WindowCaptureExclusionTargets.Add(target);
         _captureSettings = settings;
         MiniCaptureSettingsStore.Save(settings);
         WindowExclusionPathBox.Clear();
         LoadWindowExclusionFields();
-        SetStatus($"{Path.GetFileName(normalizedPath)} 창을 다음 창 지정 캡처부터 제외합니다.");
+        WindowExclusionList.SelectedItem = WindowExclusionItems.FirstOrDefault(item => item.Target.HasSameIdentity(target));
+        SetStatus(hasExecutablePath
+            ? $"{Path.GetFileName(normalizedPath)}을(를) 파일 경로 기준으로 제외합니다. 프로세스명도 저장했습니다."
+            : $"{normalizedProcessName}을(를) 프로세스명 기준으로 제외합니다.");
+    }
+
+    private void SyncWindowExclusionRuleSelector()
+    {
+        if (WindowExclusionFilePathRuleRadio is null || WindowExclusionProcessNameRuleRadio is null)
+        {
+            return;
+        }
+
+        _isUpdatingWindowExclusionRule = true;
+        try
+        {
+            if (WindowExclusionList.SelectedItem is not WindowExclusionItem selected)
+            {
+                WindowExclusionFilePathRuleRadio.IsEnabled = false;
+                WindowExclusionProcessNameRuleRadio.IsEnabled = false;
+                WindowExclusionFilePathRuleRadio.IsChecked = false;
+                WindowExclusionProcessNameRuleRadio.IsChecked = false;
+                return;
+            }
+
+            WindowExclusionFilePathRuleRadio.IsEnabled = !string.IsNullOrWhiteSpace(selected.ExecutablePath);
+            WindowExclusionProcessNameRuleRadio.IsEnabled = true;
+            WindowExclusionFilePathRuleRadio.IsChecked = selected.MatchMode == WindowCaptureExclusionMatchMode.FilePath;
+            WindowExclusionProcessNameRuleRadio.IsChecked = selected.MatchMode == WindowCaptureExclusionMatchMode.ProcessName;
+        }
+        finally
+        {
+            _isUpdatingWindowExclusionRule = false;
+        }
     }
 
     private bool TryBuildCaptureSettings(out MiniCaptureSettings settings, out string error)
@@ -553,14 +674,24 @@ public sealed class RunningProcessItem(string processName, int processId, string
 
     public string ExecutablePath { get; } = executablePath;
 
-    public string DisplayName => $"{ProcessName} (PID {ProcessId})";
+    public string DisplayName => string.IsNullOrWhiteSpace(ExecutablePath)
+        ? $"{ProcessName} (PID {ProcessId}, 경로 확인 불가)"
+        : $"{ProcessName} (PID {ProcessId})";
 }
 
-public sealed class WindowExclusionItem(string executablePath)
+public sealed class WindowExclusionItem(WindowCaptureExclusionTarget target)
 {
-    public string ExecutablePath { get; } = executablePath;
+    public WindowCaptureExclusionTarget Target { get; } = target.Clone();
 
-    public string DisplayName => Path.GetFileName(ExecutablePath);
+    public string ExecutablePath => Target.ExecutablePath;
+
+    public WindowCaptureExclusionMatchMode MatchMode => Target.MatchMode;
+
+    public string DisplayName => Target.ProcessName;
+
+    public string AppliedRuleText => MatchMode == WindowCaptureExclusionMatchMode.FilePath
+        ? "적용 기준: 파일 경로"
+        : "적용 기준: 프로세스명";
 }
 
 public enum CaptureHotkeyKind

@@ -145,7 +145,8 @@
             </Border>
 
             <Grid Grid.Column="1"
-                  Margin="12">
+                  Margin="12"
+                  MinWidth="0">
                 <ScrollViewer x:Name="CaptureSettingsPanel"
                               AutomationProperties.AutomationId="CaptureSettingsPanel"
                               VerticalScrollBarVisibility="Auto"
@@ -398,8 +399,9 @@
                               AutomationProperties.AutomationId="WindowExclusionsPanel"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
+                              HorizontalContentAlignment="Stretch"
                               Visibility="Collapsed">
-                    <StackPanel>
+                    <StackPanel HorizontalAlignment="Stretch">
                         <TextBlock FontSize="18"
                                    FontWeight="SemiBold"
                                    Foreground="{StaticResource SettingsTextBrush}"
@@ -407,7 +409,7 @@
                         <TextBlock Margin="0,5,0,18"
                                    FontSize="12"
                                    Foreground="{StaticResource SettingsMutedTextBrush}"
-                                   Text="등록한 실행 파일의 창은 창 지정 캡처 후보에서 제외됩니다. 프로세스 선택 또는 실행 파일 경로로 추가할 수 있습니다." />
+                                   Text="등록한 대상의 창은 창 지정 캡처 후보에서 제외됩니다. 프로세스를 고르면 경로와 프로세스명을 함께 저장하며, 적용 기준은 아래 라디오 버튼으로만 바꿉니다." />
 
                         <Border Padding="14"
                                 Background="{StaticResource SettingsPanelBrush}"
@@ -434,11 +436,11 @@
                                           ItemsSource="{Binding RunningProcessItems}"
                                           DisplayMemberPath="DisplayName"
                                           Style="{StaticResource SettingsComboBoxStyle}"
-                                          ToolTip="실행 파일 경로를 확인할 수 있는 실행 중 프로세스입니다." />
+                                           ToolTip="실행 파일 경로를 확인할 수 있는 실행 중 프로세스입니다. 경로를 확인할 수 없는 프로세스도 이름 기준으로 추가할 수 있습니다." />
                                 <TextBlock Margin="0,7,0,10"
                                            FontSize="11"
                                            Foreground="{StaticResource SettingsMutedTextBrush}"
-                                           Text="선택한 프로세스의 실행 파일 경로가 목록에 저장됩니다." />
+                                           Text="선택한 프로세스의 실행 파일 경로와 프로세스명이 함께 저장됩니다. 경로를 확인할 수 없으면 프로세스명 기준만 사용할 수 있습니다." />
                                 <Button AutomationProperties.AutomationId="AddRunningProcessExclusionButton"
                                         Click="OnAddRunningProcessExclusionClick"
                                         Content="선택한 프로세스 제외"
@@ -459,14 +461,15 @@
                                            FontWeight="SemiBold"
                                            Foreground="{StaticResource SettingsTextBrush}"
                                            Text="실행 파일 경로 직접 추가" />
-                                <Grid>
+                                <Grid MinWidth="0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="96" />
                                     </Grid.ColumnDefinitions>
                                     <TextBox x:Name="WindowExclusionPathBox"
-                                             Grid.Column="0"
-                                             MinHeight="32"
+                                              Grid.Column="0"
+                                              MinWidth="0"
+                                              MinHeight="32"
                                              Padding="8,4"
                                              Background="#F4F7FA"
                                              BorderBrush="#94A3B8"
@@ -510,12 +513,31 @@
                                                VerticalAlignment="Center"
                                                FontWeight="SemiBold"
                                                Foreground="{StaticResource SettingsTextBrush}"
-                                               Text="등록된 실행 파일" />
+                                                Text="등록된 제외 대상" />
                                 </DockPanel>
+                                <StackPanel Margin="0,0,0,10"
+                                            Orientation="Horizontal">
+                                    <TextBlock Margin="0,0,12,0"
+                                               VerticalAlignment="Center"
+                                               Foreground="{StaticResource SettingsMutedTextBrush}"
+                                               Text="선택한 항목 적용 기준" />
+                                    <RadioButton x:Name="WindowExclusionFilePathRuleRadio"
+                                                 Margin="0,0,14,0"
+                                                 Checked="OnWindowExclusionRuleChanged"
+                                                 Content="파일 경로"
+                                                 Foreground="{StaticResource SettingsTextBrush}"
+                                                 IsEnabled="False" />
+                                    <RadioButton x:Name="WindowExclusionProcessNameRuleRadio"
+                                                 Checked="OnWindowExclusionRuleChanged"
+                                                 Content="프로세스명"
+                                                 Foreground="{StaticResource SettingsTextBrush}"
+                                                 IsEnabled="False" />
+                                </StackPanel>
                                 <ListBox x:Name="WindowExclusionList"
-                                         AutomationProperties.AutomationId="WindowExclusionList"
-                                         ItemsSource="{Binding WindowExclusionItems}"
-                                         MinHeight="150"
+                                          AutomationProperties.AutomationId="WindowExclusionList"
+                                          ItemsSource="{Binding WindowExclusionItems}"
+                                          SelectionChanged="OnWindowExclusionSelectionChanged"
+                                          MinHeight="150"
                                          BorderBrush="{StaticResource SettingsBorderBrush}"
                                          BorderThickness="1"
                                          Background="#111516"
@@ -526,11 +548,15 @@
                                                 <TextBlock FontWeight="SemiBold"
                                                            Foreground="{StaticResource SettingsTextBrush}"
                                                            Text="{Binding DisplayName}" />
-                                                <TextBlock Margin="0,2,0,0"
-                                                           FontSize="11"
-                                                           Foreground="{StaticResource SettingsMutedTextBrush}"
-                                                           Text="{Binding ExecutablePath}"
-                                                           TextTrimming="CharacterEllipsis" />
+                                                 <TextBlock Margin="0,2,0,0"
+                                                            FontSize="11"
+                                                            Foreground="{StaticResource SettingsMutedTextBrush}"
+                                                            Text="{Binding AppliedRuleText}" />
+                                                 <TextBlock Margin="0,2,0,0"
+                                                            FontSize="11"
+                                                            Foreground="{StaticResource SettingsMutedTextBrush}"
+                                                            Text="{Binding ExecutablePath}"
+                                                            TextTrimming="CharacterEllipsis" />
                                             </StackPanel>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>

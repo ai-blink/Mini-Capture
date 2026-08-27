@@ -7,6 +7,7 @@
 - Region overlay: drag rectangle, cancel with Escape.
 - Window picker overlay: highlight cursor target window and click to capture.
 - Save result panel: file open, folder open, viewer open.
+- Window-exclusion settings: choosing a running process preserves its executable path (when available) and process name together. File-path and process-name rules are switched only by the radio selection; switching retains both stored values.
 - Mini viewer: zoom, fit, 100%, previous/next.
 - Mini explorer: Windows Explorer-style tree and file pane with current-folder refresh and sortable Details columns.
 
