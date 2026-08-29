@@ -15,6 +15,7 @@
 - 2026-08-25: Result-popup and viewer path copy now recover from the observed `CLIPBRD_E_CANT_OPEN` contention path; Release build and 18/18 tests pass, and the installed app copied successfully after a controlled 180ms clipboard lock.
 - 2026-08-25: v0.1.4 self-contained `win-x64` portable release prepared from the original `main` workspace.
 - 2026-08-30: `창 제외` now resolves ordinary process paths through limited-information Win32 queries, upgrades a matching name-only record to the file-path default, and reserves the file-picker button's full 106px layout requirement. Debug build and 20 regression cases pass; `C:\app\MiniCapture.exe` was republished after each repair with a recoverable backup.
+- 2026-08-30: Viewer GIF previews now use `XamlAnimatedGif` instead of the static `BitmapImage` first frame. The standard Debug build passed with 0 warnings/errors, all 22 regression cases passed (including GIF routing), and the rebuilt `MiniCapture.exe` was launched successfully.
 
 ## Current Work
 
@@ -27,6 +28,7 @@
 
 ## Next Actions
 
+- NEEDS_USER_UI_CHECK: select an animated GIF in the viewer and confirm that it loops instead of remaining on its first frame.
 - NEEDS_USER_UI_CHECK: open Mini Capture **설정 → 창 제외**, refresh the process list, add an accessible process, confirm both `파일 경로`/`프로세스명` radios retain the two values while toggling, and verify the file-picker button's right border at the minimum window width. Protected Windows processes may still report `경로 확인 불가`. In `new-alt`, open **전역 설정** at its minimum width and confirm the right card borders are fully visible.
 - Manually verify address-row/toolbar/F5 refresh, all four Details sort toggles, and tooltip capture exclusion.
 - Manually verify selected-area Ctrl+C/Ctrl+X/Ctrl+V plus 2-row left-sidebar crop sliders/numeric inputs and preview/apply behavior.

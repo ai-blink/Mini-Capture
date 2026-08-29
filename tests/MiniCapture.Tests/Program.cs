@@ -22,6 +22,7 @@ var tests = new (string Name, Action Run)[]
     ("BuildGaussianKernel_NormalizesAndIsSymmetric", BuildGaussianKernel_NormalizesAndIsSymmetric),
     ("ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge", ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge),
     ("DecodeImageFile_AllowsBackgroundDecode", DecodeImageFile_AllowsBackgroundDecode),
+    ("IsGifFile_RecognizesGifExtensionOnly", IsGifFile_RecognizesGifExtensionOnly),
     ("ClipboardService_RetriesClipboardCannotOpen", ClipboardService_RetriesClipboardCannotOpen),
     ("SingleInstance_ForwardsArgumentsToPrimary", SingleInstance_ForwardsArgumentsToPrimary)
 };
@@ -446,6 +447,12 @@ static void DecodeImageFile_AllowsBackgroundDecode()
     {
         Directory.Delete(folder, recursive: true);
     }
+}
+
+static void IsGifFile_RecognizesGifExtensionOnly()
+{
+    AssertTrue(ViewerWindow.IsGifFile(@"C:\captures\animation.GIF"), "GIF extension should enable animated preview");
+    AssertTrue(!ViewerWindow.IsGifFile(@"C:\captures\still.png"), "non-GIF extension should keep the standard preview");
 }
 
 static void ClipboardService_RetriesClipboardCannotOpen()

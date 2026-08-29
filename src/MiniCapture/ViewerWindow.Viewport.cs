@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using XamlAnimatedGif;
 using IOPath = System.IO.Path;
 using WpfBinding = System.Windows.Data.Binding;
 using WpfBrushes = System.Windows.Media.Brushes;
@@ -108,7 +109,7 @@ public partial class ViewerWindow
         CloseCropMode();
         ClearEditHistory();
         _isDirty = false;
-        PreviewImage.Source = _editableImage;
+        SetPreviewSource(file.Path);
         EmptyMessage.Visibility = Visibility.Collapsed;
         StatusText.Text = file.Path;
         UpdateStatusMetadata();
@@ -139,6 +140,23 @@ public partial class ViewerWindow
         return image;
     }
 
+    private void SetPreviewSource(string path)
+    {
+        AnimationBehavior.SetSourceUri(PreviewImage, null);
+        PreviewImage.Source = null;
+
+        if (IsGifFile(path))
+        {
+            AnimationBehavior.SetSourceUri(PreviewImage, new Uri(path, UriKind.Absolute));
+            return;
+        }
+
+        PreviewImage.Source = _editableImage;
+    }
+
+    internal static bool IsGifFile(string path) =>
+        string.Equals(IOPath.GetExtension(path), ".gif", StringComparison.OrdinalIgnoreCase);
+
     private void ClearImage(string message)
     {
         FlushCurrentImageViewState();
@@ -150,6 +168,7 @@ public partial class ViewerWindow
         CloseCropMode();
         ClearEditHistory();
         _isDirty = false;
+        AnimationBehavior.SetSourceUri(PreviewImage, null);
         PreviewImage.Source = null;
         ImageSurface.Width = 0;
         ImageSurface.Height = 0;
