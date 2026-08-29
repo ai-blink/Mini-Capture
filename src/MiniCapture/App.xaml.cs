@@ -182,7 +182,8 @@ public partial class App : System.Windows.Application
                 Path.Combine(AppContext.BaseDirectory, "MiniCapture.exe");
             FileAssociationRegistrar.RegisterViewerCandidates(
                 executablePath,
-                FileAssociationRegistrar.SupportedExtensions);
+                FileAssociationRegistrar.GetRegistrationExtensions(
+                    MiniCaptureSettingsStore.Load().AdditionalImageExtensions));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or ArgumentException)
         {

@@ -84,13 +84,14 @@ C:\Users\<사용자 이름>\Pictures\MiniCapture\연도\월\일
 | `Delete` | 선택한 마크업 삭제 |
 | `Space` | 누르는 동안 핸드 도구 사용 |
 
-### PNG/JPG/JPEG 기본 앱으로 선택하기
+### 이미지 확장자 기본 앱으로 선택하기
 
-Mini Capture는 실행 시 현재 사용자 계정에 PNG/JPG/JPEG를 열 수 있는 앱 후보로 등록됩니다. Windows 정책상 기존 기본 앱을 강제로 바꾸지는 않습니다.
+Mini Capture는 실행 시 현재 사용자 계정에 PNG/JPG/JPEG를 열 수 있는 앱 후보로 등록됩니다. 다른 이미지 확장자도 설정 창에서 추가할 수 있습니다. Windows 정책상 기존 기본 앱을 강제로 바꾸지는 않습니다.
 
 1. Mini Capture의 **설정 → 확장자 연결**을 엽니다.
-2. **Windows 기본 앱에서 선택하기**를 누릅니다.
-3. `.png`, `.jpg`, `.jpeg`의 기본 앱을 **Mini Capture Viewer**로 선택합니다.
+2. 다른 확장자가 필요하면 `.bmp`처럼 입력하고 **확장자 등록**을 누릅니다.
+3. **Windows 기본 앱에서 선택하기**를 누릅니다.
+4. 해당 확장자의 기본 앱을 **Mini Capture Viewer**로 선택합니다.
 
 ## 시스템 요구 사항
 

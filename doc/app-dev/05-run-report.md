@@ -1517,3 +1517,30 @@ Allow users to exclude a window-selection target by choosing a running process o
 - answer_shape: `patch-first`
 - active_constraints: 기존 dirty 파일을 되돌리지 말고, 남은 수동 UI·다중 모니터 항목만 후속으로 취급한다.
 - stale_constraints: v0.1.4 버전 갱신·패키징·배포 작업은 릴리스 게시 후 이어받지 않는다.
+
+## 설정 창 사용자 확장자 등록
+
+### Finish Line
+
+설정 창에서 이미지 확장자를 입력하면 Mini Capture Viewer의 Windows 선택 후보로 등록되고, 다음 실행과 뷰어 파일 목록에서도 유지한다.
+
+### Root Cause
+
+- 확장자 목록과 등록기는 PNG/JPG/JPEG 세 항목으로 고정되어 있었다.
+- 따라서 다른 확장자는 설정 창에 추가할 입력 표면이 없었고, 등록기에 전달돼도 후보 등록 대상에서 제외됐다.
+
+### Changes
+
+- 설정 창에 확장자 입력과 등록 동작을 추가했다. 영문·숫자로 이뤄진 1~32자 확장자만 정규화해 저장한다.
+- 추가 확장자를 사용자 설정에 보존하고, 시작 시와 수동 복구 시 기본 확장자와 함께 Windows 후보로 등록한다.
+- 파일 인자 처리와 뷰어 파일 브라우저도 저장된 확장자 목록을 동일하게 사용한다.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: 경고 0개, 오류 0개.
+- `dotnet run --project tests/MiniCapture.Tests/MiniCapture.Tests.csproj --no-build`: 21/21 회귀 검사 통과.
+- `git diff --check`: 오류 없음. 기존 CRLF 변환 경고만 발생.
+
+### Follow-up
+
+- NEEDS_USER_UI_CHECK: 설정 → 확장자 연결에서 예를 들어 `.bmp`를 등록한 뒤 Windows 기본 앱 선택 화면에 Mini Capture Viewer 후보가 보이는지 확인한다. 기본 앱 지정은 Windows가 사용자 선택으로만 허용한다.

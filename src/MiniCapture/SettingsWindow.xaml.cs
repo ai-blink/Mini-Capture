@@ -26,12 +26,7 @@ public partial class SettingsWindow : Window
     private MiniCaptureSettings _captureSettings;
     private bool _isUpdatingWindowExclusionRule;
 
-    public ObservableCollection<ExtensionAssociationItem> ExtensionItems { get; } =
-    [
-        new(".png", "Portable Network Graphics"),
-        new(".jpg", "JPEG Image"),
-        new(".jpeg", "JPEG Image")
-    ];
+    public ObservableCollection<ExtensionAssociationItem> ExtensionItems { get; } = [];
 
     public ObservableCollection<CaptureHotkeyGroup> HotkeyGroups { get; }
 
@@ -52,8 +47,9 @@ public partial class SettingsWindow : Window
             new(CaptureHotkeyKind.FullScreen, "전체 화면 캡처"),
             new(CaptureHotkeyKind.Timer, "타이머 캡처")
         ];
-        DataContext = this;
         _captureSettings = MiniCaptureSettingsStore.Load();
+        LoadExtensionItems();
+        DataContext = this;
 
         _associationRefreshTimer = new DispatcherTimer
         {
@@ -65,6 +61,7 @@ public partial class SettingsWindow : Window
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         LoadCaptureSettingsFields();
+        LoadExtensionItems();
         LoadWindowExclusionFields();
         RefreshRunningProcesses();
         ExecutablePathText.Text = GetExecutablePath();
@@ -113,13 +110,11 @@ public partial class SettingsWindow : Window
     {
         System.Windows.MessageBox.Show(
             this,
-            "Mini Capture는 PNG, JPG, JPEG 파일을 열 수 있는 앱으로 자동 등록됩니다.\n\n" +
-            "Windows 보안 정책 때문에 앱이 기존 기본 앱을 몰래 바꿀 수는 없습니다. " +
-            "마지막 선택은 Windows 설정에서 사용자가 직접 해야 합니다.\n\n" +
-            "1. Windows 기본 앱에서 선택하기를 누릅니다.\n" +
-            "2. .png, .jpg, .jpeg를 각각 검색합니다.\n" +
-            "3. 현재 앱을 Mini Capture Viewer로 바꿉니다.\n\n" +
-            "목록에 Mini Capture Viewer가 보이지 않으면 선택 목록 복구를 누른 뒤 다시 시도하세요.",
+            "기본 PNG/JPG/JPEG 외의 이미지 확장자는 아래 입력란에 추가해 선택 목록에 등록할 수 있습니다.\n\n" +
+            "1. 이미지 확장자(예: .bmp)를 입력하고 확장자 등록을 누릅니다.\n" +
+            "2. Windows 기본 앱에서 선택하기를 누릅니다.\n" +
+            "3. 해당 확장자의 현재 앱을 Mini Capture Viewer로 바꿉니다.\n\n" +
+            "Windows 보안 정책 때문에 앱이 기존 기본 앱을 몰래 바꿀 수는 없습니다.",
             "확장자 연결 설명",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
@@ -154,13 +149,55 @@ public partial class SettingsWindow : Window
         {
             FileAssociationRegistrar.RegisterViewerCandidates(
                 GetExecutablePath(),
-                FileAssociationRegistrar.SupportedExtensions);
+                FileAssociationRegistrar.GetRegistrationExtensions(_captureSettings.AdditionalImageExtensions));
             RefreshAssociationStates("선택 목록 복구 완료");
-            SetStatus("PNG/JPG/JPEG 선택 목록을 복구했습니다. Windows 기본 앱에서 Mini Capture Viewer를 선택하세요.");
+            SetStatus("등록한 확장자의 선택 목록을 복구했습니다. Windows 기본 앱에서 Mini Capture Viewer를 선택하세요.");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or ArgumentException)
         {
             SetStatus($"선택 목록 복구 실패: {ex.Message}");
+        }
+    }
+
+    private void OnAddImageExtensionClick(object sender, RoutedEventArgs e)
+    {
+        if (!FileAssociationRegistrar.TryNormalizeExtension(AdditionalImageExtensionBox.Text, out var extension))
+        {
+            SetStatus("확장자는 .bmp처럼 영문 또는 숫자로 된 1~32자 형식으로 입력하세요.");
+            return;
+        }
+
+        if (FileAssociationRegistrar.DefaultExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+        {
+            SetStatus($"{extension}은(는) 기본 등록 확장자입니다.");
+            return;
+        }
+
+        var settings = MiniCaptureSettingsStore.Load();
+        var additionalExtensions = FileAssociationRegistrar.NormalizeAdditionalExtensions(
+            settings.AdditionalImageExtensions.Append(extension));
+        if (settings.AdditionalImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+        {
+            SetStatus($"{extension}은(는) 이미 등록되어 있습니다.");
+            return;
+        }
+
+        try
+        {
+            FileAssociationRegistrar.RegisterViewerCandidates(
+                GetExecutablePath(),
+                FileAssociationRegistrar.GetRegistrationExtensions(additionalExtensions));
+            settings.AdditionalImageExtensions = additionalExtensions.ToList();
+            _captureSettings = settings;
+            MiniCaptureSettingsStore.Save(settings);
+            AdditionalImageExtensionBox.Clear();
+            LoadExtensionItems();
+            RefreshAssociationStates($"{extension} 등록 완료");
+            SetStatus($"{extension}을(를) Mini Capture Viewer 선택 목록에 등록했습니다. Windows 기본 앱에서 연결을 선택하세요.");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or ArgumentException)
+        {
+            SetStatus($"{extension} 등록 실패: {ex.Message}");
         }
     }
 
@@ -657,18 +694,31 @@ public partial class SettingsWindow : Window
             }
         }
 
-        AssociationSummaryText.Text = $"PNG/JPG/JPEG {associatedCount}/{totalCount}개 연결됨";
+        AssociationSummaryText.Text = $"{associatedCount}/{totalCount}개 연결됨";
         SetStatus($"{reason}: 전체 확장자 연결 상태를 갱신했습니다. {DateTime.Now:HH:mm:ss}");
     }
 
     private string BuildWindowsSettingsStatus(string prefix)
     {
-        return $"{prefix} .png, .jpg, .jpeg의 현재 앱을 Mini Capture Viewer로 바꾸세요.";
+        var extensions = string.Join(", ", GetExtensionItems().Select(item => item.Extension));
+        return $"{prefix} {extensions}의 현재 앱을 Mini Capture Viewer로 바꾸세요.";
     }
 
     private IEnumerable<ExtensionAssociationItem> GetExtensionItems()
     {
         return ExtensionItems;
+    }
+
+    private void LoadExtensionItems()
+    {
+        ExtensionItems.Clear();
+        foreach (var extension in FileAssociationRegistrar.GetRegistrationExtensions(
+                     _captureSettings.AdditionalImageExtensions))
+        {
+            ExtensionItems.Add(new ExtensionAssociationItem(
+                extension,
+                FileAssociationRegistrar.GetDisplayName(extension)));
+        }
     }
 
     private static string GetExecutablePath()

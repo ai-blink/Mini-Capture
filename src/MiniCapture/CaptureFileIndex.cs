@@ -5,13 +5,6 @@ namespace MiniCapture;
 
 public static class CaptureFileIndex
 {
-    private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".png",
-        ".jpg",
-        ".jpeg"
-    };
-
     public static string RootDirectory => SettingsPathHelper.DefaultCaptureDirectory;
 
     public static IReadOnlyList<CaptureImageFile> GetImages(string? folderPath)
@@ -22,7 +15,7 @@ public static class CaptureFileIndex
             return Array.Empty<CaptureImageFile>();
         }
 
-        return EnumerateImageFiles(folder, recursive: false)
+        return EnumerateImageFiles(folder, recursive: false, GetImageExtensions())
             .Select(file => new CaptureImageFile(file))
             .OrderByDescending(file => file.LastWriteTime)
             .ThenBy(file => file.FileName, StringComparer.OrdinalIgnoreCase)
@@ -34,7 +27,7 @@ public static class CaptureFileIndex
         Directory.CreateDirectory(RootDirectory);
 
         FileInfo? latest = null;
-        foreach (var file in EnumerateImageFiles(RootDirectory, recursive: true))
+        foreach (var file in EnumerateImageFiles(RootDirectory, recursive: true, GetImageExtensions()))
         {
             if (latest is null ||
                 file.LastWriteTime > latest.LastWriteTime ||
@@ -100,7 +93,7 @@ public static class CaptureFileIndex
     public static bool IsImagePath(string? path)
     {
         return !string.IsNullOrWhiteSpace(path) &&
-            ImageExtensions.Contains(Path.GetExtension(path)) &&
+            GetImageExtensions().Contains(Path.GetExtension(path)) &&
             File.Exists(path);
     }
 
@@ -251,11 +244,21 @@ public static class CaptureFileIndex
         }
     }
 
-    private static IEnumerable<FileInfo> EnumerateImageFiles(string folder, bool recursive)
+    private static HashSet<string> GetImageExtensions()
+    {
+        return FileAssociationRegistrar.GetRegistrationExtensions(
+                MiniCaptureSettingsStore.Load().AdditionalImageExtensions)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static IEnumerable<FileInfo> EnumerateImageFiles(
+        string folder,
+        bool recursive,
+        IReadOnlySet<string> imageExtensions)
     {
         foreach (var file in EnumerateFiles(folder, recursive))
         {
-            if (ImageExtensions.Contains(file.Extension))
+            if (imageExtensions.Contains(file.Extension))
             {
                 yield return file;
             }

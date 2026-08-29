@@ -15,6 +15,8 @@ public sealed class MiniCaptureSettings
 
     public bool CaptureUiExcludedFromCapture { get; set; } = true;
 
+    public List<string> AdditionalImageExtensions { get; set; } = [];
+
     public List<WindowCaptureExclusionTarget> WindowCaptureExclusionTargets { get; set; } = [];
 
     [JsonPropertyName("WindowCaptureExcludedExecutablePaths")]
@@ -66,6 +68,7 @@ public sealed class MiniCaptureSettings
             ShortcutTimerDelaySeconds = ShortcutTimerDelaySeconds,
             QuickButtonVisible = QuickButtonVisible,
             CaptureUiExcludedFromCapture = CaptureUiExcludedFromCapture,
+            AdditionalImageExtensions = FileAssociationRegistrar.NormalizeAdditionalExtensions(AdditionalImageExtensions).ToList(),
             WindowCaptureExclusionTargets = NormalizeWindowCaptureExclusionTargets(
                     WindowCaptureExclusionTargets,
                     LegacyWindowCaptureExcludedExecutablePaths)
@@ -396,6 +399,9 @@ public static class MiniCaptureSettingsStore
         settings.SetHotkeySlots(CaptureHotkeyKind.Region, settings.GetHotkeySlots(CaptureHotkeyKind.Region));
         settings.SetHotkeySlots(CaptureHotkeyKind.FullScreen, settings.GetHotkeySlots(CaptureHotkeyKind.FullScreen));
         settings.SetHotkeySlots(CaptureHotkeyKind.Timer, settings.GetHotkeySlots(CaptureHotkeyKind.Timer));
+        settings.AdditionalImageExtensions = FileAssociationRegistrar.NormalizeAdditionalExtensions(
+                settings.AdditionalImageExtensions)
+            .ToList();
         settings.WindowCaptureExclusionTargets = MiniCaptureSettings.NormalizeWindowCaptureExclusionTargets(
                 settings.WindowCaptureExclusionTargets,
                 settings.LegacyWindowCaptureExcludedExecutablePaths)

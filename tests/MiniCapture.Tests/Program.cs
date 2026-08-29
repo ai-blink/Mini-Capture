@@ -11,6 +11,7 @@ var tests = new (string Name, Action Run)[]
     ("IsIgnoredProcessName_RecognizesDimScreenOverlay", IsIgnoredProcessName_RecognizesDimScreenOverlay),
     ("WindowExclusions_NormalizeAndMatchExecutablePaths", WindowExclusions_NormalizeAndMatchExecutablePaths),
     ("WindowExclusions_RetainProcessNameAndSwitchOnlyByMode", WindowExclusions_RetainProcessNameAndSwitchOnlyByMode),
+    ("ImageExtensions_NormalizeAndPreserveCustomRegistration", ImageExtensions_NormalizeAndPreserveCustomRegistration),
     ("GetImages_AllowsExternalFolderWithoutRecursiveScan", GetImages_AllowsExternalFolderWithoutRecursiveScan),
     ("GetImages_DoesNotRecursivelyScanCaptureSubfolders", GetImages_DoesNotRecursivelyScanCaptureSubfolders),
     ("BuildFolderTree_IncludesExternalPathAndChildFolders", BuildFolderTree_IncludesExternalPathAndChildFolders),
@@ -178,6 +179,33 @@ static void WindowExclusions_RetainProcessNameAndSwitchOnlyByMode()
     AssertTrue(
         upgradedTargets[0].MatchMode == WindowCaptureExclusionMatchMode.FilePath,
         "a later resolved executable path should restore the file-path default");
+}
+
+static void ImageExtensions_NormalizeAndPreserveCustomRegistration()
+{
+    AssertTrue(
+        FileAssociationRegistrar.TryNormalizeExtension("BMP", out var bmp) && bmp == ".bmp",
+        "extension input should be normalized with a leading lowercase period");
+    AssertTrue(
+        !FileAssociationRegistrar.TryNormalizeExtension(".image-format", out _),
+        "unsafe extension characters should be rejected");
+
+    var additional = FileAssociationRegistrar.NormalizeAdditionalExtensions(
+        [".bmp", "BMP", ".png", ".tiff", ".bad-extension"]);
+    AssertTrue(
+        additional.SequenceEqual([".bmp", ".tiff"], StringComparer.OrdinalIgnoreCase),
+        "custom extensions should be deduplicated and exclude built-in or invalid values");
+
+    var registrations = FileAssociationRegistrar.GetRegistrationExtensions(additional);
+    AssertTrue(
+        registrations.SequenceEqual([".png", ".jpg", ".jpeg", ".bmp", ".tiff"], StringComparer.OrdinalIgnoreCase),
+        "default and custom extensions should be registered together");
+
+    var settings = new MiniCaptureSettings { AdditionalImageExtensions = ["GIF", ".png", ".invalid-extension"] };
+    var clone = settings.Clone();
+    AssertTrue(
+        clone.AdditionalImageExtensions.SequenceEqual([".gif"], StringComparer.OrdinalIgnoreCase),
+        "settings copies should retain only valid custom extensions");
 }
 
 static void GetImages_AllowsExternalFolderWithoutRecursiveScan()
