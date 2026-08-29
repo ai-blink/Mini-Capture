@@ -69,16 +69,6 @@ public partial class ViewerWindow
         return new ViewerIndexSnapshot(folderNodes, targetPath, targetFolder);
     }
 
-    private static ViewerIndexSnapshot BuildFolderSnapshot(string folderPath, string? preferredPath)
-    {
-        var targetFolder = Directory.Exists(folderPath)
-            ? IOPath.GetFullPath(folderPath)
-            : CaptureFileIndex.RootDirectory;
-        CaptureFileIndex.TryCreateImageFile(preferredPath, out var preferredFile);
-        var folderNodes = CaptureFileIndex.BuildFolderTree(targetFolder, preferredFile);
-        return new ViewerIndexSnapshot(folderNodes, preferredFile?.Path, targetFolder);
-    }
-
     private static string? ResolveTargetPath(string? requestedPath)
     {
         if (CaptureFileIndex.IsImagePath(requestedPath))

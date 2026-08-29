@@ -16,6 +16,7 @@ var tests = new (string Name, Action Run)[]
     ("GetImages_DoesNotRecursivelyScanCaptureSubfolders", GetImages_DoesNotRecursivelyScanCaptureSubfolders),
     ("BuildFolderTree_IncludesExternalPathAndChildFolders", BuildFolderTree_IncludesExternalPathAndChildFolders),
     ("FolderSelection_IgnoresCurrentExternalFolder", FolderSelection_IgnoresCurrentExternalFolder),
+    ("OpenImage_UsesIncrementalUpdateForNewFileInCurrentFolder", OpenImage_UsesIncrementalUpdateForNewFileInCurrentFolder),
     ("RequiresDetailsView_ForLargeFolder", RequiresDetailsView_ForLargeFolder),
     ("SortFiles_UsesRequestedColumnAndDirection", SortFiles_UsesRequestedColumnAndDirection),
     ("CalculateCropRectangle_ClampsMarginsAndPreservesOnePixel", CalculateCropRectangle_ClampsMarginsAndPreservesOnePixel),
@@ -24,6 +25,7 @@ var tests = new (string Name, Action Run)[]
     ("DecodeImageFile_AllowsBackgroundDecode", DecodeImageFile_AllowsBackgroundDecode),
     ("IsGifFile_RecognizesGifExtensionOnly", IsGifFile_RecognizesGifExtensionOnly),
     ("ClipboardService_RetriesClipboardCannotOpen", ClipboardService_RetriesClipboardCannotOpen),
+    ("ClipboardService_CreatesDetachedBitmap", ClipboardService_CreatesDetachedBitmap),
     ("SingleInstance_ForwardsArgumentsToPrimary", SingleInstance_ForwardsArgumentsToPrimary)
 };
 
@@ -281,6 +283,27 @@ static void GetImages_DoesNotRecursivelyScanCaptureSubfolders()
     }
 }
 
+static void OpenImage_UsesIncrementalUpdateForNewFileInCurrentFolder()
+{
+    var folder = CreateTemporaryFolder();
+    try
+    {
+        var imagePath = Path.Combine(folder, "new-capture.png");
+        File.WriteAllBytes(imagePath, [1]);
+
+        AssertTrue(
+            ViewerWindow.CanIncrementallyOpenImage(folder, imagePath),
+            "a new image in the displayed folder should not require a library refresh");
+        AssertTrue(
+            !ViewerWindow.CanIncrementallyOpenImage(Path.Combine(folder, "other"), imagePath),
+            "an image in another folder must still navigate before selection");
+    }
+    finally
+    {
+        Directory.Delete(folder, recursive: true);
+    }
+}
+
 static void RequiresDetailsView_ForLargeFolder()
 {
     AssertTrue(!ViewerWindow.RequiresDetailsView(ViewerWindow.MaxIconViewFiles), "icon views should remain available at the threshold");
@@ -486,6 +509,33 @@ static void ClipboardService_RetriesClipboardCannotOpen()
     AssertIntEqual(3, attempts, "clipboard write attempts");
     AssertIntEqual(2, delays.Count, "clipboard retry delays");
     AssertTrue(copiedText == expectedText, "clipboard retry should eventually copy the requested path");
+}
+
+static void ClipboardService_CreatesDetachedBitmap()
+{
+    var pixels = new byte[]
+    {
+        0x10, 0x20, 0x30, 0xFF,
+        0x40, 0x50, 0x60, 0xFF
+    };
+    var source = System.Windows.Media.Imaging.BitmapSource.Create(
+        2,
+        1,
+        96,
+        96,
+        System.Windows.Media.PixelFormats.Bgra32,
+        palette: null,
+        pixels,
+        stride: 8);
+
+    using var bitmap = ClipboardService.CreateClipboardBitmap(source);
+
+    AssertIntEqual(2, bitmap.Width, "clipboard bitmap width");
+    AssertIntEqual(1, bitmap.Height, "clipboard bitmap height");
+    var firstPixel = bitmap.GetPixel(0, 0);
+    AssertIntEqual(0x30, firstPixel.R, "clipboard bitmap red channel");
+    AssertIntEqual(0x20, firstPixel.G, "clipboard bitmap green channel");
+    AssertIntEqual(0x10, firstPixel.B, "clipboard bitmap blue channel");
 }
 
 static void SingleInstance_ForwardsArgumentsToPrimary()

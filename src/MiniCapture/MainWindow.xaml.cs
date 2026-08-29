@@ -10,7 +10,6 @@ using System.Windows.Markup;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using WpfBrushes = System.Windows.Media.Brushes;
-using WpfClipboard = System.Windows.Clipboard;
 using WpfPoint = System.Windows.Point;
 using WpfToolTip = System.Windows.Controls.ToolTip;
 
@@ -712,10 +711,10 @@ public partial class MainWindow : Window
             image.StreamSource = stream;
             image.EndInit();
             image.Freeze();
-            WpfClipboard.SetImage(image);
+            ClipboardService.SetImage(image);
             ShowStatus("이미지를 클립보드에 복사했습니다.");
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or System.Runtime.InteropServices.COMException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or System.Runtime.InteropServices.ExternalException)
         {
             ShowStatus($"이미지 복사 실패: {ex.Message}");
         }

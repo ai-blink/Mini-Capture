@@ -1518,6 +1518,38 @@ Allow users to exclude a window-selection target by choosing a running process o
 - active_constraints: 기존 dirty 파일을 되돌리지 말고, 남은 수동 UI·다중 모니터 항목만 후속으로 취급한다.
 - stale_constraints: v0.1.4 버전 갱신·패키징·배포 작업은 릴리스 게시 후 이어받지 않는다.
 
+## v0.1.5 이미지 클립보드 호환성 릴리스
+
+### Finish Line
+
+캡처 완료 팝업, 뷰어, 선택 영역에서 이미지 복사를 한 번 실행하면 현재 클립보드 관리자와 함께 사용하는 환경에서도 이미지가 클립보드에 기록된다.
+
+### Root Cause
+
+- 실제 v0.1.4 뷰어에서 WPF `Clipboard.SetImage`가 `0x800401D0 (CLIPBRD_E_CANT_OPEN)`으로 실패했다.
+- 같은 PNG에 50/100/150/200ms 간격의 5회 재시도를 적용해도 모두 실패해, 경로 복사와 같은 재시도만으로는 해결되지 않았다.
+- 같은 환경에서 WinForms 이미지 클립보드 경로는 재시도 없이 즉시 성공했다. 따라서 이미지 데이터 전달 방식을 WinForms 호환 경로로 통일했다.
+
+### Changes
+
+- WPF `BitmapSource`를 분리된 `System.Drawing.Bitmap`으로 변환해 WinForms 클립보드에 기록하는 공통 경로를 `ClipboardService`에 추가했다.
+- 완료 팝업, 뷰어 전체 이미지, 선택 영역 복사가 모두 공통 경로를 사용하도록 변경했다.
+- 이미지 변환 크기와 색상 채널을 확인하는 회귀 테스트를 추가했다.
+- 앱·어셈블리·파일·정보 버전과 README 포터블 경로를 `0.1.5`로 갱신했다.
+
+### Verification
+
+- `dotnet run --project tests/MiniCapture.Tests/MiniCapture.Tests.csproj -c Release`: 19/19 통과.
+- `dotnet build MiniCapture.slnx -c Release --no-restore`: 경고 0개, 오류 0개.
+- 설치본 뷰어 단일 클릭: 성공 상태 및 1060×1050 클립보드 이미지 확인.
+- 설치본 캡처 완료 팝업 단일 클릭: 성공 상태 및 3840×2160 클립보드 이미지 확인.
+- 검증용 전체 화면 캡처 파일은 확인 후 휴지통으로 이동했다.
+
+### Release Package
+
+- `artifacts/publish/MiniCapture-v0.1.5-win-x64-portable/MiniCapture.exe`
+- `artifacts/MiniCapture-v0.1.5-win-x64-portable.zip`
+
 ## 설정 창 사용자 확장자 등록
 
 ### Finish Line
@@ -1544,3 +1576,32 @@ Allow users to exclude a window-selection target by choosing a running process o
 ### Follow-up
 
 - NEEDS_USER_UI_CHECK: 설정 → 확장자 연결에서 예를 들어 `.bmp`를 등록한 뒤 Windows 기본 앱 선택 화면에 Mini Capture Viewer 후보가 보이는지 확인한다. 기본 앱 지정은 Windows가 사용자 선택으로만 허용한다.
+
+## 뷰어 라이브러리 증분 갱신
+
+### Finish Line
+
+열려 있는 뷰어에서 현재 폴더에 새 캡처를 열거나 F5를 눌러도 전체 캡처 라이브러리와 폴더 트리를 다시 만들지 않아 창이 멈추지 않는다.
+
+### Root Cause
+
+- 새 캡처는 현재 목록에 아직 없어서 같은 폴더여도 전체 인덱스 갱신으로 넘어갔다.
+- 이 경로는 재귀 폴더 트리를 다시 만들고 파일 목록을 비운 뒤 다시 채웠다.
+- F5도 현재 폴더 파일만 갱신하면 되는데 폴더 트리 스냅샷을 다시 만들었다.
+
+### Changes
+
+- 현재 표시 중인 폴더의 새 이미지는 정렬 위치에 즉시 추가하고 바로 선택한다.
+- 이미 목록에 있는 파일은 메타데이터만 갱신해 정렬 위치를 조정한다.
+- F5는 현재 폴더 목록만 비동기로 다시 읽고 기존 트리를 유지한다.
+- 새 캡처가 현재 폴더에 있으면 증분 경로를 택하는 회귀 테스트를 추가했다.
+
+### Verification
+
+- 실행 중이던 Mini Capture를 종료한 뒤 `dotnet build MiniCapture.slnx -c Debug --no-restore`를 실행해 경고 0개, 오류 0개를 확인했다.
+- `dotnet run --project tests/MiniCapture.Tests/MiniCapture.Tests.csproj --no-build`: 23/23 회귀 검사 통과.
+- 표준 Debug 출력의 `MiniCapture.exe`를 다시 실행했다.
+
+### Follow-up
+
+- NEEDS_USER_UI_CHECK: 뷰어를 열어 둔 채 같은 날짜 폴더에 새 캡처를 연속으로 추가하고, 목록이 즉시 갱신되며 창이 멈추지 않는지 확인한다.

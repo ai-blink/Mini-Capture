@@ -195,11 +195,26 @@ public partial class ViewerWindow : Window
 
     private bool TryOpenImageFromCurrentFolder(string? imagePath)
     {
-        if (!CaptureFileIndex.IsImagePath(imagePath) ||
-            !IsSameFolderSelection(_currentFolderPath, IOPath.GetDirectoryName(imagePath)) ||
-            FindFile(imagePath) is not { } file)
+        if (!CanIncrementallyOpenImage(_currentFolderPath, imagePath) ||
+            !CaptureFileIndex.TryCreateImageFile(imagePath, out var imageFile) ||
+            imageFile is null)
         {
             return false;
+        }
+
+        var file = FindFile(imagePath);
+        if (file is null)
+        {
+            _files.Insert(GetSortedFileInsertIndex(imageFile), imageFile);
+            _activeFolderFileCount = _files.Count;
+            FileCountText.Text = $"{_files.Count:0}개";
+            UpdateNavigationButtons();
+            file = imageFile;
+        }
+        else
+        {
+            file.RefreshFromDisk();
+            MoveFileToSortedPosition(file);
         }
 
         if (!string.Equals(_currentFile?.Path, file.Path, StringComparison.OrdinalIgnoreCase))
@@ -209,6 +224,10 @@ public partial class ViewerWindow : Window
 
         return true;
     }
+
+    internal static bool CanIncrementallyOpenImage(string? currentFolderPath, string? imagePath) =>
+        CaptureFileIndex.IsImagePath(imagePath) &&
+        IsSameFolderSelection(currentFolderPath, IOPath.GetDirectoryName(imagePath));
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {

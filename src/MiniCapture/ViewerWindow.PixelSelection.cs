@@ -58,7 +58,7 @@ public partial class ViewerWindow
             CopyPixelSelectionToClipboard(selection);
             SetViewerStatus($"선택 영역을 클립보드에 복사했습니다: {selection.Width} × {selection.Height}px");
         }
-        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.ExternalException)
         {
             SetViewerStatus($"선택 영역 복사 실패: {ex.Message}");
         }
@@ -76,7 +76,7 @@ public partial class ViewerWindow
         {
             CopyPixelSelectionToClipboard(selection);
         }
-        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.ExternalException)
         {
             SetViewerStatus($"선택 영역 복사 실패: {ex.Message}");
             return;
@@ -139,7 +139,7 @@ public partial class ViewerWindow
     {
         var copied = new CroppedBitmap(ComposeImageForExport(), selection);
         copied.Freeze();
-        WpfClipboard.SetImage(copied);
+        ClipboardService.SetImage(copied);
     }
 
     private bool TryGetPixelSelection(out Int32Rect selection)

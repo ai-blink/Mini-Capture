@@ -14,7 +14,6 @@ using System.Windows.Threading;
 using IOPath = System.IO.Path;
 using WpfBinding = System.Windows.Data.Binding;
 using WpfBrushes = System.Windows.Media.Brushes;
-using WpfClipboard = System.Windows.Clipboard;
 using WpfPoint = System.Windows.Point;
 using WpfRect = System.Windows.Rect;
 using WpfColor = System.Windows.Media.Color;
@@ -79,18 +78,7 @@ public partial class ViewerWindow
 
         try
         {
-            var snapshot = await Task.Run(
-                () => BuildFolderSnapshot(folderPath, preferredPath),
-                load.Token);
-            if (!IsCurrentLoad(load))
-            {
-                return;
-            }
-
-            _folderNodes = snapshot.FolderNodes;
-            FolderTree.ItemsSource = _folderNodes;
-            SelectFolderPath(snapshot.TargetFolder);
-            await LoadFolderAsync(snapshot.TargetFolder, snapshot.TargetPath, load, stopwatch);
+            await LoadFolderAsync(folderPath, preferredPath, load, stopwatch);
         }
         catch (OperationCanceledException)
         {
@@ -255,10 +243,10 @@ public partial class ViewerWindow
 
         try
         {
-            WpfClipboard.SetImage(ComposeImageForExport());
+            ClipboardService.SetImage(ComposeImageForExport());
             SetViewerStatus("이미지를 클립보드에 복사했습니다.");
         }
-        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.ExternalException)
         {
             SetViewerStatus($"이미지 복사 실패: {ex.Message}");
         }
