@@ -20,7 +20,7 @@
 
 ## Immediate Next Step
 
-- v0.1.4 is the current portable release; keep only the existing interactive viewer and multi-monitor follow-ups open.
+- v0.1.5 self-contained `win-x64` portable package is built, hash-verified, and locally launched; complete GitHub tag/release publication, then keep only the existing interactive viewer and multi-monitor follow-ups open.
 - **Only remaining step for the ViewerWindow split**: run the full manual-GUI regression checklist (design doc `notes/subagents/deep-refactor/20260806_170229_design.md` §6, or Phase 4's consolidated priority order — edit tools first, then annotation select/move/resize/delete, then restart-and-restore-layout, then navigation/toolbar, then keyboard) since the assistant has no interactive-desktop control for this native WPF app and no automated test exercises the actual XAML wiring/click paths.
 - Manually verify the mosaic size slider and block/blur type buttons on a real capture.
 - Manually add consecutive captures while the viewer displays the same folder and confirm that the list updates without a whole-window freeze.

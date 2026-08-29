@@ -1544,11 +1544,15 @@ Allow users to exclude a window-selection target by choosing a running process o
 - 설치본 뷰어 단일 클릭: 성공 상태 및 1060×1050 클립보드 이미지 확인.
 - 설치본 캡처 완료 팝업 단일 클릭: 성공 상태 및 3840×2160 클립보드 이미지 확인.
 - 검증용 전체 화면 캡처 파일은 확인 후 휴지통으로 이동했다.
+- 릴리스 마감 검증: `dotnet build MiniCapture.slnx -c Release --no-restore` 경고 0개, 오류 0개 및 최신 Debug 회귀 검사 23/23 통과.
+- 생성한 self-contained 단일 파일 `MiniCapture.exe`(`0.1.5.0`)를 로컬에서 기동해 게시 대상 실행 파일임을 확인했다.
 
 ### Release Package
 
 - `artifacts/publish/MiniCapture-v0.1.5-win-x64-portable/MiniCapture.exe`
 - `artifacts/MiniCapture-v0.1.5-win-x64-portable.zip`
+- 실행 파일 SHA-256: `AA8AC63C2493E901896ACC7A16D51F4A863166EA1E6AAFF2515454CC57A18A44`
+- ZIP SHA-256: `8B5032AF15ECA33C636B76096FA33E839044D5F0D379FE44A6EEAAD0BCF87326`
 
 ## 설정 창 사용자 확장자 등록
 

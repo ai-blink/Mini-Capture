@@ -17,6 +17,7 @@
 - 2026-08-30: `창 제외` now resolves ordinary process paths through limited-information Win32 queries, upgrades a matching name-only record to the file-path default, and reserves the file-picker button's full 106px layout requirement. Debug build and 20 regression cases pass; `C:\app\MiniCapture.exe` was republished after each repair with a recoverable backup.
 - 2026-08-30: Viewer GIF previews now use `XamlAnimatedGif` instead of the static `BitmapImage` first frame. The standard Debug build passed with 0 warnings/errors, all 22 regression cases passed (including GIF routing), and the rebuilt `MiniCapture.exe` was launched successfully.
 - 2026-08-30: Opening a new capture in the displayed folder now updates the existing list incrementally, and F5 refreshes only that folder instead of rebuilding the recursive library tree; Debug build passed with 0 warnings/errors and all 23 regression cases passed.
+- 2026-08-30: v0.1.5 self-contained `win-x64` portable package passed Release build, 23 regression checks, archive-content verification, SHA-256 capture, and local package launch.
 
 ## Current Work
 
