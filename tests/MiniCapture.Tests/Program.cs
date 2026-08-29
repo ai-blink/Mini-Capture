@@ -108,6 +108,9 @@ static void WindowExclusions_RetainProcessNameAndSwitchOnlyByMode()
         string.Equals("KeyDemoOsk", targets[0].ProcessName, StringComparison.Ordinal),
         "process name should be retained beside the executable path");
     AssertTrue(
+        targets[0].MatchMode == WindowCaptureExclusionMatchMode.FilePath,
+        "a target with an executable path should default to file-path matching");
+    AssertTrue(
         WindowPickerService.IsExcludedWindowTarget(
             @"C:\ai\projects\key-demo-osk\KeyDemoOsk.exe",
             "OtherProcess",
@@ -130,6 +133,51 @@ static void WindowExclusions_RetainProcessNameAndSwitchOnlyByMode()
     AssertTrue(
         string.Equals(@"C:\ai\projects\key-demo-osk\KeyDemoOsk.exe", targets[0].ExecutablePath, StringComparison.Ordinal),
         "changing match mode must retain the executable path");
+
+    var nameOnlyTargets = MiniCaptureSettings.NormalizeWindowCaptureExclusionTargets(
+        [
+            new WindowCaptureExclusionTarget
+            {
+                ProcessName = "PathUnavailableProcess",
+                MatchMode = WindowCaptureExclusionMatchMode.FilePath
+            }
+        ],
+        legacyExecutablePaths: []);
+
+    AssertIntEqual(1, nameOnlyTargets.Count, "path-unavailable exclusion target count");
+    AssertTrue(
+        nameOnlyTargets[0].MatchMode == WindowCaptureExclusionMatchMode.ProcessName,
+        "a target without an executable path should fall back to process-name matching");
+    AssertTrue(
+        WindowPickerService.IsExcludedWindowTarget(
+            executablePath: null,
+            processName: "PathUnavailableProcess",
+            nameOnlyTargets),
+        "path-unavailable target should match by process name");
+
+    var upgradedTargets = MiniCaptureSettings.NormalizeWindowCaptureExclusionTargets(
+        [
+            new WindowCaptureExclusionTarget
+            {
+                ProcessName = "KeyDemoOsk",
+                MatchMode = WindowCaptureExclusionMatchMode.ProcessName
+            },
+            new WindowCaptureExclusionTarget
+            {
+                ExecutablePath = @"C:\ai\projects\key-demo-osk\KeyDemoOsk.exe",
+                ProcessName = "KeyDemoOsk",
+                MatchMode = WindowCaptureExclusionMatchMode.FilePath
+            }
+        ],
+        legacyExecutablePaths: []);
+
+    AssertIntEqual(1, upgradedTargets.Count, "path-upgraded exclusion target count");
+    AssertTrue(
+        string.Equals(@"C:\ai\projects\key-demo-osk\KeyDemoOsk.exe", upgradedTargets[0].ExecutablePath, StringComparison.Ordinal),
+        "a later resolved executable path should upgrade the name-only target");
+    AssertTrue(
+        upgradedTargets[0].MatchMode == WindowCaptureExclusionMatchMode.FilePath,
+        "a later resolved executable path should restore the file-path default");
 }
 
 static void GetImages_AllowsExternalFolderWithoutRecursiveScan()

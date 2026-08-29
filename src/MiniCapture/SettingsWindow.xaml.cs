@@ -368,15 +368,11 @@ public partial class SettingsWindow : Window
                 }
 
                 var executablePath = string.Empty;
-                try
+                if (NativeWindowApi.TryGetProcessExecutablePath(process.Id, out var processImagePath))
                 {
                     MiniCaptureSettings.TryNormalizeWindowCaptureExcludedExecutablePath(
-                        process.MainModule?.FileName,
+                        processImagePath,
                         out executablePath);
-                }
-                catch (Exception ex) when (ex is InvalidOperationException or Win32Exception or NotSupportedException)
-                {
-                    // The process remains selectable by its process name when Windows withholds the path.
                 }
 
                 items.Add(new RunningProcessItem(process.ProcessName, process.Id, executablePath));
@@ -432,8 +428,25 @@ public partial class SettingsWindow : Window
                 ? WindowCaptureExclusionMatchMode.FilePath
                 : WindowCaptureExclusionMatchMode.ProcessName
         };
-        if (settings.WindowCaptureExclusionTargets.Any(existing => existing.HasSameIdentity(target)))
+        var existing = settings.WindowCaptureExclusionTargets.FirstOrDefault(candidate =>
+            candidate.HasSameIdentity(target));
+        if (existing is not null)
         {
+            if (hasExecutablePath && string.IsNullOrWhiteSpace(existing.ExecutablePath))
+            {
+                existing.ExecutablePath = normalizedPath;
+                existing.ProcessName = normalizedProcessName;
+                existing.MatchMode = WindowCaptureExclusionMatchMode.FilePath;
+                _captureSettings = settings;
+                MiniCaptureSettingsStore.Save(settings);
+                WindowExclusionPathBox.Clear();
+                LoadWindowExclusionFields();
+                WindowExclusionList.SelectedItem = WindowExclusionItems.FirstOrDefault(item =>
+                    item.Target.HasSameIdentity(target));
+                SetStatus($"{Path.GetFileName(normalizedPath)}의 실행 파일 경로를 확인해 파일 경로 기준으로 전환했습니다. 프로세스명도 계속 저장됩니다.");
+                return;
+            }
+
             SetStatus("해당 제외 대상은 이미 창 지정 제외 목록에 있습니다.");
             return;
         }

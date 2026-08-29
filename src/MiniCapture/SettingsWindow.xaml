@@ -464,7 +464,7 @@
                                 <Grid MinWidth="0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="96" />
+                                        <ColumnDefinition Width="106" />
                                     </Grid.ColumnDefinitions>
                                     <TextBox x:Name="WindowExclusionPathBox"
                                               Grid.Column="0"

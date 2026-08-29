@@ -1375,11 +1375,14 @@ Allow users to exclude a window-selection target by choosing a running process o
 - 실행 중인 프로세스에서 경로를 얻으면 파일 경로 기준으로 추가하면서 프로세스명도 저장한다. 경로를 얻지 못한 프로세스는 프로세스명 기준으로 추가하며, 이후 기준 변경은 선택한 항목의 라디오 버튼으로만 수행한다.
 - 파일 경로 기준과 프로세스명 기준의 매칭을 분리해, 라디오 전환이 반대 값을 지우거나 암묵적으로 fallback하지 않도록 했다.
 - Mini Capture `창 제외`와 `new-alt` 전역 설정의 세로 스크롤 본문은 뷰포트 폭을 유지하고, 내부 입력만 축소 가능하게 바꿨다. 따라서 긴 경로가 카드 외곽의 오른쪽 테두리를 밀어 화면 밖으로 내보내지 않는다.
+- `Process.MainModule` 대신 `PROCESS_QUERY_LIMITED_INFORMATION`과 `QueryFullProcessImageName`으로 일반 프로세스의 실행 경로를 조회하고, 같은 이름의 기존 이름 전용 항목은 경로와 파일 경로 기본값으로 승격한다. Windows가 보호하는 프로세스만 이름 기준으로 남는다.
+- 직접 경로 추가 행은 `파일 선택` 버튼의 왼쪽 10px 간격과 96px 최소 너비를 포함한 106px 열을 사용해, 버튼 오른쪽 테두리가 열 밖으로 넘치지 않게 했다.
 
 ### Verification
 
 - `dotnet build MiniCapture.slnx --nologo`: 경고 0개, 오류 0개.
 - `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --no-build`: 20/20 통과. 경로 기준 매칭, 프로세스명 기준 전환, 두 식별자 보존 검사를 포함한다.
+- `dotnet build MiniCapture.slnx --nologo` 및 `dotnet run --project tests\MiniCapture.Tests\MiniCapture.Tests.csproj --no-build`: 경고 0개·오류 0개, 20/20 통과. 이름 전용 항목의 경로 기준 승격 검사도 포함한다.
 - `dotnet build C:\ai\projects\new-alt\next\AltController.Next.slnx --nologo`: 경고 0개, 오류 0개.
 - 두 작업공간의 변경 범위 `git diff --check`: Mini Capture는 오류 없음. `new-alt` 전체 검사에는 보호 대상 사용자 파일 `notes/transfers/new-alt/latest_context.md`의 기존 trailing whitespace만 보고됐다.
 

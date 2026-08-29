@@ -11,6 +11,8 @@ internal static class NativeWindowApi
     private const int DwmwaCloaked = 14;
     private const uint WdaNone = 0x00000000;
     private const uint WdaExcludeFromCapture = 0x00000011;
+    private const uint ProcessQueryLimitedInformation = 0x1000;
+    private const int MaximumProcessImagePathLength = 32768;
 
     public static IReadOnlyList<IntPtr> EnumerateTopLevelWindows()
     {
@@ -34,6 +36,41 @@ internal static class NativeWindowApi
         return unchecked((int)processId);
     }
 
+    public static bool TryGetProcessExecutablePath(int processId, out string executablePath)
+    {
+        executablePath = string.Empty;
+        if (processId <= 0)
+        {
+            return false;
+        }
+
+        var processHandle = OpenProcess(
+            ProcessQueryLimitedInformation,
+            inheritHandle: false,
+            unchecked((uint)processId));
+        if (processHandle == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        try
+        {
+            var pathBuffer = new StringBuilder(MaximumProcessImagePathLength);
+            var pathLength = (uint)pathBuffer.Capacity;
+            if (!QueryFullProcessImageName(processHandle, flags: 0, pathBuffer, ref pathLength) || pathLength == 0)
+            {
+                return false;
+            }
+
+            executablePath = pathBuffer.ToString(0, unchecked((int)pathLength));
+            return true;
+        }
+        finally
+        {
+            _ = CloseHandle(processHandle);
+        }
+    }
+
     public static WindowProcessInfo GetProcessInfo(IntPtr hwnd)
     {
         var processId = GetProcessId(hwnd);
@@ -46,14 +83,9 @@ internal static class NativeWindowApi
         {
             using var process = Process.GetProcessById(processId);
             var processName = process.ProcessName;
-            try
-            {
-                return new WindowProcessInfo(processName, process.MainModule?.FileName ?? string.Empty);
-            }
-            catch (System.ComponentModel.Win32Exception)
-            {
-                return new WindowProcessInfo(processName, string.Empty);
-            }
+            return new WindowProcessInfo(
+                processName,
+                TryGetProcessExecutablePath(processId, out var executablePath) ? executablePath : string.Empty);
         }
         catch (ArgumentException)
         {
@@ -187,6 +219,19 @@ internal static class NativeWindowApi
 
     [DllImport("user32.dll")]
     private static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint processId);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr OpenProcess(uint desiredAccess, bool inheritHandle, uint processId);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool QueryFullProcessImageName(
+        IntPtr processHandle,
+        uint flags,
+        StringBuilder executablePath,
+        ref uint executablePathLength);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool CloseHandle(IntPtr handle);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool SetWindowDisplayAffinity(IntPtr hwnd, uint affinity);

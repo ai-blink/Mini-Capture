@@ -14,10 +14,11 @@
 - 2026-08-25: Viewer image switching no longer starts duplicate same-folder indexing/loading, and full-resolution decodes are serialized to prevent canceled synchronous decodes from overlapping newer requests.
 - 2026-08-25: Result-popup and viewer path copy now recover from the observed `CLIPBRD_E_CANT_OPEN` contention path; Release build and 18/18 tests pass, and the installed app copied successfully after a controlled 180ms clipboard lock.
 - 2026-08-25: v0.1.4 self-contained `win-x64` portable release prepared from the original `main` workspace.
+- 2026-08-30: `창 제외` now resolves ordinary process paths through limited-information Win32 queries, upgrades a matching name-only record to the file-path default, and reserves the file-picker button's full 106px layout requirement. Debug build and 20 regression cases pass; `C:\app\MiniCapture.exe` was republished after each repair with a recoverable backup.
 
 ## Current Work
 
-- 2026-08-28 window-exclusion settings slice: process selection now retains its executable path (when available) plus process name; the selected target switches only through its file-path/process-name radio buttons without discarding either value. Both settings screens constrain the scrollable body to the viewport and allow only inner inputs to shrink, preventing the outer right border from extending off-screen. Mini Capture build and 20/20 regression checks pass; `new-alt` build passes. Actual desktop confirmation is `NEEDS_USER_UI_CHECK`.
+- 2026-08-28–30 window-exclusion settings slice: process selection retains executable path plus process name and defaults to file-path matching when a path is available. A later path resolution upgrades a name-only record; radio toggles remain the only way to change an already path-backed target's mode. Mini Capture now uses limited-information process-path queries and the direct file-picker button fits its own grid column. Mini Capture build and 20/20 regression checks pass; `new-alt` build passes. Actual desktop confirmation is `NEEDS_USER_UI_CHECK`.
 - Finish Line: both settings surfaces show their full right border at their supported widths, and Mini Capture retains both target identifiers while the radio selection is the sole mode switch. Automated acceptance passed for Mini Capture and the `new-alt` build; visual verification is `NEEDS_USER_UI_CHECK` because the shared desktop was not safely controlled. Scope Limit: no new capture modes, exclusion-matching algorithms, or unrelated settings redesign. Review Budget: one implementation pass and two build/test review loops used. Stop Rule: stop pending only the user UI check; record unrelated findings as `FOLLOW_UP`.
 - v0.1.4 reliability fixes are code-complete, release-verified, and published; no release implementation remains active.
 - The viewer refresh/sorting, tooltip capture-exclusion, pixel-area editing/crop, and configurable window-exclusion slices are code-complete and regression-tested. Interactive desktop validation remains pending alongside the earlier high-resolution external-image validation.
@@ -26,7 +27,7 @@
 
 ## Next Actions
 
-- NEEDS_USER_UI_CHECK: open Mini Capture **설정 → 창 제외**, select an accessible process, add it, confirm both `파일 경로`/`프로세스명` radios retain the two values while toggling, and verify the file-path card's right border at the minimum window width. In `new-alt`, open **전역 설정** at its minimum width and confirm the right card borders are fully visible.
+- NEEDS_USER_UI_CHECK: open Mini Capture **설정 → 창 제외**, refresh the process list, add an accessible process, confirm both `파일 경로`/`프로세스명` radios retain the two values while toggling, and verify the file-picker button's right border at the minimum window width. Protected Windows processes may still report `경로 확인 불가`. In `new-alt`, open **전역 설정** at its minimum width and confirm the right card borders are fully visible.
 - Manually verify address-row/toolbar/F5 refresh, all four Details sort toggles, and tooltip capture exclusion.
 - Manually verify selected-area Ctrl+C/Ctrl+X/Ctrl+V plus 2-row left-sidebar crop sliders/numeric inputs and preview/apply behavior.
 - Manually verify toolbar wrapping/crop icon and register a visible process through `창 제외` before checking it cannot be selected.

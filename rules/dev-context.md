@@ -10,7 +10,7 @@
 - Viewer toolbar now includes pixel-area selection, copy/cut/paste, and crop entry; the crop panel expands below the left file list in two rows.
 - Normal-width viewer toolbars wrap command groups instead of showing a horizontal scrollbar; the crop command uses the Windows four-corner crop glyph.
 - Settings now let users exclude target windows by registered executable path.
-- The window-exclusion repair now stores the selected process's executable path (when available) and process name together. Its radio buttons are the only rule selector and preserve both values while toggling. The scrollable settings bodies in Mini Capture and `C:\ai\projects\new-alt` now stretch to their viewport while their inner inputs may shrink; build/test evidence is complete and only visual confirmation remains.
+- The window-exclusion repair queries executable paths with `PROCESS_QUERY_LIMITED_INFORMATION`/`QueryFullProcessImageName`, so normal processes no longer depend on the overly restrictive `Process.MainModule` query. A formerly name-only target is upgraded to its resolved path and file-path default, while user-chosen radio modes for existing path targets remain intact. The direct-path picker reserves its 10px gap plus 96px button width inside a 106px column so its right border stays inside the card. Build/test evidence is complete; the refreshed process list and border still require user visual confirmation.
 - The mosaic edit tool exposes a block-size slider (6-64px) and a block/Gaussian-blur type toggle; `ApplyMosaic` branches on type. `ContextToolbar` height changed from fixed `Height="42"` to `MinHeight="42"` after real-app usage showed the mosaic type buttons clipping (found by launching the built exe, not by code review).
 - Viewer image activation now avoids duplicate same-folder indexing/loading, and full-resolution decodes are serialized so canceled synchronous decodes cannot overlap newer requests.
 - Result-popup and viewer path copy share bounded recovery for the observed `CLIPBRD_E_CANT_OPEN` contention error.
@@ -25,7 +25,7 @@
 - Manually validate refresh/F5 and all four sort toggles on the interactive desktop.
 - Manually select an image area, verify Ctrl+C/Ctrl+X/Ctrl+V, then crop with left/right and top/bottom slider and numeric values before applying.
 - Confirm a normal-width viewer wraps its toolbar without clipping, and verify a registered `창 제외` process cannot be selected.
-- NEEDS_USER_UI_CHECK: validate the full right border and radio-only rule switching in Mini Capture, then validate `new-alt`'s global-settings right border at its minimum width.
+- NEEDS_USER_UI_CHECK: refresh Mini Capture's running-process list and confirm normal user processes now show executable paths while protected Windows processes remain unavailable; validate the file-picker right border and radio-only rule switching. Then validate `new-alt`'s global-settings right border at its minimum width.
 - Re-run the outstanding repeated-association, sibling-navigation, and high-resolution external-image workflow.
 - Keep true multi-monitor validation and installer/default-app packaging as follow-ups.
 

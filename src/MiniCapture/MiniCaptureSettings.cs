@@ -192,6 +192,8 @@ public sealed class MiniCaptureSettings
             if (string.IsNullOrWhiteSpace(existing.ExecutablePath) && !string.IsNullOrWhiteSpace(normalized.ExecutablePath))
             {
                 existing.ExecutablePath = normalized.ExecutablePath;
+                existing.ProcessName = normalized.ProcessName;
+                existing.MatchMode = normalized.MatchMode;
             }
         }
 
