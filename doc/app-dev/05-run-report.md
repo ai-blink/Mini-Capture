@@ -1609,3 +1609,37 @@ Allow users to exclude a window-selection target by choosing a running process o
 ### Follow-up
 
 - NEEDS_USER_UI_CHECK: 뷰어를 열어 둔 채 같은 날짜 폴더에 새 캡처를 연속으로 추가하고, 목록이 즉시 갱신되며 창이 멈추지 않는지 확인한다.
+
+## v0.1.6 파일 연결 활성화 릴리스
+
+### Finish Line
+
+이미 열려 있는 뷰어가 Windows 파일 연결로 전달받은 기존 파일을 확장자 인덱스와 독립적으로 받아 해당 파일로 전환한다.
+
+### Root Cause
+
+- 파일 연결 인수도 뷰어 라이브러리의 등록 확장자 필터로 판별했다.
+- 따라서 Windows가 Mini Capture에 전달한 기존 파일이라도 등록 목록 밖 확장자는 열기 요청 전에 무시됐다.
+
+### Changes
+
+- 파일 연결용 기존 파일 판별을 인덱스용 확장자 필터에서 분리했다.
+- 외부 연결로 연 파일은 현재 폴더 목록에 없더라도 선택 가능한 항목으로 포함한다.
+- 기존 뷰어의 같은 폴더 전환과 인수 전달을 고정하는 회귀 테스트를 추가했다.
+
+### Verification
+
+- `dotnet run --project tests/MiniCapture.Tests/MiniCapture.Tests.csproj -c Release --no-restore`: 24/24 통과.
+- `dotnet build MiniCapture.slnx -c Release --no-restore`: 경고 0개, 오류 0개.
+- self-contained `win-x64` 단일 파일 게시와 ZIP 생성 완료.
+
+### Release Package
+
+- `artifacts/publish/MiniCapture-v0.1.6-win-x64-portable/MiniCapture.exe`
+- `artifacts/MiniCapture-v0.1.6-win-x64-portable.zip`
+- 실행 파일 SHA-256: `B52DD2274CAC49DD02A3026DA8A6D251FEEE0FDE0AC5B3F99A0C27414BAF4150`
+- ZIP SHA-256: `B9DADE5C3CEE12CCCF943CB7AD3E6BF060FD837BFEC12B063AE2962D603C2C24`
+
+### Follow-up
+
+- NEEDS_USER_UI_CHECK: 새 릴리스에서 설정 → 확장자 연결 UI를 열고, 등록된 형식과 다른 외부 이미지 파일을 연속으로 열어 현재 뷰어가 전환되는지 확인한다.

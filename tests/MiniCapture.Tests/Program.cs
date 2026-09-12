@@ -12,6 +12,7 @@ var tests = new (string Name, Action Run)[]
     ("WindowExclusions_NormalizeAndMatchExecutablePaths", WindowExclusions_NormalizeAndMatchExecutablePaths),
     ("WindowExclusions_RetainProcessNameAndSwitchOnlyByMode", WindowExclusions_RetainProcessNameAndSwitchOnlyByMode),
     ("ImageExtensions_NormalizeAndPreserveCustomRegistration", ImageExtensions_NormalizeAndPreserveCustomRegistration),
+    ("OpenFileArgument_AcceptsExistingAssociatedFile", OpenFileArgument_AcceptsExistingAssociatedFile),
     ("GetImages_AllowsExternalFolderWithoutRecursiveScan", GetImages_AllowsExternalFolderWithoutRecursiveScan),
     ("GetImages_DoesNotRecursivelyScanCaptureSubfolders", GetImages_DoesNotRecursivelyScanCaptureSubfolders),
     ("BuildFolderTree_IncludesExternalPathAndChildFolders", BuildFolderTree_IncludesExternalPathAndChildFolders),
@@ -209,6 +210,36 @@ static void ImageExtensions_NormalizeAndPreserveCustomRegistration()
     AssertTrue(
         clone.AdditionalImageExtensions.SequenceEqual([".gif"], StringComparer.OrdinalIgnoreCase),
         "settings copies should retain only valid custom extensions");
+}
+
+static void OpenFileArgument_AcceptsExistingAssociatedFile()
+{
+    var folder = CreateTemporaryFolder();
+    try
+    {
+        var path = Path.Combine(folder, "opened-from-shell.not-an-index-extension");
+        File.WriteAllBytes(path, [1]);
+
+        AssertTrue(
+            CaptureFileIndex.IsOpenCandidatePath(path),
+            "an existing file passed by a Windows file association should be accepted for viewer dispatch");
+        AssertTrue(
+            !CaptureFileIndex.IsImagePath(path),
+            "the associated-file dispatch path must remain independent from the indexed extension list");
+        AssertTrue(
+            App.GetOpenFileArgument(["--settings", path]) == path,
+            "activation should forward the existing associated file instead of discarding it by extension");
+        AssertTrue(
+            CaptureFileIndex.TryCreateOpenCandidate(path, out var file) && file is not null,
+            "the viewer should create an entry for an associated file that is outside the indexed extension list");
+        AssertTrue(
+            ViewerWindow.CanIncrementallyOpenImage(folder, path),
+            "an already open viewer should switch to an associated file in its current folder");
+    }
+    finally
+    {
+        Directory.Delete(folder, recursive: true);
+    }
 }
 
 static void GetImages_AllowsExternalFolderWithoutRecursiveScan()

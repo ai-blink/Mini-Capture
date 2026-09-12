@@ -92,15 +92,35 @@ public static class CaptureFileIndex
 
     public static bool IsImagePath(string? path)
     {
-        return !string.IsNullOrWhiteSpace(path) &&
-            GetImageExtensions().Contains(Path.GetExtension(path)) &&
-            File.Exists(path);
+        if (!IsOpenCandidatePath(path))
+        {
+            return false;
+        }
+
+        var extension = Path.GetExtension(path);
+        return !string.IsNullOrWhiteSpace(extension) && GetImageExtensions().Contains(extension);
+    }
+
+    public static bool IsOpenCandidatePath(string? path)
+    {
+        return !string.IsNullOrWhiteSpace(path) && File.Exists(path);
     }
 
     public static bool TryCreateImageFile(string? path, out CaptureImageFile? imageFile)
     {
-        imageFile = null;
         if (!IsImagePath(path))
+        {
+            imageFile = null;
+            return false;
+        }
+
+        return TryCreateOpenCandidate(path, out imageFile);
+    }
+
+    public static bool TryCreateOpenCandidate(string? path, out CaptureImageFile? imageFile)
+    {
+        imageFile = null;
+        if (!IsOpenCandidatePath(path))
         {
             return false;
         }

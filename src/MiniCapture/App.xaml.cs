@@ -21,7 +21,7 @@ public partial class App : System.Windows.Application
     public App(string[] args)
     {
         _openSettingsOnStartup = args.Any(arg => string.Equals(arg, "--settings", StringComparison.OrdinalIgnoreCase));
-        _startupImagePath = args.FirstOrDefault(CaptureFileIndex.IsImagePath);
+        _startupImagePath = GetOpenFileArgument(args);
     }
 
     public bool IsExitRequested { get; private set; }
@@ -78,7 +78,7 @@ public partial class App : System.Windows.Application
     {
         Dispatcher.BeginInvoke(() =>
         {
-            var imagePath = args.FirstOrDefault(CaptureFileIndex.IsImagePath);
+            var imagePath = GetOpenFileArgument(args);
             if (imagePath is not null)
             {
                 EnsureMainWindow().OpenViewer(imagePath);
@@ -93,6 +93,12 @@ public partial class App : System.Windows.Application
 
             ShowCaptureWindow();
         });
+    }
+
+    internal static string? GetOpenFileArgument(IEnumerable<string> args)
+    {
+        ArgumentNullException.ThrowIfNull(args);
+        return args.FirstOrDefault(CaptureFileIndex.IsOpenCandidatePath);
     }
 
     private void CreateTrayIcon()

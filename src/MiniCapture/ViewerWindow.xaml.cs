@@ -196,7 +196,7 @@ public partial class ViewerWindow : Window
     private bool TryOpenImageFromCurrentFolder(string? imagePath)
     {
         if (!CanIncrementallyOpenImage(_currentFolderPath, imagePath) ||
-            !CaptureFileIndex.TryCreateImageFile(imagePath, out var imageFile) ||
+            !CaptureFileIndex.TryCreateOpenCandidate(imagePath, out var imageFile) ||
             imageFile is null)
         {
             return false;
@@ -226,7 +226,7 @@ public partial class ViewerWindow : Window
     }
 
     internal static bool CanIncrementallyOpenImage(string? currentFolderPath, string? imagePath) =>
-        CaptureFileIndex.IsImagePath(imagePath) &&
+        CaptureFileIndex.IsOpenCandidatePath(imagePath) &&
         IsSameFolderSelection(currentFolderPath, IOPath.GetDirectoryName(imagePath));
 
     private async void OnLoaded(object sender, RoutedEventArgs e)

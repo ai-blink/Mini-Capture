@@ -64,14 +64,14 @@ public partial class ViewerWindow
     {
         var targetPath = ResolveTargetPath(requestedPath);
         var targetFolder = GetTargetFolder(targetPath);
-        CaptureFileIndex.TryCreateImageFile(targetPath, out var knownLatest);
+        CaptureFileIndex.TryCreateOpenCandidate(targetPath, out var knownLatest);
         var folderNodes = CaptureFileIndex.BuildFolderTree(targetFolder, knownLatest);
         return new ViewerIndexSnapshot(folderNodes, targetPath, targetFolder);
     }
 
     private static string? ResolveTargetPath(string? requestedPath)
     {
-        if (CaptureFileIndex.IsImagePath(requestedPath))
+        if (CaptureFileIndex.IsOpenCandidatePath(requestedPath))
         {
             return requestedPath;
         }
@@ -140,6 +140,18 @@ public partial class ViewerWindow
             return;
         }
 
+        var preferredIsInFolder = false;
+        CaptureImageFile? preferredFile = null;
+        if (CaptureFileIndex.TryCreateOpenCandidate(preferredPath, out preferredFile) && preferredFile is not null)
+        {
+            preferredIsInFolder = string.Equals(preferredFile.FolderPath, folderPath, StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (preferredIsInFolder && preferredFile is not null && !files.Any(file => PathsEqual(file.Path, preferredFile.Path)))
+        {
+            files = SortFiles(files.Append(preferredFile), requestedSortColumn, requestedSortDirection);
+        }
+
         _activeFolderFileCount = files.Count;
         _isExternalFolder = !CaptureFileIndex.IsUnderRoot(folderPath);
         _files.Clear();
@@ -151,12 +163,6 @@ public partial class ViewerWindow
         if (switchedToDetailsForLargeFolder)
         {
             SetViewMode(ExplorerViewMode.Details);
-        }
-
-        var preferredIsInFolder = false;
-        if (CaptureFileIndex.TryCreateImageFile(preferredPath, out var preferredFile) && preferredFile is not null)
-        {
-            preferredIsInFolder = string.Equals(preferredFile.FolderPath, folderPath, StringComparison.OrdinalIgnoreCase);
         }
 
         try
