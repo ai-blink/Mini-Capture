@@ -45,6 +45,34 @@ public partial class ViewerWindow
         PasteIntoPixelSelection();
     }
 
+    private void OnApplySelectionMosaicClick(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetPixelSelection(out var selection))
+        {
+            SetViewerStatus("먼저 모자이크할 영역을 선택하세요.");
+            return;
+        }
+
+        // 선택 영역은 모자이크 객체로 넘기고 해제한다. 이후 객체를 다시 선택해 이동·크기·종류를 고친다.
+        _pixelSelection = null;
+        if (_pixelSelectionFrame is not null)
+        {
+            AnnotationOverlay.Children.Remove(_pixelSelectionFrame);
+            _pixelSelectionFrame = null;
+        }
+
+        var annotation = new EditableAnnotation
+        {
+            Kind = ViewerAnnotationKind.Mosaic,
+            Color = _selectedColor,
+            StrokeThickness = 1,
+            PixelBounds = new WpfRect(selection.X, selection.Y, selection.Width, selection.Height),
+            MosaicType = _mosaicType,
+            MosaicBlockSize = _mosaicBlockSize
+        };
+        AddAnnotation(annotation, _mosaicType == ViewerMosaicType.Blur ? "흐림 모자이크를 추가했습니다." : "모자이크를 추가했습니다.");
+    }
+
     private void CopyPixelSelection()
     {
         if (!TryGetPixelSelection(out var selection))
@@ -141,6 +169,41 @@ public partial class ViewerWindow
         copied.Freeze();
         ClipboardService.SetImage(copied);
     }
+
+    private void UpdatePixelSelectionDrag(WpfPoint displayPoint)
+    {
+        if (_editableImage is null)
+        {
+            return;
+        }
+
+        var delta = DisplayToPixel(displayPoint) - DisplayToPixel(_drawStartPoint);
+        var moved = MovePixelRect(
+            _pixelSelectionStartRect,
+            (int)Math.Round(delta.X),
+            (int)Math.Round(delta.Y),
+            _editableImage.PixelWidth,
+            _editableImage.PixelHeight);
+        _pixelSelection = moved;
+
+        if (_pixelSelectionFrame is not null)
+        {
+            var rect = PixelToDisplayRect(new WpfRect(moved.X, moved.Y, moved.Width, moved.Height));
+            Canvas.SetLeft(_pixelSelectionFrame, rect.Left);
+            Canvas.SetTop(_pixelSelectionFrame, rect.Top);
+        }
+    }
+
+    private static bool ContainsPixel(Int32Rect rect, WpfPoint pixel) =>
+        pixel.X >= rect.X && pixel.X < rect.X + rect.Width &&
+        pixel.Y >= rect.Y && pixel.Y < rect.Y + rect.Height;
+
+    internal static Int32Rect MovePixelRect(Int32Rect start, int deltaX, int deltaY, int imageWidth, int imageHeight) =>
+        new(
+            Math.Clamp(start.X + deltaX, 0, Math.Max(0, imageWidth - start.Width)),
+            Math.Clamp(start.Y + deltaY, 0, Math.Max(0, imageHeight - start.Height)),
+            start.Width,
+            start.Height);
 
     private bool TryGetPixelSelection(out Int32Rect selection)
     {

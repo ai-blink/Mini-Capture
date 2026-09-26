@@ -7,7 +7,11 @@
 - Multilingual UI work started 2026-09-27 to match the README's EN/KO/ZH/JA promise (previously only the READMEs were translated, the app itself was 100% Korean-hardcoded with no i18n infra at all). Built `.resx` infra (neutral=Korean + `en`/`zh-CN`/`ja` satellites, 123 keys) with a hand-written `Strings.Designer.cs` (plain `dotnet build` never runs the VS single-file generator, so a checked-in generated class is required), and fully localized `SettingsWindow` (XAML + code-behind + a11y AutomationName strings) plus a new "언어/Language" settings section with restart-to-apply. `ViewerWindow`/`MainWindow`/tray menu are still hardcoded Korean — next slices.
 - Fixed a real regression the language-restart flow introduced: `Process.Start` + `Shutdown()` raced the app's single-instance mutex, letting a dying old window get reactivated mid-teardown with its transparent layered-window style broken. Fix: the relaunched process passes `--restart-wait <pid>` and waits for the old PID to fully exit before the single-instance check; normal "already running" launches are unaffected.
 
+- 2026-09-27 viewer editing slice: the "missing" mosaic UI was an off-screen restored viewer (`ViewerLeft=-914`), now clamped by `ClampWindowBounds`. The immediate `▦` mosaic tool is removed; mosaic is created from a `▧` selection as a non-destructive `ViewerAnnotationKind.Mosaic` object (re-select, move, resize, change size/type, Delete; composed on save; block size is in image pixels). Pixel selections and shapes drag-move. Build 0/0, 27/27 tests.
+
 ## Immediate Next Step
+
+- NEEDS_USER_UI_CHECK (mosaic object): apply, deselect, re-select, move/resize, change size/type, save. Observed once: a cold start with a file argument did not open the viewer (not reproduced, not investigated).
 
 - NEEDS_USER_UI_CHECK (i18n): switch language in Settings → 언어/Language, confirm the restart prompt applies it, and re-confirm the floating capture button is transparent again afterward.
 - Localize `MainWindow.xaml`/`.xaml.cs` (23 Korean literals) + the tray context menu (`App.xaml.cs`) next — small but easy to miss.

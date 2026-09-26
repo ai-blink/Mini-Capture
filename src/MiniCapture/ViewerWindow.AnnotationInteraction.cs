@@ -38,7 +38,12 @@ public partial class ViewerWindow
         }
 
         SelectAnnotation(annotation);
-        if (_editTool != ViewerEditTool.Select || Keyboard.FocusedElement is System.Windows.Controls.TextBox)
+        // 도형 도구 중에도 기존 도형을 끌면 새로 그리지 않고 옮긴다. 텍스트 도구는 클릭 편집을 위해 제외.
+        // 영역 선택 도구에서는 모자이크 객체만 옮기고, 그 밖의 곳은 새 영역 선택으로 넘긴다.
+        var canMove = _editTool is ViewerEditTool.Select or ViewerEditTool.Rectangle or ViewerEditTool.Ellipse or
+                ViewerEditTool.Arrow or ViewerEditTool.Pen ||
+            (_editTool == ViewerEditTool.PixelSelect && annotation.Kind == ViewerAnnotationKind.Mosaic);
+        if (!canMove || Keyboard.FocusedElement is System.Windows.Controls.TextBox)
         {
             return;
         }
@@ -165,6 +170,10 @@ public partial class ViewerWindow
             path.Data = annotation.Kind == ViewerAnnotationKind.Arrow
                 ? CreateDisplayArrowGeometry(annotation)
                 : CreateDisplayPenGeometry(annotation);
+        }
+        else if (annotation.Element is System.Windows.Controls.Image mosaicImage && annotation.Kind == ViewerAnnotationKind.Mosaic)
+        {
+            mosaicImage.Source = GetMosaicPatch(annotation, out _);
         }
 
         PositionAnnotationElement(annotation);

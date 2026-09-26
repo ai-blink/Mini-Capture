@@ -116,11 +116,12 @@ public partial class ViewerWindow
             return;
         }
 
+        bounds = ClampWindowBounds(bounds, GetVirtualScreenRect());
         WindowStartupLocation = WindowStartupLocation.Manual;
-        Left = left;
-        Top = top;
-        Width = width;
-        Height = height;
+        Left = bounds.Left;
+        Top = bounds.Top;
+        Width = bounds.Width;
+        Height = bounds.Height;
 
         if (string.Equals(settings.ViewerWindowState, nameof(WindowState.Maximized), StringComparison.Ordinal))
         {
@@ -274,14 +275,23 @@ public partial class ViewerWindow
     private static double ClampPanelWidth(double width, double minWidth) =>
         Math.Clamp(width, minWidth, MaxStoredPanelWidth);
 
-    private static bool IntersectsVirtualScreen(WpfRect bounds)
-    {
-        var virtualScreen = new WpfRect(
+    private static bool IntersectsVirtualScreen(WpfRect bounds) =>
+        GetVirtualScreenRect().IntersectsWith(bounds);
+
+    private static WpfRect GetVirtualScreenRect() =>
+        new(
             SystemParameters.VirtualScreenLeft,
             SystemParameters.VirtualScreenTop,
             SystemParameters.VirtualScreenWidth,
             SystemParameters.VirtualScreenHeight);
-        return virtualScreen.IntersectsWith(bounds);
+
+    internal static WpfRect ClampWindowBounds(WpfRect bounds, WpfRect area)
+    {
+        var width = Math.Min(bounds.Width, area.Width);
+        var height = Math.Min(bounds.Height, area.Height);
+        var left = Math.Clamp(bounds.Left, area.Left, area.Right - width);
+        var top = Math.Clamp(bounds.Top, area.Top, area.Bottom - height);
+        return new WpfRect(left, top, width, height);
     }
 
     private GridView CreateDetailsView()

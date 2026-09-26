@@ -215,6 +215,7 @@ public partial class ViewerWindow
                 Fill = WpfBrushes.Transparent
             },
             ViewerAnnotationKind.Text => CreateAnnotationTextBox(annotation, brush),
+            ViewerAnnotationKind.Mosaic => CreateMosaicElement(annotation),
             ViewerAnnotationKind.Pen => new WpfPath
             {
                 Stroke = brush,
@@ -239,6 +240,18 @@ public partial class ViewerWindow
                 Fill = WpfBrushes.Transparent
             }
         };
+    }
+
+    private System.Windows.Controls.Image CreateMosaicElement(EditableAnnotation annotation)
+    {
+        var image = new System.Windows.Controls.Image
+        {
+            Source = GetMosaicPatch(annotation, out _),
+            Stretch = Stretch.Fill
+        };
+        AutomationProperties.SetAutomationId(image, "ViewerMosaicObject");
+        RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.NearestNeighbor);
+        return image;
     }
 
     private System.Windows.Controls.TextBox CreateAnnotationTextBox(EditableAnnotation annotation, System.Windows.Media.Brush brush)
@@ -294,8 +307,16 @@ public partial class ViewerWindow
     private void SelectAnnotation(EditableAnnotation? annotation)
     {
         _selectedAnnotation = annotation;
+        if (annotation is { Kind: ViewerAnnotationKind.Mosaic })
+        {
+            // 선택한 모자이크의 값을 설정 줄에 반영한다. 슬라이더 핸들러는 값이 같으면 객체를 건드리지 않는다.
+            _mosaicType = annotation.MosaicType;
+            MosaicSizeSlider.Value = annotation.MosaicBlockSize;
+        }
+
         RenderSelectionFrame();
         UpdateEditButtons();
+        UpdateToolContext();
     }
 
     private void RenderSelectionFrame()

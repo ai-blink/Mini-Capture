@@ -106,13 +106,6 @@ public partial class ViewerWindow
         shape.Stroke = stroke;
         shape.StrokeThickness = 2;
         shape.Fill = WpfBrushes.Transparent;
-
-        if (_editTool == ViewerEditTool.Mosaic)
-        {
-            shape.Fill = new SolidColorBrush(WpfColor.FromArgb(42, _selectedColor.R, _selectedColor.G, _selectedColor.B));
-            shape.StrokeDashArray = new DoubleCollection { 4, 3 };
-        }
-
         return shape;
     }
 

@@ -641,14 +641,6 @@
                                     ToolTip="텍스트"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
                                     Tag="Text" />
-                            <Button x:Name="MosaicToolButton"
-                                    AutomationProperties.AutomationId="ViewerMosaicToolButton"
-                                    AutomationProperties.Name="모자이크"
-                                    Click="OnToolButtonClick"
-                                    Content="▦"
-                                    ToolTip="모자이크"
-                                    Style="{StaticResource ToolGlyphButtonStyle}"
-                                    Tag="Mosaic" />
                             <Button x:Name="DeleteAnnotationButton"
                                     AutomationProperties.AutomationId="ViewerDeleteAnnotationButton"
                                     AutomationProperties.Name="삭제"
@@ -909,6 +901,14 @@
                                     ToolTip="가우시안 흐림"
                                     Style="{StaticResource RibbonTextButtonStyle}"
                                     Tag="Blur" />
+                            <Button x:Name="ApplySelectionMosaicButton"
+                                    Margin="8,0,0,0"
+                                    AutomationProperties.AutomationId="ViewerApplySelectionMosaicButton"
+                                    AutomationProperties.Name="선택 영역에 모자이크 적용"
+                                    Click="OnApplySelectionMosaicClick"
+                                    Content="모자이크 적용"
+                                    ToolTip="선택 영역에 현재 크기·종류로 모자이크 적용"
+                                    Style="{StaticResource RibbonTextButtonStyle}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>

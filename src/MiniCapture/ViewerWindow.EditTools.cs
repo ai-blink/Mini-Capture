@@ -71,6 +71,14 @@ public partial class ViewerWindow
         {
             MosaicSizeText.Text = $"{_mosaicBlockSize}px";
         }
+
+        if (_selectedAnnotation is { Kind: ViewerAnnotationKind.Mosaic } mosaic &&
+            mosaic.MosaicBlockSize != _mosaicBlockSize)
+        {
+            mosaic.MosaicBlockSize = _mosaicBlockSize;
+            RefreshAnnotationVisual(mosaic);
+            MarkAnnotationChanged($"모자이크 크기를 {_mosaicBlockSize}px로 바꿨습니다.");
+        }
     }
 
     private void OnMosaicTypeButtonClick(object sender, RoutedEventArgs e)
@@ -82,6 +90,14 @@ public partial class ViewerWindow
         }
 
         _mosaicType = mosaicType;
+        if (_selectedAnnotation is { Kind: ViewerAnnotationKind.Mosaic } mosaic &&
+            mosaic.MosaicType != _mosaicType)
+        {
+            mosaic.MosaicType = _mosaicType;
+            RefreshAnnotationVisual(mosaic);
+            MarkAnnotationChanged(_mosaicType == ViewerMosaicType.Blur ? "흐림 모자이크로 바꿨습니다." : "블록 모자이크로 바꿨습니다.");
+        }
+
         UpdateToolContext();
     }
 
@@ -109,10 +125,9 @@ public partial class ViewerWindow
         {
             ViewerEditTool.Pan => "핸드툴: 이미지를 끌어 이동합니다.",
             ViewerEditTool.Select => "선택: 보기 상태를 유지하고 편집하지 않습니다.",
-            ViewerEditTool.PixelSelect => "영역 선택: 드래그한 영역을 복사, 잘라내기, 붙여넣기할 수 있습니다.",
+            ViewerEditTool.PixelSelect => "영역 선택: 드래그한 영역을 복사, 잘라내기, 붙여넣기하거나 모자이크할 수 있습니다.",
             ViewerEditTool.Rectangle => "네모: 이미지 위에서 드래그해 그립니다.",
             ViewerEditTool.Ellipse => "동그라미: 이미지 위에서 드래그해 그립니다.",
-            ViewerEditTool.Mosaic => "모자이크: 가릴 영역을 드래그합니다.",
             ViewerEditTool.Pen => "펜: 이미지 위에 자유선을 그립니다.",
             ViewerEditTool.Arrow => "화살표: 드래그해서 방향을 표시합니다.",
             _ => "텍스트: 이미지 위를 클릭해 입력합니다."
@@ -226,6 +241,17 @@ public partial class ViewerWindow
 
         if (_editTool == ViewerEditTool.PixelSelect)
         {
+            if (_pixelSelection is { } selection && ContainsPixel(selection, DisplayToPixel(position)))
+            {
+                _isMovingPixelSelection = true;
+                _drawStartPoint = position;
+                _pixelSelectionStartRect = selection;
+                AnnotationOverlay.CaptureMouse();
+                AnnotationOverlay.Cursor = WpfCursors.SizeAll;
+                e.Handled = true;
+                return;
+            }
+
             _isDrawing = true;
             _drawStartPoint = position;
             _previewShape = CreatePixelSelectionPreview();
@@ -282,6 +308,13 @@ public partial class ViewerWindow
             return;
         }
 
+        if (_isMovingPixelSelection)
+        {
+            UpdatePixelSelectionDrag(ClampToSurface(e.GetPosition(AnnotationOverlay)));
+            e.Handled = true;
+            return;
+        }
+
         if (!_isDrawing)
         {
             return;
@@ -323,6 +356,20 @@ public partial class ViewerWindow
             return;
         }
 
+        if (_isMovingPixelSelection)
+        {
+            _isMovingPixelSelection = false;
+            AnnotationOverlay.ReleaseMouseCapture();
+            AnnotationOverlay.Cursor = WpfCursors.Cross;
+            if (_pixelSelection is { } moved)
+            {
+                SetViewerStatus($"영역 선택: {moved.Width} × {moved.Height}px ({moved.X}, {moved.Y})");
+            }
+
+            e.Handled = true;
+            return;
+        }
+
         if (!_isDrawing)
         {
             return;
@@ -359,11 +406,7 @@ public partial class ViewerWindow
 
         if (rect.Width >= 2 && rect.Height >= 2)
         {
-            if (_editTool == ViewerEditTool.Mosaic)
-            {
-                ApplyMosaic(rect);
-            }
-            else if (_editTool == ViewerEditTool.Arrow)
+            if (_editTool == ViewerEditTool.Arrow)
             {
                 AddArrowAnnotation(_drawStartPoint, endPoint);
             }

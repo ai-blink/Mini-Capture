@@ -88,6 +88,10 @@ public partial class ViewerWindow
             case ViewerAnnotationKind.Pen:
                 drawing.DrawGeometry(null, pen, CreatePixelPenGeometry(annotation));
                 break;
+            case ViewerAnnotationKind.Mosaic:
+                var patch = GetMosaicPatch(annotation, out var region);
+                drawing.DrawImage(patch, new WpfRect(region.X, region.Y, region.Width, region.Height));
+                break;
             case ViewerAnnotationKind.Arrow:
                 if (annotation.PixelPoints.Count >= 2)
                 {
@@ -101,59 +105,57 @@ public partial class ViewerWindow
         }
     }
 
-    private async void ApplyMosaic(Int32Rect pixelRect)
+    // 모자이크 객체는 픽셀을 굽지 않고, 현재 원본 이미지의 해당 영역으로 조각을 만들어 위에 덮는다.
+    // 저장·복사 때 ComposeImageForExport가 같은 조각을 합성한다.
+    private BitmapSource GetMosaicPatch(EditableAnnotation annotation, out Int32Rect region)
     {
-        if (_editableImage is null || _isApplyingMosaic)
+        var image = _editableImage ?? throw new InvalidOperationException("No image is loaded.");
+        region = ToMosaicRegion(annotation.PixelBounds, image.PixelWidth, image.PixelHeight);
+        var key = (region, annotation.MosaicType, annotation.MosaicBlockSize, image);
+        if (annotation.MosaicPatch is null || !Equals(annotation.MosaicPatchKey, key))
         {
-            return;
+            annotation.MosaicPatch = CreateMosaicPatch(image, region, annotation.MosaicType, annotation.MosaicBlockSize);
+            annotation.MosaicPatchKey = key;
         }
 
-        _isApplyingMosaic = true;
-        try
+        return annotation.MosaicPatch;
+    }
+
+    private static Int32Rect ToMosaicRegion(WpfRect bounds, int imageWidth, int imageHeight)
+    {
+        var x = Math.Clamp((int)Math.Floor(bounds.X), 0, imageWidth - 1);
+        var y = Math.Clamp((int)Math.Floor(bounds.Y), 0, imageHeight - 1);
+        var right = Math.Clamp((int)Math.Ceiling(bounds.Right), x + 1, imageWidth);
+        var bottom = Math.Clamp((int)Math.Ceiling(bounds.Bottom), y + 1, imageHeight);
+        return new Int32Rect(x, y, right - x, bottom - y);
+    }
+
+    internal static BitmapSource CreateMosaicPatch(BitmapSource image, Int32Rect region, ViewerMosaicType mosaicType, int blockSize)
+    {
+        var stride = region.Width * 4;
+        var pixels = new byte[stride * region.Height];
+        ConvertToBgra32(image).CopyPixels(region, pixels, stride, 0);
+
+        blockSize = Math.Max(1, blockSize);
+        if (mosaicType == ViewerMosaicType.Blur)
         {
-            CommitAnnotationsToBitmap("모자이크 전 주석을 이미지에 적용했습니다.", pushUndo: true);
-            PushUndoSnapshot();
-            var source = ConvertToBgra32(_editableImage);
-            var width = source.PixelWidth;
-            var height = source.PixelHeight;
-            var stride = width * 4;
-            var pixels = new byte[stride * height];
-            source.CopyPixels(pixels, stride, 0);
-
-            var blockSize = Math.Clamp((int)Math.Round(_mosaicBlockSize / Math.Max(_zoom, MinZoom)), 6, 64);
-            var right = Math.Min(width, pixelRect.X + pixelRect.Width);
-            var bottom = Math.Min(height, pixelRect.Y + pixelRect.Height);
-            var mosaicType = _mosaicType;
-
-            await Task.Run(() =>
+            ApplyGaussianBlurRegion(pixels, stride, 0, 0, region.Width, region.Height, blockSize / 2.0);
+        }
+        else
+        {
+            for (var y = 0; y < region.Height; y += blockSize)
             {
-                if (mosaicType == ViewerMosaicType.Blur)
+                for (var x = 0; x < region.Width; x += blockSize)
                 {
-                    ApplyGaussianBlurRegion(pixels, stride, pixelRect.X, pixelRect.Y, right, bottom, blockSize / 2.0);
+                    ApplyMosaicBlock(pixels, stride, x, y, Math.Min(region.Width, x + blockSize), Math.Min(region.Height, y + blockSize));
                 }
-                else
-                {
-                    for (var y = pixelRect.Y; y < bottom; y += blockSize)
-                    {
-                        for (var x = pixelRect.X; x < right; x += blockSize)
-                        {
-                            var blockRight = Math.Min(right, x + blockSize);
-                            var blockBottom = Math.Min(bottom, y + blockSize);
-                            ApplyMosaicBlock(pixels, stride, x, y, blockRight, blockBottom);
-                        }
-                    }
-                }
-            });
+            }
+        }
 
-            var bitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, null);
-            bitmap.WritePixels(new Int32Rect(0, 0, width, height), pixels, stride, 0);
-            bitmap.Freeze();
-            SetEditableImage(bitmap, mosaicType == ViewerMosaicType.Blur ? "흐림 모자이크를 적용했습니다." : "모자이크를 적용했습니다.");
-        }
-        finally
-        {
-            _isApplyingMosaic = false;
-        }
+        var patch = new WriteableBitmap(region.Width, region.Height, 96, 96, PixelFormats.Bgra32, null);
+        patch.WritePixels(new Int32Rect(0, 0, region.Width, region.Height), pixels, stride, 0);
+        patch.Freeze();
+        return patch;
     }
 
     private static void DrawArrowHead(DrawingContext drawing, WpfPoint start, WpfPoint end, System.Windows.Media.Brush brush, double strokeThickness)

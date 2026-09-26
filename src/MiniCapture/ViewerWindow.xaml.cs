@@ -35,7 +35,6 @@ internal enum ViewerEditTool
     PixelSelect,
     Rectangle,
     Ellipse,
-    Mosaic,
     Text,
     Pen,
     Arrow
@@ -53,7 +52,8 @@ internal enum ViewerAnnotationKind
     Ellipse,
     Text,
     Pen,
-    Arrow
+    Arrow,
+    Mosaic
 }
 
 internal enum ViewerFileSortColumn
@@ -97,6 +97,15 @@ public partial class ViewerWindow : Window
 
         public string Text { get; set; } = string.Empty;
 
+        public ViewerMosaicType MosaicType { get; set; }
+
+        public int MosaicBlockSize { get; set; }
+
+        // 원본 이미지에서 계산한 모자이크 조각 캐시. 키(영역·종류·크기·원본)가 바뀌면 다시 만든다.
+        public BitmapSource? MosaicPatch { get; set; }
+
+        public object? MosaicPatchKey { get; set; }
+
         public FrameworkElement? Element { get; set; }
     }
 
@@ -133,6 +142,7 @@ public partial class ViewerWindow : Window
     private bool _isPanning;
     private bool _isResizingAnnotation;
     private bool _isMovingAnnotation;
+    private bool _isMovingPixelSelection;
     private bool _isRestoringImageViewState;
     private bool _isUpdatingZoomSlider;
     private bool _spacePanActive;
@@ -143,13 +153,13 @@ public partial class ViewerWindow : Window
     private WpfPoint _drawStartPoint;
     private WpfPoint _panStartPoint;
     private Int32Rect? _pixelSelection;
+    private Int32Rect _pixelSelectionStartRect;
     private double _panStartHorizontalOffset;
     private double _panStartVerticalOffset;
     private WpfColor _selectedColor = WpfColor.FromRgb(239, 68, 68);
     private double _strokeThickness = 4.0;
     private int _mosaicBlockSize = 14;
     private ViewerMosaicType _mosaicType = ViewerMosaicType.Block;
-    private bool _isApplyingMosaic;
     private double _zoom = 1.0;
     private ExplorerViewMode _viewMode = ExplorerViewMode.Details;
     private ViewerFileSortColumn _fileSortColumn = ViewerFileSortColumn.ModifiedDate;

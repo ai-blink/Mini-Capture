@@ -113,7 +113,6 @@ public partial class ViewerWindow
         SetViewButtonState(PixelSelectToolButton, _editTool == ViewerEditTool.PixelSelect && !_spacePanActive);
         SetViewButtonState(RectangleToolButton, _editTool == ViewerEditTool.Rectangle);
         SetViewButtonState(EllipseToolButton, _editTool == ViewerEditTool.Ellipse);
-        SetViewButtonState(MosaicToolButton, _editTool == ViewerEditTool.Mosaic);
         SetViewButtonState(TextToolButton, _editTool == ViewerEditTool.Text);
         SetViewButtonState(PenToolButton, _editTool == ViewerEditTool.Pen);
         SetViewButtonState(ArrowToolButton, _editTool == ViewerEditTool.Arrow);
@@ -135,7 +134,8 @@ public partial class ViewerWindow
             ViewerEditTool.Rectangle or
             ViewerEditTool.Ellipse;
         var showsText = _editTool == ViewerEditTool.Text;
-        var showsMosaic = _editTool == ViewerEditTool.Mosaic;
+        var editsMosaic = _selectedAnnotation?.Kind == ViewerAnnotationKind.Mosaic;
+        var showsMosaic = _editTool == ViewerEditTool.PixelSelect || editsMosaic;
 
         ContextToolbar.Visibility = showsStroke || showsText || showsMosaic
             ? Visibility.Visible
@@ -152,20 +152,23 @@ public partial class ViewerWindow
         MosaicContextGroup.Visibility = showsMosaic
             ? Visibility.Visible
             : Visibility.Collapsed;
+        ApplySelectionMosaicButton.Visibility = _editTool == ViewerEditTool.PixelSelect
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         if (showsMosaic)
         {
             SetViewButtonState(MosaicTypeBlockButton, _mosaicType == ViewerMosaicType.Block);
             SetViewButtonState(MosaicTypeBlurButton, _mosaicType == ViewerMosaicType.Blur);
         }
 
-        ContextToolName.Text = _editTool switch
+        ContextToolName.Text = editsMosaic ? "모자이크 편집" : _editTool switch
         {
             ViewerEditTool.Pen => "펜 설정",
             ViewerEditTool.Arrow => "화살표 설정",
             ViewerEditTool.Rectangle => "네모 설정",
             ViewerEditTool.Ellipse => "원 설정",
             ViewerEditTool.Text => "텍스트 설정",
-            ViewerEditTool.Mosaic => "모자이크 설정",
+            ViewerEditTool.PixelSelect => "선택 영역 모자이크",
             _ => string.Empty
         };
     }

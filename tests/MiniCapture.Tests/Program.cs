@@ -21,6 +21,9 @@ var tests = new (string Name, Action Run)[]
     ("RequiresDetailsView_ForLargeFolder", RequiresDetailsView_ForLargeFolder),
     ("SortFiles_UsesRequestedColumnAndDirection", SortFiles_UsesRequestedColumnAndDirection),
     ("CalculateCropRectangle_ClampsMarginsAndPreservesOnePixel", CalculateCropRectangle_ClampsMarginsAndPreservesOnePixel),
+    ("ClampWindowBounds_PullsOffscreenViewerIntoArea", ClampWindowBounds_PullsOffscreenViewerIntoArea),
+    ("MovePixelRect_KeepsSelectionInsideImage", MovePixelRect_KeepsSelectionInsideImage),
+    ("CreateMosaicPatch_AveragesBlocksInsideRegionOnly", CreateMosaicPatch_AveragesBlocksInsideRegionOnly),
     ("BuildGaussianKernel_NormalizesAndIsSymmetric", BuildGaussianKernel_NormalizesAndIsSymmetric),
     ("ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge", ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge),
     ("DecodeImageFile_AllowsBackgroundDecode", DecodeImageFile_AllowsBackgroundDecode),
@@ -412,6 +415,65 @@ static void CalculateCropRectangle_ClampsMarginsAndPreservesOnePixel()
     AssertIntEqual(7, constrainedCrop.Y, "constrained crop y");
     AssertIntEqual(1, constrainedCrop.Width, "constrained crop width");
     AssertIntEqual(1, constrainedCrop.Height, "constrained crop height");
+}
+
+static void ClampWindowBounds_PullsOffscreenViewerIntoArea()
+{
+    var area = new System.Windows.Rect(0, 0, 2560, 1440);
+
+    var offscreen = ViewerWindow.ClampWindowBounds(new System.Windows.Rect(-771, 966, 2279, 1031), area);
+    AssertTrue(offscreen.Left == 0 && offscreen.Top == 409, $"offscreen viewer should move inside, got {offscreen}");
+    AssertTrue(offscreen.Width == 2279 && offscreen.Height == 1031, $"fitting size should be preserved, got {offscreen}");
+
+    var oversized = ViewerWindow.ClampWindowBounds(new System.Windows.Rect(100, 100, 3000, 2000), area);
+    AssertTrue(oversized == area, $"oversized viewer should shrink to the area, got {oversized}");
+
+    var inside = new System.Windows.Rect(200, 150, 1200, 800);
+    AssertTrue(ViewerWindow.ClampWindowBounds(inside, area) == inside, "visible viewer bounds should stay unchanged");
+}
+
+static void MovePixelRect_KeepsSelectionInsideImage()
+{
+    var start = new System.Windows.Int32Rect(10, 20, 30, 40);
+
+    var moved = ViewerWindow.MovePixelRect(start, 15, -5, 200, 100);
+    AssertTrue(moved == new System.Windows.Int32Rect(25, 15, 30, 40), $"selection should move by delta, got {moved}");
+
+    var clampedHigh = ViewerWindow.MovePixelRect(start, 500, 500, 200, 100);
+    AssertTrue(clampedHigh == new System.Windows.Int32Rect(170, 60, 30, 40), $"selection should stop at right/bottom edge, got {clampedHigh}");
+
+    var clampedLow = ViewerWindow.MovePixelRect(start, -500, -500, 200, 100);
+    AssertTrue(clampedLow == new System.Windows.Int32Rect(0, 0, 30, 40), $"selection should stop at left/top edge, got {clampedLow}");
+}
+
+static void CreateMosaicPatch_AveragesBlocksInsideRegionOnly()
+{
+    // 6x2 이미지: 열마다 파랑 값이 0,100,200,0,100,200. 영역 (1,0,4,2)에 블록 2 → [100,200] [0,100] 두 블록.
+    const int width = 6;
+    const int height = 2;
+    var pixels = new byte[width * height * 4];
+    byte[] blues = [0, 100, 200, 0, 100, 200];
+    for (var y = 0; y < height; y++)
+    {
+        for (var x = 0; x < width; x++)
+        {
+            var offset = (y * width + x) * 4;
+            pixels[offset] = blues[x];
+            pixels[offset + 3] = 255;
+        }
+    }
+
+    var image = System.Windows.Media.Imaging.BitmapSource.Create(width, height, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, pixels, width * 4);
+    var patch = ViewerWindow.CreateMosaicPatch(image, new System.Windows.Int32Rect(1, 0, 4, 2), ViewerMosaicType.Block, 2);
+    AssertIntEqual(4, patch.PixelWidth, "patch width");
+    AssertIntEqual(2, patch.PixelHeight, "patch height");
+
+    var patchPixels = new byte[4 * 2 * 4];
+    patch.CopyPixels(patchPixels, 4 * 4, 0);
+    AssertIntEqual(150, patchPixels[0], "first block average");
+    AssertIntEqual(150, patchPixels[4], "first block is uniform");
+    AssertIntEqual(50, patchPixels[8], "second block average");
+    AssertIntEqual(50, patchPixels[(4 + 3) * 4], "second block covers bottom row");
 }
 
 static void BuildGaussianKernel_NormalizesAndIsSymmetric()
