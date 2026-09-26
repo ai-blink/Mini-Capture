@@ -1,13 +1,18 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace MiniCapture;
 
 public static class Program
 {
+    internal const string RestartWaitArgument = "--restart-wait";
+
     [STAThread]
     public static void Main(string[] args)
     {
         DpiAwarenessApi.TryEnablePerMonitorV2();
+        LocalizationService.ApplyLanguage(MiniCaptureSettingsStore.Load().Language);
+        WaitForRestartSourceExit(args);
 
         if (!SingleInstanceCoordinator.TryCreatePrimary(out var instance))
         {
@@ -22,6 +27,25 @@ public static class Program
             instance!.StartListening(app.HandleActivationArguments);
             app.InitializeComponent();
             app.Run();
+        }
+    }
+
+    private static void WaitForRestartSourceExit(string[] args)
+    {
+        var index = Array.IndexOf(args, RestartWaitArgument);
+        if (index < 0 || index + 1 >= args.Length || !int.TryParse(args[index + 1], out var processId))
+        {
+            return;
+        }
+
+        try
+        {
+            using var sourceProcess = Process.GetProcessById(processId);
+            sourceProcess.WaitForExit(5000);
+        }
+        catch (ArgumentException)
+        {
+            // The source process already exited before this instance started.
         }
     }
 }

@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Common -->
+  <data name="Common_Close" xml:space="preserve"><value>閉じる</value></data>
+  <data name="Common_Detect" xml:space="preserve"><value>検出</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Common_ResetDefault" xml:space="preserve"><value>既定値に戻す</value></data>
+  <data name="Common_Refresh" xml:space="preserve"><value>更新</value></data>
+  <data name="Common_BrowseFile" xml:space="preserve"><value>ファイルを選択</value></data>
+  <data name="Common_ShowHelp" xml:space="preserve"><value>説明を見る</value></data>
+
+  <!-- Window chrome -->
+  <data name="Settings_WindowTitle" xml:space="preserve"><value>Mini Capture 設定</value></data>
+  <data name="Settings_HeaderSubtitle" xml:space="preserve"><value>拡張子の関連付けとアプリの詳細設定</value></data>
+
+  <!-- Section nav / headers -->
+  <data name="Settings_Section_ExtensionDefaults" xml:space="preserve"><value>拡張子の関連付け</value></data>
+  <data name="Settings_Section_CaptureSettings" xml:space="preserve"><value>キャプチャ設定</value></data>
+  <data name="Settings_Section_WindowExclusions" xml:space="preserve"><value>ウィンドウ除外</value></data>
+  <data name="Settings_Section_Language" xml:space="preserve"><value>言語</value></data>
+
+  <!-- Capture settings panel -->
+  <data name="Settings_Capture_Subtitle" xml:space="preserve"><value>ホットキー、タイマー、透明クイックアイコンの表示状態を保存します。</value></data>
+  <data name="Settings_Capture_HotkeyHelp" xml:space="preserve"><value>各コンボボックス横の検出をクリックすると、そのキーが自動入力されます。3番目のキー検出でCtrl+Alt+Wのように押すと、組み合わせ全体が入力されます。</value></data>
+  <data name="Settings_Capture_TimerLabel" xml:space="preserve"><value>グローバルタイマー(秒)</value></data>
+  <data name="Settings_Capture_ShortcutTimerLabel" xml:space="preserve"><value>タイマーホットキー(秒)</value></data>
+  <data name="Settings_Capture_QuickButtonVisible" xml:space="preserve"><value>透明クイックアイコンをデスクトップに表示</value></data>
+  <data name="Settings_Capture_UiExcluded" xml:space="preserve"><value>クイックアイコン、サブボタン、右クリックメニューをキャプチャから除外</value></data>
+
+  <!-- Hotkey labels -->
+  <data name="Hotkey_Window" xml:space="preserve"><value>ウィンドウ選択</value></data>
+  <data name="Hotkey_Region" xml:space="preserve"><value>領域選択</value></data>
+  <data name="Hotkey_FullScreen" xml:space="preserve"><value>全画面キャプチャ</value></data>
+  <data name="Hotkey_Timer" xml:space="preserve"><value>タイマーキャプチャ</value></data>
+  <data name="Hotkey_FirstKeyPart" xml:space="preserve"><value>1番目のキー</value></data>
+  <data name="Hotkey_SecondKeyPart" xml:space="preserve"><value>2番目のキー</value></data>
+  <data name="Hotkey_MainKeyPart" xml:space="preserve"><value>3番目のキー</value></data>
+  <data name="Hotkey_Suffix" xml:space="preserve"><value>ホットキー</value></data>
+  <data name="Hotkey_DetectSuffix" xml:space="preserve"><value>キー検出</value></data>
+  <data name="Hotkey_EmptyPlaceholder" xml:space="preserve"><value>(未設定)</value></data>
+  <data name="Hotkey_StatusWaiting" xml:space="preserve"><value>待機中</value></data>
+  <data name="Hotkey_StatusDetected" xml:space="preserve"><value>検出完了</value></data>
+
+  <!-- Window exclusions panel -->
+  <data name="Settings_WindowExclusion_Title" xml:space="preserve"><value>ウィンドウ除外リスト</value></data>
+  <data name="Settings_WindowExclusion_Subtitle" xml:space="preserve"><value>登録した対象のウィンドウは、ウィンドウ指定キャプチャの候補から除外されます。プロセスを選ぶとパスとプロセス名が一緒に保存され、適用基準は下のラジオボタンでのみ変更できます。</value></data>
+  <data name="Settings_WindowExclusion_RunningProcessLabel" xml:space="preserve"><value>実行中のプロセス</value></data>
+  <data name="Settings_WindowExclusion_RunningProcessTooltip" xml:space="preserve"><value>実行ファイルのパスを確認できる実行中のプロセスです。パスを確認できないプロセスも名前基準で追加できます。</value></data>
+  <data name="Settings_WindowExclusion_RunningProcessHelp" xml:space="preserve"><value>選択したプロセスの実行ファイルのパスとプロセス名が一緒に保存されます。パスを確認できない場合は、プロセス名基準のみ使用できます。</value></data>
+  <data name="Settings_WindowExclusion_AddRunningProcess" xml:space="preserve"><value>選択したプロセスを除外</value></data>
+  <data name="Settings_WindowExclusion_AddPathLabel" xml:space="preserve"><value>実行ファイルのパスを直接追加</value></data>
+  <data name="Settings_WindowExclusion_PathTooltip" xml:space="preserve"><value>除外する .exe ファイルの絶対パス</value></data>
+  <data name="Settings_WindowExclusion_AddPathButton" xml:space="preserve"><value>パスを追加</value></data>
+  <data name="Settings_WindowExclusion_RemoveSelected" xml:space="preserve"><value>選択項目を削除</value></data>
+  <data name="Settings_WindowExclusion_RegisteredLabel" xml:space="preserve"><value>登録済みの除外対象</value></data>
+  <data name="Settings_WindowExclusion_RuleLabel" xml:space="preserve"><value>選択項目の適用基準</value></data>
+  <data name="Settings_WindowExclusion_RuleFilePath" xml:space="preserve"><value>ファイルパス</value></data>
+  <data name="Settings_WindowExclusion_RuleProcessName" xml:space="preserve"><value>プロセス名</value></data>
+  <data name="Settings_WindowExclusion_AppliedRuleFilePath" xml:space="preserve"><value>適用基準: ファイルパス</value></data>
+  <data name="Settings_WindowExclusion_AppliedRuleProcessName" xml:space="preserve"><value>適用基準: プロセス名</value></data>
+
+  <!-- Extension defaults panel -->
+  <data name="Settings_Extension_Subtitle" xml:space="preserve"><value>既定の PNG/JPG/JPEG 以外の画像拡張子も登録し、Windows の既定アプリ選択リストに追加できます。</value></data>
+  <data name="Settings_Extension_StatusTitle" xml:space="preserve"><value>既定アプリ選択状態</value></data>
+  <data name="Settings_Extension_StatusHelp" xml:space="preserve"><value>登録した拡張子は Mini Capture Viewer の選択リストに追加されます。既定アプリの変更は、ユーザーが Windows の設定で直接選択する必要があります。</value></data>
+  <data name="Settings_Extension_StatusPending" xml:space="preserve"><value>確認待ち</value></data>
+  <data name="Settings_Extension_ImageExtensionsTitle" xml:space="preserve"><value>画像拡張子</value></data>
+  <data name="Settings_Extension_ImageExtensionsHelp" xml:space="preserve"><value>画像拡張子を追加すると、Mini Capture Viewer の選択リストに登録され、このリストに保持されます。</value></data>
+  <data name="Settings_Extension_ExtensionInputTooltip" xml:space="preserve"><value>例: .bmp または bmp</value></data>
+  <data name="Settings_Extension_RegisterButton" xml:space="preserve"><value>拡張子を登録</value></data>
+  <data name="Settings_Extension_ColumnExtension" xml:space="preserve"><value>拡張子</value></data>
+  <data name="Settings_Extension_ColumnFormat" xml:space="preserve"><value>形式</value></data>
+  <data name="Settings_Extension_ColumnCurrentApp" xml:space="preserve"><value>現在の既定アプリ</value></data>
+  <data name="Settings_Extension_ColumnEdit" xml:space="preserve"><value>変更</value></data>
+  <data name="Settings_Extension_OpenDefaultApps" xml:space="preserve"><value>Windows の既定のアプリで選択する</value></data>
+  <data name="Settings_Extension_RestoreCandidates" xml:space="preserve"><value>選択リストを復元</value></data>
+  <data name="Settings_Extension_CopyExecutablePath" xml:space="preserve"><value>実行ファイルのパスをコピー</value></data>
+  <data name="Settings_Extension_ChangeAutomationName" xml:space="preserve"><value>{0} の Windows 既定アプリを変更</value></data>
+  <data name="Settings_Extension_HelpDialogTitle" xml:space="preserve"><value>拡張子の関連付けについて</value></data>
+  <data name="Settings_Extension_HelpDialogBody" xml:space="preserve"><value>既定の PNG/JPG/JPEG 以外の画像拡張子は、下の入力欄に追加して選択リストに登録できます。
+
+1. 画像拡張子(例: .bmp)を入力し、「拡張子を登録」をクリックします。
+2. 「Windows の既定のアプリで選択する」をクリックします。
+3. その拡張子の現在のアプリを Mini Capture Viewer に変更します。
+
+Windows のセキュリティポリシーにより、アプリが既存の既定アプリを無断で変更することはできません。</value></data>
+
+  <!-- Footer -->
+  <data name="Settings_Footer_DefaultAppNotice" xml:space="preserve"><value>既定アプリの変更は、ユーザーが Windows の設定で直接選択する必要があります。</value></data>
+
+  <!-- Status / dialog messages -->
+  <data name="Settings_Status_AutoRefresh10s" xml:space="preserve"><value>10秒ごとに自動更新</value></data>
+  <data name="Settings_Status_WindowOpened" xml:space="preserve"><value>設定ウィンドウを開きました</value></data>
+  <data name="Settings_Status_WindowActivated" xml:space="preserve"><value>設定ウィンドウがアクティブになりました</value></data>
+  <data name="Settings_Status_OpenedDefaultApps" xml:space="preserve"><value>Windows の既定のアプリ設定を開きました。</value></data>
+  <data name="Settings_Status_OpenDefaultAppsFailed" xml:space="preserve"><value>Windows の既定のアプリ設定を開けませんでした: {0}</value></data>
+  <data name="Settings_Status_PathCopied" xml:space="preserve"><value>実行ファイルのパスをコピーしました。</value></data>
+  <data name="Settings_Status_PathCopyFailed" xml:space="preserve"><value>パスをコピーできませんでした: {0}</value></data>
+  <data name="Settings_Status_RestoreCandidatesDone" xml:space="preserve"><value>登録済み拡張子の選択リストを復元しました。Windows の既定のアプリで Mini Capture Viewer を選択してください。</value></data>
+  <data name="Settings_Status_RestoreCandidatesFailed" xml:space="preserve"><value>選択リストの復元に失敗しました: {0}</value></data>
+  <data name="Settings_Status_InvalidExtensionFormat" xml:space="preserve"><value>拡張子は .bmp のように、英数字1〜32文字で入力してください。</value></data>
+  <data name="Settings_Status_ExtensionIsDefault" xml:space="preserve"><value>{0} は既定登録済みの拡張子です。</value></data>
+  <data name="Settings_Status_ExtensionAlreadyRegistered" xml:space="preserve"><value>{0} はすでに登録されています。</value></data>
+  <data name="Settings_Status_ExtensionRegisteredReason" xml:space="preserve"><value>{0} の登録完了</value></data>
+  <data name="Settings_Status_ExtensionRegistered" xml:space="preserve"><value>{0} を Mini Capture Viewer の選択リストに登録しました。Windows の既定のアプリで関連付けを選択してください。</value></data>
+  <data name="Settings_Status_ExtensionRegisterFailed" xml:space="preserve"><value>{0} の登録に失敗しました: {1}</value></data>
+  <data name="Settings_Status_CaptureSettingsSaved" xml:space="preserve"><value>キャプチャ設定を保存しました。ホットキーとクイックアイコンの設定はすぐに反映されます。</value></data>
+  <data name="Settings_Status_CaptureSettingsReset" xml:space="preserve"><value>キャプチャ設定を既定値に戻しました。</value></data>
+  <data name="Settings_Status_ProcessesRefreshed" xml:space="preserve"><value>実行中のプロセス {0} 件を更新しました。</value></data>
+  <data name="Settings_Status_SelectProcessFirst" xml:space="preserve"><value>除外する実行中のプロセスを先に選択してください。</value></data>
+  <data name="Settings_Dialog_BrowseExecutableTitle" xml:space="preserve"><value>ウィンドウ指定から除外する実行ファイルの選択</value></data>
+  <data name="Settings_Dialog_ExecutableFilterName" xml:space="preserve"><value>実行ファイル</value></data>
+  <data name="Settings_Dialog_AllFilesFilterName" xml:space="preserve"><value>すべてのファイル</value></data>
+  <data name="Settings_Status_InvalidExecutablePathOrBrowse" xml:space="preserve"><value>存在する .exe ファイルの絶対パスを入力するか、「ファイルを選択」を使用してください。</value></data>
+  <data name="Settings_Status_SelectExclusionToRemove" xml:space="preserve"><value>削除する実行ファイルをリストから選択してください。</value></data>
+  <data name="Settings_Status_ExclusionAlreadyRemoved" xml:space="preserve"><value>選択した除外対象はすでにリストから削除されています。</value></data>
+  <data name="Settings_Status_ExclusionRemoved" xml:space="preserve"><value>{0} をウィンドウ指定の除外リストから削除しました。</value></data>
+  <data name="Settings_Status_ExclusionProcessNameOnly" xml:space="preserve"><value>実行ファイルのパスを確認できない対象は、プロセス名基準でのみ除外できます。</value></data>
+  <data name="Settings_Status_ExclusionTargetNotFound" xml:space="preserve"><value>選択した除外対象が見つからなかったため、リストを更新しました。</value></data>
+  <data name="Settings_Status_RuleSwitchedToFilePath" xml:space="preserve"><value>ファイルパス基準に切り替えました。プロセス名も引き続き保存されます。</value></data>
+  <data name="Settings_Status_RuleSwitchedToProcessName" xml:space="preserve"><value>プロセス名基準に切り替えました。実行ファイルのパスも引き続き保存されます。</value></data>
+  <data name="Settings_Status_InvalidExecutablePathOrSelectProcess" xml:space="preserve"><value>存在する .exe ファイルの絶対パスを入力するか、実行中のプロセスを選択してください。</value></data>
+  <data name="Settings_Status_ProcessNameUnresolved" xml:space="preserve"><value>プロセス名を確認できなかったため、除外対象を保存できませんでした。</value></data>
+  <data name="Settings_Status_ExclusionAlreadyExists" xml:space="preserve"><value>その除外対象は、すでにウィンドウ指定の除外リストにあります。</value></data>
+  <data name="Settings_Status_ExclusionUpgradedToFilePath" xml:space="preserve"><value>{0} の実行ファイルのパスを確認し、ファイルパス基準に切り替えました。プロセス名も引き続き保存されます。</value></data>
+  <data name="Settings_Status_ExclusionAddedFilePath" xml:space="preserve"><value>{0} をファイルパス基準で除外します。プロセス名も保存しました。</value></data>
+  <data name="Settings_Status_ExclusionAddedProcessName" xml:space="preserve"><value>{0} をプロセス名基準で除外します。</value></data>
+  <data name="Settings_Status_TimerRangeInvalid" xml:space="preserve"><value>グローバルタイマーは 0〜60 の秒数で入力してください。</value></data>
+  <data name="Settings_Status_ShortcutTimerRangeInvalid" xml:space="preserve"><value>タイマーホットキーは 1〜60 の秒数で入力してください。</value></data>
+  <data name="Settings_Status_HotkeyFormatInvalid" xml:space="preserve"><value>{0} のホットキーは Ctrl+Alt+R のような形式で入力してください。</value></data>
+  <data name="Settings_Status_HotkeyRequired" xml:space="preserve"><value>{0} のホットキーを1つ以上指定してください。</value></data>
+  <data name="Settings_Status_HotkeysMustBeDistinct" xml:space="preserve"><value>すべてのホットキーの組み合わせは、互いに異なる必要があります。</value></data>
+  <data name="Settings_Status_DetectCancelled" xml:space="preserve"><value>キー検出をキャンセルしました。</value></data>
+  <data name="Settings_Status_HotkeyDetected" xml:space="preserve"><value>{0} の{1}を {2} に設定しました。保存を押すと適用されます。</value></data>
+  <data name="Settings_Status_AssociationSummary" xml:space="preserve"><value>{0}/{1} 件関連付け済み</value></data>
+  <data name="Settings_Status_AssociationsRefreshed" xml:space="preserve"><value>{0}: すべての拡張子の関連付け状態を更新しました。{1}</value></data>
+  <data name="Settings_Status_WindowsSettingsPrompt" xml:space="preserve"><value>{0} {1} の現在のアプリを Mini Capture Viewer に変更してください。</value></data>
+
+  <!-- Running process display -->
+  <data name="Settings_Process_DisplayNamePathUnknown" xml:space="preserve"><value>{0} (PID {1}、パス確認不可)</value></data>
+  <data name="Settings_Process_DisplayName" xml:space="preserve"><value>{0} (PID {1})</value></data>
+
+  <!-- File association reader -->
+  <data name="FileAssoc_Unspecified" xml:space="preserve"><value>未指定</value></data>
+  <data name="FileAssoc_CheckFailed" xml:space="preserve"><value>確認失敗</value></data>
+  <data name="FileAssoc_None" xml:space="preserve"><value>(なし)</value></data>
+  <data name="FileAssoc_DetailNoCommand" xml:space="preserve"><value>UserChoice={0}、既定={1}</value></data>
+  <data name="FileAssoc_DetailWithCommand" xml:space="preserve"><value>UserChoice={0}、既定={1}、コマンド={2}</value></data>
+
+  <!-- Language section -->
+  <data name="Settings_Language_Subtitle" xml:space="preserve"><value>アプリに表示する言語を選択します。変更後は再起動すると適用されます。</value></data>
+  <data name="Settings_Language_Label" xml:space="preserve"><value>表示言語</value></data>
+  <data name="Settings_Language_ApplyButton" xml:space="preserve"><value>適用して再起動</value></data>
+  <data name="Settings_Language_RestartPromptTitle" xml:space="preserve"><value>再起動</value></data>
+  <data name="Settings_Language_RestartPromptBody" xml:space="preserve"><value>言語を変更するには Mini Capture を再起動する必要があります。今すぐ再起動しますか?</value></data>
+</root>

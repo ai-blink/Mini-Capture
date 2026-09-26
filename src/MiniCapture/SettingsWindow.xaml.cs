@@ -1,13 +1,14 @@
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-using WpfClipboard = System.Windows.Clipboard;
+using MiniCapture.Resources;
 using WpfBrush = System.Windows.Media.Brush;
 using WpfBrushes = System.Windows.Media.Brushes;
 
@@ -17,7 +18,8 @@ internal enum SettingsSection
 {
     ExtensionDefaults,
     CaptureSettings,
-    WindowExclusions
+    WindowExclusions,
+    Language
 }
 
 public partial class SettingsWindow : Window
@@ -34,6 +36,9 @@ public partial class SettingsWindow : Window
 
     public ObservableCollection<WindowExclusionItem> WindowExclusionItems { get; } = [];
 
+    public IReadOnlyList<LanguageOption> LanguageOptions { get; } =
+        Enum.GetValues<AppLanguage>().Select(language => new LanguageOption(language)).ToList();
+
     private IEnumerable<CaptureHotkeySettingItem> HotkeySettings =>
         HotkeyGroups.SelectMany(group => group.Slots);
 
@@ -42,10 +47,10 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         HotkeyGroups =
         [
-            new(CaptureHotkeyKind.Window, "창 선택"),
-            new(CaptureHotkeyKind.Region, "영역 선택"),
-            new(CaptureHotkeyKind.FullScreen, "전체 화면 캡처"),
-            new(CaptureHotkeyKind.Timer, "타이머 캡처")
+            new(CaptureHotkeyKind.Window, Strings.Hotkey_Window),
+            new(CaptureHotkeyKind.Region, Strings.Hotkey_Region),
+            new(CaptureHotkeyKind.FullScreen, Strings.Hotkey_FullScreen),
+            new(CaptureHotkeyKind.Timer, Strings.Hotkey_Timer)
         ];
         _captureSettings = MiniCaptureSettingsStore.Load();
         LoadExtensionItems();
@@ -55,7 +60,7 @@ public partial class SettingsWindow : Window
         {
             Interval = TimeSpan.FromSeconds(10)
         };
-        _associationRefreshTimer.Tick += (_, _) => RefreshAssociationStates("10초 자동 갱신");
+        _associationRefreshTimer.Tick += (_, _) => RefreshAssociationStates(Strings.Settings_Status_AutoRefresh10s);
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -63,17 +68,18 @@ public partial class SettingsWindow : Window
         LoadCaptureSettingsFields();
         LoadExtensionItems();
         LoadWindowExclusionFields();
+        LoadLanguageFields();
         RefreshRunningProcesses();
         ExecutablePathText.Text = GetExecutablePath();
         ShowSection(SettingsSection.ExtensionDefaults);
-        RefreshAssociationStates("설정 창 열림");
+        RefreshAssociationStates(Strings.Settings_Status_WindowOpened);
         _associationRefreshTimer.Start();
     }
 
     protected override void OnActivated(EventArgs e)
     {
         base.OnActivated(e);
-        RefreshAssociationStates("설정 창 활성화");
+        RefreshAssociationStates(Strings.Settings_Status_WindowActivated);
     }
 
     protected override void OnClosed(EventArgs e)
@@ -98,11 +104,11 @@ public partial class SettingsWindow : Window
         try
         {
             ShellService.OpenDefaultAppsSettings();
-            SetStatus(BuildWindowsSettingsStatus("Windows 기본 앱 설정을 열었습니다."));
+            SetStatus(BuildWindowsSettingsStatus(Strings.Settings_Status_OpenedDefaultApps));
         }
         catch (Exception ex) when (ex is InvalidOperationException or Win32Exception)
         {
-            SetStatus($"Windows 기본 앱 설정을 열 수 없습니다: {ex.Message}");
+            SetStatus(string.Format(Strings.Settings_Status_OpenDefaultAppsFailed, ex.Message));
         }
     }
 
@@ -110,26 +116,22 @@ public partial class SettingsWindow : Window
     {
         System.Windows.MessageBox.Show(
             this,
-            "기본 PNG/JPG/JPEG 외의 이미지 확장자는 아래 입력란에 추가해 선택 목록에 등록할 수 있습니다.\n\n" +
-            "1. 이미지 확장자(예: .bmp)를 입력하고 확장자 등록을 누릅니다.\n" +
-            "2. Windows 기본 앱에서 선택하기를 누릅니다.\n" +
-            "3. 해당 확장자의 현재 앱을 Mini Capture Viewer로 바꿉니다.\n\n" +
-            "Windows 보안 정책 때문에 앱이 기존 기본 앱을 몰래 바꿀 수는 없습니다.",
-            "확장자 연결 설명",
+            Strings.Settings_Extension_HelpDialogBody,
+            Strings.Settings_Extension_HelpDialogTitle,
             MessageBoxButton.OK,
             MessageBoxImage.Information);
     }
 
-    private void OnCopyExecutablePathClick(object sender, RoutedEventArgs e)
+    private async void OnCopyExecutablePathClick(object sender, RoutedEventArgs e)
     {
         try
         {
-            WpfClipboard.SetText(GetExecutablePath());
-            SetStatus("실행 파일 경로를 복사했습니다.");
+            await ClipboardService.SetTextAsync(GetExecutablePath());
+            SetStatus(Strings.Settings_Status_PathCopied);
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
         {
-            SetStatus($"경로를 복사할 수 없습니다: {ex.Message}");
+            SetStatus(string.Format(Strings.Settings_Status_PathCopyFailed, ex.Message));
         }
     }
 
@@ -140,7 +142,7 @@ public partial class SettingsWindow : Window
 
     private void OnRefreshAssociationsClick(object sender, RoutedEventArgs e)
     {
-        RefreshAssociationStates("수동 새로고침");
+        RefreshAssociationStates(Strings.Common_Refresh);
     }
 
     private void OnRegisterAssociationCandidatesClick(object sender, RoutedEventArgs e)
@@ -150,12 +152,12 @@ public partial class SettingsWindow : Window
             FileAssociationRegistrar.RegisterViewerCandidates(
                 GetExecutablePath(),
                 FileAssociationRegistrar.GetRegistrationExtensions(_captureSettings.AdditionalImageExtensions));
-            RefreshAssociationStates("선택 목록 복구 완료");
-            SetStatus("등록한 확장자의 선택 목록을 복구했습니다. Windows 기본 앱에서 Mini Capture Viewer를 선택하세요.");
+            RefreshAssociationStates(Strings.Settings_Extension_RestoreCandidates);
+            SetStatus(Strings.Settings_Status_RestoreCandidatesDone);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or ArgumentException)
         {
-            SetStatus($"선택 목록 복구 실패: {ex.Message}");
+            SetStatus(string.Format(Strings.Settings_Status_RestoreCandidatesFailed, ex.Message));
         }
     }
 
@@ -163,13 +165,13 @@ public partial class SettingsWindow : Window
     {
         if (!FileAssociationRegistrar.TryNormalizeExtension(AdditionalImageExtensionBox.Text, out var extension))
         {
-            SetStatus("확장자는 .bmp처럼 영문 또는 숫자로 된 1~32자 형식으로 입력하세요.");
+            SetStatus(Strings.Settings_Status_InvalidExtensionFormat);
             return;
         }
 
         if (FileAssociationRegistrar.DefaultExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
         {
-            SetStatus($"{extension}은(는) 기본 등록 확장자입니다.");
+            SetStatus(string.Format(Strings.Settings_Status_ExtensionIsDefault, extension));
             return;
         }
 
@@ -178,7 +180,7 @@ public partial class SettingsWindow : Window
             settings.AdditionalImageExtensions.Append(extension));
         if (settings.AdditionalImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
         {
-            SetStatus($"{extension}은(는) 이미 등록되어 있습니다.");
+            SetStatus(string.Format(Strings.Settings_Status_ExtensionAlreadyRegistered, extension));
             return;
         }
 
@@ -192,18 +194,19 @@ public partial class SettingsWindow : Window
             MiniCaptureSettingsStore.Save(settings);
             AdditionalImageExtensionBox.Clear();
             LoadExtensionItems();
-            RefreshAssociationStates($"{extension} 등록 완료");
-            SetStatus($"{extension}을(를) Mini Capture Viewer 선택 목록에 등록했습니다. Windows 기본 앱에서 연결을 선택하세요.");
+            RefreshAssociationStates(string.Format(Strings.Settings_Status_ExtensionRegisteredReason, extension));
+            SetStatus(string.Format(Strings.Settings_Status_ExtensionRegistered, extension));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or ArgumentException)
         {
-            SetStatus($"{extension} 등록 실패: {ex.Message}");
+            SetStatus(string.Format(Strings.Settings_Status_ExtensionRegisterFailed, extension, ex.Message));
         }
     }
 
     private void ShowSection(SettingsSection section)
     {
-        if (ExtensionDefaultsPanel is null || CaptureSettingsPanel is null || WindowExclusionsPanel is null)
+        if (ExtensionDefaultsPanel is null || CaptureSettingsPanel is null ||
+            WindowExclusionsPanel is null || LanguagePanel is null)
         {
             return;
         }
@@ -215,6 +218,9 @@ public partial class SettingsWindow : Window
             ? Visibility.Visible
             : Visibility.Collapsed;
         WindowExclusionsPanel.Visibility = section == SettingsSection.WindowExclusions
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        LanguagePanel.Visibility = section == SettingsSection.Language
             ? Visibility.Visible
             : Visibility.Collapsed;
     }
@@ -230,7 +236,7 @@ public partial class SettingsWindow : Window
         _captureSettings = settings;
         MiniCaptureSettingsStore.Save(settings);
         LoadCaptureSettingsFields();
-        SetStatus("캡처 설정을 저장했습니다. 단축키와 퀵 아이콘 설정이 즉시 반영됩니다.");
+        SetStatus(Strings.Settings_Status_CaptureSettingsSaved);
     }
 
     private void OnResetCaptureSettingsClick(object sender, RoutedEventArgs e)
@@ -238,11 +244,12 @@ public partial class SettingsWindow : Window
         _captureSettings = new MiniCaptureSettings
         {
             QuickButtonLeft = _captureSettings.QuickButtonLeft,
-            QuickButtonTop = _captureSettings.QuickButtonTop
+            QuickButtonTop = _captureSettings.QuickButtonTop,
+            Language = _captureSettings.Language
         };
         MiniCaptureSettingsStore.Save(_captureSettings);
         LoadCaptureSettingsFields();
-        SetStatus("캡처 설정을 기본값으로 되돌렸습니다.");
+        SetStatus(Strings.Settings_Status_CaptureSettingsReset);
     }
 
     private void LoadCaptureSettingsFields()
@@ -274,14 +281,14 @@ public partial class SettingsWindow : Window
     private void OnRefreshWindowExclusionProcessesClick(object sender, RoutedEventArgs e)
     {
         RefreshRunningProcesses();
-        SetStatus($"실행 중인 프로세스 {RunningProcessItems.Count}개를 새로고침했습니다.");
+        SetStatus(string.Format(Strings.Settings_Status_ProcessesRefreshed, RunningProcessItems.Count));
     }
 
     private void OnAddRunningProcessExclusionClick(object sender, RoutedEventArgs e)
     {
         if (RunningProcessBox.SelectedItem is not RunningProcessItem process)
         {
-            SetStatus("제외할 실행 중인 프로세스를 먼저 선택하세요.");
+            SetStatus(Strings.Settings_Status_SelectProcessFirst);
             return;
         }
 
@@ -292,9 +299,12 @@ public partial class SettingsWindow : Window
     {
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
-            Title = "창 지정에서 제외할 실행 파일 선택",
+            Title = Strings.Settings_Dialog_BrowseExecutableTitle,
             CheckFileExists = true,
-            Filter = "실행 파일 (*.exe)|*.exe|모든 파일 (*.*)|*.*"
+            Filter = string.Format(
+                "{0} (*.exe)|*.exe|{1} (*.*)|*.*",
+                Strings.Settings_Dialog_ExecutableFilterName,
+                Strings.Settings_Dialog_AllFilesFilterName)
         };
         if (dialog.ShowDialog(this) == true)
         {
@@ -308,7 +318,7 @@ public partial class SettingsWindow : Window
                 WindowExclusionPathBox.Text,
                 out _))
         {
-            SetStatus("존재하는 .exe 파일의 절대 경로를 입력하거나 파일 선택을 사용하세요.");
+            SetStatus(Strings.Settings_Status_InvalidExecutablePathOrBrowse);
             return;
         }
 
@@ -321,7 +331,7 @@ public partial class SettingsWindow : Window
     {
         if (WindowExclusionList.SelectedItem is not WindowExclusionItem selected)
         {
-            SetStatus("삭제할 실행 파일을 목록에서 선택하세요.");
+            SetStatus(Strings.Settings_Status_SelectExclusionToRemove);
             return;
         }
 
@@ -330,7 +340,7 @@ public partial class SettingsWindow : Window
             target.HasSameIdentity(selected.Target));
         if (removed == 0)
         {
-            SetStatus("선택한 제외 대상은 이미 목록에서 제거되었습니다.");
+            SetStatus(Strings.Settings_Status_ExclusionAlreadyRemoved);
             LoadWindowExclusionFields();
             return;
         }
@@ -338,7 +348,7 @@ public partial class SettingsWindow : Window
         _captureSettings = settings;
         MiniCaptureSettingsStore.Save(settings);
         LoadWindowExclusionFields();
-        SetStatus($"{selected.DisplayName}을(를) 창 지정 제외 목록에서 제거했습니다.");
+        SetStatus(string.Format(Strings.Settings_Status_ExclusionRemoved, selected.DisplayName));
     }
 
     private void OnWindowExclusionSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -360,7 +370,7 @@ public partial class SettingsWindow : Window
             : WindowCaptureExclusionMatchMode.ProcessName;
         if (matchMode == WindowCaptureExclusionMatchMode.FilePath && string.IsNullOrWhiteSpace(selected.ExecutablePath))
         {
-            SetStatus("실행 파일 경로를 확인할 수 없는 대상은 프로세스명 기준으로만 제외할 수 있습니다.");
+            SetStatus(Strings.Settings_Status_ExclusionProcessNameOnly);
             SyncWindowExclusionRuleSelector();
             return;
         }
@@ -375,7 +385,7 @@ public partial class SettingsWindow : Window
             candidate.HasSameIdentity(selected.Target));
         if (target is null)
         {
-            SetStatus("선택한 제외 대상을 찾을 수 없어 목록을 새로고침했습니다.");
+            SetStatus(Strings.Settings_Status_ExclusionTargetNotFound);
             LoadWindowExclusionFields();
             return;
         }
@@ -387,8 +397,8 @@ public partial class SettingsWindow : Window
         WindowExclusionList.SelectedItem = WindowExclusionItems.FirstOrDefault(item =>
             item.Target.HasSameIdentity(selected.Target));
         SetStatus(matchMode == WindowCaptureExclusionMatchMode.FilePath
-            ? "파일 경로 기준으로 전환했습니다. 프로세스명도 계속 저장됩니다."
-            : "프로세스명 기준으로 전환했습니다. 실행 파일 경로도 계속 저장됩니다.");
+            ? Strings.Settings_Status_RuleSwitchedToFilePath
+            : Strings.Settings_Status_RuleSwitchedToProcessName);
     }
 
     private void RefreshRunningProcesses()
@@ -446,13 +456,13 @@ public partial class SettingsWindow : Window
             out var normalizedPath);
         if (hasExecutablePath && !File.Exists(normalizedPath))
         {
-            SetStatus("존재하는 .exe 파일의 절대 경로를 입력하거나 실행 중인 프로세스를 선택하세요.");
+            SetStatus(Strings.Settings_Status_InvalidExecutablePathOrSelectProcess);
             return;
         }
 
         if (!MiniCaptureSettings.TryNormalizeWindowCaptureExcludedProcessName(processName, out var normalizedProcessName))
         {
-            SetStatus("프로세스명을 확인할 수 없어 제외 대상을 저장하지 못했습니다.");
+            SetStatus(Strings.Settings_Status_ProcessNameUnresolved);
             return;
         }
 
@@ -480,11 +490,11 @@ public partial class SettingsWindow : Window
                 LoadWindowExclusionFields();
                 WindowExclusionList.SelectedItem = WindowExclusionItems.FirstOrDefault(item =>
                     item.Target.HasSameIdentity(target));
-                SetStatus($"{Path.GetFileName(normalizedPath)}의 실행 파일 경로를 확인해 파일 경로 기준으로 전환했습니다. 프로세스명도 계속 저장됩니다.");
+                SetStatus(string.Format(Strings.Settings_Status_ExclusionUpgradedToFilePath, Path.GetFileName(normalizedPath)));
                 return;
             }
 
-            SetStatus("해당 제외 대상은 이미 창 지정 제외 목록에 있습니다.");
+            SetStatus(Strings.Settings_Status_ExclusionAlreadyExists);
             return;
         }
 
@@ -495,8 +505,8 @@ public partial class SettingsWindow : Window
         LoadWindowExclusionFields();
         WindowExclusionList.SelectedItem = WindowExclusionItems.FirstOrDefault(item => item.Target.HasSameIdentity(target));
         SetStatus(hasExecutablePath
-            ? $"{Path.GetFileName(normalizedPath)}을(를) 파일 경로 기준으로 제외합니다. 프로세스명도 저장했습니다."
-            : $"{normalizedProcessName}을(를) 프로세스명 기준으로 제외합니다.");
+            ? string.Format(Strings.Settings_Status_ExclusionAddedFilePath, Path.GetFileName(normalizedPath))
+            : string.Format(Strings.Settings_Status_ExclusionAddedProcessName, normalizedProcessName));
     }
 
     private void SyncWindowExclusionRuleSelector()
@@ -536,7 +546,7 @@ public partial class SettingsWindow : Window
 
         if (!int.TryParse(TimerDelayBox.Text, out var seconds) || seconds < 0 || seconds > 60)
         {
-            error = "전역 타이머 시간은 0부터 60 사이의 초 단위 숫자로 입력하세요.";
+            error = Strings.Settings_Status_TimerRangeInvalid;
             return false;
         }
 
@@ -544,7 +554,7 @@ public partial class SettingsWindow : Window
             shortcutTimerSeconds < 1 ||
             shortcutTimerSeconds > 60)
         {
-            error = "타이머 단축키 시간은 1부터 60 사이의 초 단위 숫자로 입력하세요.";
+            error = Strings.Settings_Status_ShortcutTimerRangeInvalid;
             return false;
         }
 
@@ -563,7 +573,7 @@ public partial class SettingsWindow : Window
 
                 if (!CaptureHotkey.TryParse(item.HotkeyText, out var hotkey))
                 {
-                    error = $"{item.Label} 단축키를 Ctrl+Alt+R 같은 형식으로 입력하세요.";
+                    error = string.Format(Strings.Settings_Status_HotkeyFormatInvalid, item.Label);
                     return false;
                 }
 
@@ -573,7 +583,7 @@ public partial class SettingsWindow : Window
 
             if (normalizedHotkeys.All(string.IsNullOrWhiteSpace))
             {
-                error = $"{group.Label} 단축키를 하나 이상 지정하세요.";
+                error = string.Format(Strings.Settings_Status_HotkeyRequired, group.Label);
                 return false;
             }
 
@@ -582,7 +592,7 @@ public partial class SettingsWindow : Window
 
         if (allNonEmptyHotkeys.Select(item => item.Hotkey).Distinct(StringComparer.OrdinalIgnoreCase).Count() != allNonEmptyHotkeys.Count)
         {
-            error = "모든 단축키 조합은 서로 달라야 합니다.";
+            error = Strings.Settings_Status_HotkeysMustBeDistinct;
             return false;
         }
 
@@ -613,15 +623,19 @@ public partial class SettingsWindow : Window
 
         if (dialog.ShowDialog() != true || string.IsNullOrWhiteSpace(dialog.DetectedValue))
         {
-            item.StatusText = "대기";
-            SetStatus("키 감지를 취소했습니다.");
+            item.StatusText = Strings.Hotkey_StatusWaiting;
+            SetStatus(Strings.Settings_Status_DetectCancelled);
             e.Handled = true;
             return;
         }
 
         ApplyDetectedHotkeyPart(item, part, dialog.DetectedValue);
-        item.StatusText = "감지 완료";
-        SetStatus($"{item.Label} {CaptureHotkeyPartDisplayName(part)}을 {dialog.DetectedValue}(으)로 선택했습니다. 저장을 누르면 적용됩니다.");
+        item.StatusText = Strings.Hotkey_StatusDetected;
+        SetStatus(string.Format(
+            Strings.Settings_Status_HotkeyDetected,
+            item.Label,
+            CaptureHotkeyPartDisplayName(part),
+            dialog.DetectedValue));
         e.Handled = true;
     }
 
@@ -636,7 +650,7 @@ public partial class SettingsWindow : Window
         for (var index = 0; index < group.Slots.Count; index++)
         {
             group.Slots[index].HotkeyText = index < hotkeys.Count ? hotkeys[index] : string.Empty;
-            group.Slots[index].StatusText = "대기";
+            group.Slots[index].StatusText = Strings.Hotkey_StatusWaiting;
         }
     }
 
@@ -667,9 +681,9 @@ public partial class SettingsWindow : Window
     private static string CaptureHotkeyPartDisplayName(CaptureHotkeyPart part) =>
         part switch
         {
-            CaptureHotkeyPart.First => "첫 번째 키",
-            CaptureHotkeyPart.Second => "두 번째 키",
-            _ => "세 번째 키"
+            CaptureHotkeyPart.First => Strings.Hotkey_FirstKeyPart,
+            CaptureHotkeyPart.Second => Strings.Hotkey_SecondKeyPart,
+            _ => Strings.Hotkey_MainKeyPart
         };
 
     private void SetStatus(string message)
@@ -694,14 +708,14 @@ public partial class SettingsWindow : Window
             }
         }
 
-        AssociationSummaryText.Text = $"{associatedCount}/{totalCount}개 연결됨";
-        SetStatus($"{reason}: 전체 확장자 연결 상태를 갱신했습니다. {DateTime.Now:HH:mm:ss}");
+        AssociationSummaryText.Text = string.Format(Strings.Settings_Status_AssociationSummary, associatedCount, totalCount);
+        SetStatus(string.Format(Strings.Settings_Status_AssociationsRefreshed, reason, $"{DateTime.Now:HH:mm:ss}"));
     }
 
     private string BuildWindowsSettingsStatus(string prefix)
     {
         var extensions = string.Join(", ", GetExtensionItems().Select(item => item.Extension));
-        return $"{prefix} {extensions}의 현재 앱을 Mini Capture Viewer로 바꾸세요.";
+        return string.Format(Strings.Settings_Status_WindowsSettingsPrompt, prefix, extensions);
     }
 
     private IEnumerable<ExtensionAssociationItem> GetExtensionItems()
@@ -718,6 +732,44 @@ public partial class SettingsWindow : Window
             ExtensionItems.Add(new ExtensionAssociationItem(
                 extension,
                 FileAssociationRegistrar.GetDisplayName(extension)));
+        }
+    }
+
+    private void LoadLanguageFields()
+    {
+        var currentLanguage = MiniCaptureSettingsStore.Load().Language;
+        LanguageComboBox.SelectedItem = LanguageOptions.FirstOrDefault(option => option.Language == currentLanguage);
+    }
+
+    private void OnApplyLanguageClick(object sender, RoutedEventArgs e)
+    {
+        if (LanguageComboBox.SelectedItem is not LanguageOption option || option.Language == _captureSettings.Language)
+        {
+            return;
+        }
+
+        var settings = MiniCaptureSettingsStore.Load();
+        settings.Language = option.Language;
+        _captureSettings = settings;
+        MiniCaptureSettingsStore.Save(settings);
+
+        var result = System.Windows.MessageBox.Show(
+            this,
+            Strings.Settings_Language_RestartPromptBody,
+            Strings.Settings_Language_RestartPromptTitle,
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result == MessageBoxResult.Yes)
+        {
+            var startInfo = new System.Diagnostics.ProcessStartInfo(GetExecutablePath())
+            {
+                UseShellExecute = true
+            };
+            startInfo.ArgumentList.Add(Program.RestartWaitArgument);
+            startInfo.ArgumentList.Add(Environment.ProcessId.ToString(CultureInfo.InvariantCulture));
+            System.Diagnostics.Process.Start(startInfo);
+            System.Windows.Application.Current.Shutdown();
         }
     }
 
@@ -738,8 +790,8 @@ public sealed class RunningProcessItem(string processName, int processId, string
     public string ExecutablePath { get; } = executablePath;
 
     public string DisplayName => string.IsNullOrWhiteSpace(ExecutablePath)
-        ? $"{ProcessName} (PID {ProcessId}, 경로 확인 불가)"
-        : $"{ProcessName} (PID {ProcessId})";
+        ? string.Format(Strings.Settings_Process_DisplayNamePathUnknown, ProcessName, ProcessId)
+        : string.Format(Strings.Settings_Process_DisplayName, ProcessName, ProcessId);
 }
 
 public sealed class WindowExclusionItem(WindowCaptureExclusionTarget target)
@@ -753,8 +805,15 @@ public sealed class WindowExclusionItem(WindowCaptureExclusionTarget target)
     public string DisplayName => Target.ProcessName;
 
     public string AppliedRuleText => MatchMode == WindowCaptureExclusionMatchMode.FilePath
-        ? "적용 기준: 파일 경로"
-        : "적용 기준: 프로세스명";
+        ? Strings.Settings_WindowExclusion_AppliedRuleFilePath
+        : Strings.Settings_WindowExclusion_AppliedRuleProcessName;
+}
+
+public sealed class LanguageOption(AppLanguage language)
+{
+    public AppLanguage Language { get; } = language;
+
+    public string DisplayName => LocalizationService.GetNativeName(Language);
 }
 
 public enum CaptureHotkeyKind
@@ -799,7 +858,7 @@ public sealed class CaptureHotkeySettingItem(
     private string _firstKey = string.Empty;
     private string _secondKey = string.Empty;
     private string _mainKey = string.Empty;
-    private string _statusText = "대기";
+    private string _statusText = Strings.Hotkey_StatusWaiting;
     private bool _isSelected;
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -810,9 +869,9 @@ public sealed class CaptureHotkeySettingItem(
 
     public int SlotNumber { get; } = slotNumber;
 
-    public string HotkeyAutomationName => $"{Label} 단축키";
+    public string HotkeyAutomationName => $"{Label} {Strings.Hotkey_Suffix}";
 
-    public string DetectAutomationName => $"{Label} 키 감지";
+    public string DetectAutomationName => $"{Label} {Strings.Hotkey_DetectSuffix}";
 
     public string FirstKeyAutomationId => $"{Kind}Hotkey{SlotNumber}FirstKeyCombo";
 
@@ -820,13 +879,13 @@ public sealed class CaptureHotkeySettingItem(
 
     public string MainKeyAutomationId => $"{Kind}Hotkey{SlotNumber}MainKeyCombo";
 
-    public string FirstKeyAutomationName => $"{Label} 첫 번째 키";
+    public string FirstKeyAutomationName => $"{Label} {Strings.Hotkey_FirstKeyPart}";
 
-    public string SecondKeyAutomationName => $"{Label} 두 번째 키";
+    public string SecondKeyAutomationName => $"{Label} {Strings.Hotkey_SecondKeyPart}";
 
-    public string MainKeyAutomationName => $"{Label} 세 번째 키";
+    public string MainKeyAutomationName => $"{Label} {Strings.Hotkey_MainKeyPart}";
 
-    public string SlotLabel => "단축키";
+    public string SlotLabel => Strings.Hotkey_Suffix;
 
     public string PlusText => string.Empty;
 
@@ -840,11 +899,11 @@ public sealed class CaptureHotkeySettingItem(
 
     public string DetectMainKeyAutomationId => $"Detect{Kind}Hotkey{SlotNumber}MainKeyButton";
 
-    public string DetectFirstKeyAutomationName => $"{Label} 첫 번째 키 감지";
+    public string DetectFirstKeyAutomationName => $"{Label} {Strings.Hotkey_FirstKeyPart} {Strings.Hotkey_DetectSuffix}";
 
-    public string DetectSecondKeyAutomationName => $"{Label} 두 번째 키 감지";
+    public string DetectSecondKeyAutomationName => $"{Label} {Strings.Hotkey_SecondKeyPart} {Strings.Hotkey_DetectSuffix}";
 
-    public string DetectMainKeyAutomationName => $"{Label} 세 번째 키 감지";
+    public string DetectMainKeyAutomationName => $"{Label} {Strings.Hotkey_MainKeyPart} {Strings.Hotkey_DetectSuffix}";
 
     public IReadOnlyList<string> ModifierOptions { get; } =
     [
@@ -904,7 +963,7 @@ public sealed class CaptureHotkeySettingItem(
         }
     }
 
-    public string DisplayHotkeyText => string.IsNullOrWhiteSpace(HotkeyText) ? "(비어 있음)" : HotkeyText;
+    public string DisplayHotkeyText => string.IsNullOrWhiteSpace(HotkeyText) ? Strings.Hotkey_EmptyPlaceholder : HotkeyText;
 
     public string HotkeyText
     {
@@ -1020,7 +1079,7 @@ public sealed class ExtensionAssociationItem(
     string displayName) : INotifyPropertyChanged
 {
     private bool _isAssociated;
-    private string _statusText = "확인 대기";
+    private string _statusText = Strings.Settings_Extension_StatusPending;
     private string _statusDetail = string.Empty;
     private WpfBrush _statusBrush = WpfBrushes.LightGray;
 
@@ -1030,7 +1089,7 @@ public sealed class ExtensionAssociationItem(
 
     public string DisplayName { get; } = displayName;
 
-    public string ChangeAutomationName => $"{Extension} Windows 기본 앱 변경";
+    public string ChangeAutomationName => string.Format(Strings.Settings_Extension_ChangeAutomationName, Extension);
 
     public bool IsAssociated
     {
@@ -1101,16 +1160,17 @@ public static class FileAssociationReader
                 IsMiniCaptureReference(command, executablePath);
             var status = associated
                 ? "Mini Capture"
-                : string.IsNullOrWhiteSpace(progId) ? "미지정" : progId;
+                : string.IsNullOrWhiteSpace(progId) ? Strings.FileAssoc_Unspecified : progId;
+            var none = Strings.FileAssoc_None;
             var detail = command is null
-                ? $"UserChoice={userChoiceProgId ?? "(없음)"}, 기본={defaultProgId ?? "(없음)"}"
-                : $"UserChoice={userChoiceProgId ?? "(없음)"}, 기본={defaultProgId ?? "(없음)"}, 명령={command}";
+                ? string.Format(Strings.FileAssoc_DetailNoCommand, userChoiceProgId ?? none, defaultProgId ?? none)
+                : string.Format(Strings.FileAssoc_DetailWithCommand, userChoiceProgId ?? none, defaultProgId ?? none, command);
 
             return new FileAssociationState(associated, status, detail);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
-            return new FileAssociationState(false, "확인 실패", ex.Message);
+            return new FileAssociationState(false, Strings.FileAssoc_CheckFailed, ex.Message);
         }
     }
 

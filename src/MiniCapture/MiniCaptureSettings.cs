@@ -15,6 +15,8 @@ public sealed class MiniCaptureSettings
 
     public bool CaptureUiExcludedFromCapture { get; set; } = true;
 
+    public AppLanguage Language { get; set; } = AppLanguage.Korean;
+
     public List<string> AdditionalImageExtensions { get; set; } = [];
 
     public List<WindowCaptureExclusionTarget> WindowCaptureExclusionTargets { get; set; } = [];
@@ -68,6 +70,7 @@ public sealed class MiniCaptureSettings
             ShortcutTimerDelaySeconds = ShortcutTimerDelaySeconds,
             QuickButtonVisible = QuickButtonVisible,
             CaptureUiExcludedFromCapture = CaptureUiExcludedFromCapture,
+            Language = Language,
             AdditionalImageExtensions = FileAssociationRegistrar.NormalizeAdditionalExtensions(AdditionalImageExtensions).ToList(),
             WindowCaptureExclusionTargets = NormalizeWindowCaptureExclusionTargets(
                     WindowCaptureExclusionTargets,

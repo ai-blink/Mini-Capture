@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Common -->
+  <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Common_Detect" xml:space="preserve"><value>Detect</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Common_ResetDefault" xml:space="preserve"><value>Reset to Default</value></data>
+  <data name="Common_Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Common_BrowseFile" xml:space="preserve"><value>Browse File</value></data>
+  <data name="Common_ShowHelp" xml:space="preserve"><value>View Help</value></data>
+
+  <!-- Window chrome -->
+  <data name="Settings_WindowTitle" xml:space="preserve"><value>Mini Capture Settings</value></data>
+  <data name="Settings_HeaderSubtitle" xml:space="preserve"><value>Extension associations and app details</value></data>
+
+  <!-- Section nav / headers -->
+  <data name="Settings_Section_ExtensionDefaults" xml:space="preserve"><value>File Associations</value></data>
+  <data name="Settings_Section_CaptureSettings" xml:space="preserve"><value>Capture Settings</value></data>
+  <data name="Settings_Section_WindowExclusions" xml:space="preserve"><value>Window Exclusions</value></data>
+  <data name="Settings_Section_Language" xml:space="preserve"><value>Language</value></data>
+
+  <!-- Capture settings panel -->
+  <data name="Settings_Capture_Subtitle" xml:space="preserve"><value>Saves hotkeys, timer, and transparent quick-button visibility.</value></data>
+  <data name="Settings_Capture_HotkeyHelp" xml:space="preserve"><value>Click Detect next to a combo box to fill that key automatically. Pressing a combo like Ctrl+Alt+W during the third key's detection fills the whole combination.</value></data>
+  <data name="Settings_Capture_TimerLabel" xml:space="preserve"><value>Global Timer (sec)</value></data>
+  <data name="Settings_Capture_ShortcutTimerLabel" xml:space="preserve"><value>Timer Hotkey (sec)</value></data>
+  <data name="Settings_Capture_QuickButtonVisible" xml:space="preserve"><value>Show transparent quick button on desktop</value></data>
+  <data name="Settings_Capture_UiExcluded" xml:space="preserve"><value>Exclude the quick button, sub-buttons, and right-click menu from captures</value></data>
+
+  <!-- Hotkey labels -->
+  <data name="Hotkey_Window" xml:space="preserve"><value>Window Select</value></data>
+  <data name="Hotkey_Region" xml:space="preserve"><value>Region Select</value></data>
+  <data name="Hotkey_FullScreen" xml:space="preserve"><value>Full Screen Capture</value></data>
+  <data name="Hotkey_Timer" xml:space="preserve"><value>Timer Capture</value></data>
+  <data name="Hotkey_FirstKeyPart" xml:space="preserve"><value>First Key</value></data>
+  <data name="Hotkey_SecondKeyPart" xml:space="preserve"><value>Second Key</value></data>
+  <data name="Hotkey_MainKeyPart" xml:space="preserve"><value>Third Key</value></data>
+  <data name="Hotkey_Suffix" xml:space="preserve"><value>Hotkey</value></data>
+  <data name="Hotkey_DetectSuffix" xml:space="preserve"><value>Key Detect</value></data>
+  <data name="Hotkey_EmptyPlaceholder" xml:space="preserve"><value>(empty)</value></data>
+  <data name="Hotkey_StatusWaiting" xml:space="preserve"><value>Waiting</value></data>
+  <data name="Hotkey_StatusDetected" xml:space="preserve"><value>Detected</value></data>
+
+  <!-- Window exclusions panel -->
+  <data name="Settings_WindowExclusion_Title" xml:space="preserve"><value>Window Exclusion List</value></data>
+  <data name="Settings_WindowExclusion_Subtitle" xml:space="preserve"><value>Windows belonging to registered targets are excluded from window-select capture candidates. Choosing a process saves both its path and process name; change the matching rule only with the radio buttons below.</value></data>
+  <data name="Settings_WindowExclusion_RunningProcessLabel" xml:space="preserve"><value>Running Processes</value></data>
+  <data name="Settings_WindowExclusion_RunningProcessTooltip" xml:space="preserve"><value>Running processes whose executable path could be resolved. Processes whose path cannot be resolved can still be added by name.</value></data>
+  <data name="Settings_WindowExclusion_RunningProcessHelp" xml:space="preserve"><value>The selected process's executable path and process name are saved together. If the path cannot be resolved, only the process-name rule is available.</value></data>
+  <data name="Settings_WindowExclusion_AddRunningProcess" xml:space="preserve"><value>Exclude Selected Process</value></data>
+  <data name="Settings_WindowExclusion_AddPathLabel" xml:space="preserve"><value>Add Executable Path Manually</value></data>
+  <data name="Settings_WindowExclusion_PathTooltip" xml:space="preserve"><value>Absolute path of the .exe file to exclude</value></data>
+  <data name="Settings_WindowExclusion_AddPathButton" xml:space="preserve"><value>Add Path</value></data>
+  <data name="Settings_WindowExclusion_RemoveSelected" xml:space="preserve"><value>Remove Selected</value></data>
+  <data name="Settings_WindowExclusion_RegisteredLabel" xml:space="preserve"><value>Registered Exclusions</value></data>
+  <data name="Settings_WindowExclusion_RuleLabel" xml:space="preserve"><value>Matching Rule for Selected Item</value></data>
+  <data name="Settings_WindowExclusion_RuleFilePath" xml:space="preserve"><value>File Path</value></data>
+  <data name="Settings_WindowExclusion_RuleProcessName" xml:space="preserve"><value>Process Name</value></data>
+  <data name="Settings_WindowExclusion_AppliedRuleFilePath" xml:space="preserve"><value>Rule: File Path</value></data>
+  <data name="Settings_WindowExclusion_AppliedRuleProcessName" xml:space="preserve"><value>Rule: Process Name</value></data>
+
+  <!-- Extension defaults panel -->
+  <data name="Settings_Extension_Subtitle" xml:space="preserve"><value>Register image extensions beyond the default PNG/JPG/JPEG to add them to the Windows default app picker.</value></data>
+  <data name="Settings_Extension_StatusTitle" xml:space="preserve"><value>Default App Selection Status</value></data>
+  <data name="Settings_Extension_StatusHelp" xml:space="preserve"><value>Registered extensions are added to the Mini Capture Viewer selection list. Changing the default app requires manually selecting it in Windows Settings.</value></data>
+  <data name="Settings_Extension_StatusPending" xml:space="preserve"><value>Checking Pending</value></data>
+  <data name="Settings_Extension_ImageExtensionsTitle" xml:space="preserve"><value>Image Extensions</value></data>
+  <data name="Settings_Extension_ImageExtensionsHelp" xml:space="preserve"><value>Adding an image extension registers it in the Mini Capture Viewer selection list and keeps it in this list.</value></data>
+  <data name="Settings_Extension_ExtensionInputTooltip" xml:space="preserve"><value>e.g. .bmp or bmp</value></data>
+  <data name="Settings_Extension_RegisterButton" xml:space="preserve"><value>Register Extension</value></data>
+  <data name="Settings_Extension_ColumnExtension" xml:space="preserve"><value>Extension</value></data>
+  <data name="Settings_Extension_ColumnFormat" xml:space="preserve"><value>Format</value></data>
+  <data name="Settings_Extension_ColumnCurrentApp" xml:space="preserve"><value>Current Default App</value></data>
+  <data name="Settings_Extension_ColumnEdit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Settings_Extension_OpenDefaultApps" xml:space="preserve"><value>Choose in Windows Default Apps</value></data>
+  <data name="Settings_Extension_RestoreCandidates" xml:space="preserve"><value>Restore Selection List</value></data>
+  <data name="Settings_Extension_CopyExecutablePath" xml:space="preserve"><value>Copy Executable Path</value></data>
+  <data name="Settings_Extension_ChangeAutomationName" xml:space="preserve"><value>Change Windows default app for {0}</value></data>
+  <data name="Settings_Extension_HelpDialogTitle" xml:space="preserve"><value>File Association Help</value></data>
+  <data name="Settings_Extension_HelpDialogBody" xml:space="preserve"><value>You can register image extensions beyond the default PNG/JPG/JPEG by adding them in the field below.
+
+1. Enter an image extension (e.g. .bmp) and click Register Extension.
+2. Click Choose in Windows Default Apps.
+3. Change that extension's current app to Mini Capture Viewer.
+
+Due to Windows security policy, an app cannot silently change the existing default app.</value></data>
+
+  <!-- Footer -->
+  <data name="Settings_Footer_DefaultAppNotice" xml:space="preserve"><value>Changing the default app requires manually selecting it in Windows Settings.</value></data>
+
+  <!-- Status / dialog messages -->
+  <data name="Settings_Status_AutoRefresh10s" xml:space="preserve"><value>Auto refresh (10s)</value></data>
+  <data name="Settings_Status_WindowOpened" xml:space="preserve"><value>Settings window opened</value></data>
+  <data name="Settings_Status_WindowActivated" xml:space="preserve"><value>Settings window activated</value></data>
+  <data name="Settings_Status_OpenedDefaultApps" xml:space="preserve"><value>Opened Windows Default Apps settings.</value></data>
+  <data name="Settings_Status_OpenDefaultAppsFailed" xml:space="preserve"><value>Could not open Windows Default Apps settings: {0}</value></data>
+  <data name="Settings_Status_PathCopied" xml:space="preserve"><value>Copied the executable path.</value></data>
+  <data name="Settings_Status_PathCopyFailed" xml:space="preserve"><value>Could not copy the path: {0}</value></data>
+  <data name="Settings_Status_RestoreCandidatesDone" xml:space="preserve"><value>Restored the selection list for registered extensions. Choose Mini Capture Viewer in Windows Default Apps.</value></data>
+  <data name="Settings_Status_RestoreCandidatesFailed" xml:space="preserve"><value>Failed to restore selection list: {0}</value></data>
+  <data name="Settings_Status_InvalidExtensionFormat" xml:space="preserve"><value>Enter an extension as 1-32 letters or digits, like .bmp.</value></data>
+  <data name="Settings_Status_ExtensionIsDefault" xml:space="preserve"><value>{0} is already a default extension.</value></data>
+  <data name="Settings_Status_ExtensionAlreadyRegistered" xml:space="preserve"><value>{0} is already registered.</value></data>
+  <data name="Settings_Status_ExtensionRegisteredReason" xml:space="preserve"><value>{0} registered</value></data>
+  <data name="Settings_Status_ExtensionRegistered" xml:space="preserve"><value>Registered {0} in the Mini Capture Viewer selection list. Choose the association in Windows Default Apps.</value></data>
+  <data name="Settings_Status_ExtensionRegisterFailed" xml:space="preserve"><value>Failed to register {0}: {1}</value></data>
+  <data name="Settings_Status_CaptureSettingsSaved" xml:space="preserve"><value>Saved capture settings. Hotkey and quick-button settings apply immediately.</value></data>
+  <data name="Settings_Status_CaptureSettingsReset" xml:space="preserve"><value>Reset capture settings to defaults.</value></data>
+  <data name="Settings_Status_ProcessesRefreshed" xml:space="preserve"><value>Refreshed {0} running processes.</value></data>
+  <data name="Settings_Status_SelectProcessFirst" xml:space="preserve"><value>Select a running process to exclude first.</value></data>
+  <data name="Settings_Dialog_BrowseExecutableTitle" xml:space="preserve"><value>Select Executable to Exclude from Window Select</value></data>
+  <data name="Settings_Dialog_ExecutableFilterName" xml:space="preserve"><value>Executable Files</value></data>
+  <data name="Settings_Dialog_AllFilesFilterName" xml:space="preserve"><value>All Files</value></data>
+  <data name="Settings_Status_InvalidExecutablePathOrBrowse" xml:space="preserve"><value>Enter the absolute path of an existing .exe file, or use Browse File.</value></data>
+  <data name="Settings_Status_SelectExclusionToRemove" xml:space="preserve"><value>Select an executable in the list to remove.</value></data>
+  <data name="Settings_Status_ExclusionAlreadyRemoved" xml:space="preserve"><value>The selected exclusion was already removed from the list.</value></data>
+  <data name="Settings_Status_ExclusionRemoved" xml:space="preserve"><value>Removed {0} from the window-select exclusion list.</value></data>
+  <data name="Settings_Status_ExclusionProcessNameOnly" xml:space="preserve"><value>Targets whose executable path cannot be resolved can only be excluded by process name.</value></data>
+  <data name="Settings_Status_ExclusionTargetNotFound" xml:space="preserve"><value>Could not find the selected exclusion, so the list was refreshed.</value></data>
+  <data name="Settings_Status_RuleSwitchedToFilePath" xml:space="preserve"><value>Switched to the file-path rule. The process name is still saved as well.</value></data>
+  <data name="Settings_Status_RuleSwitchedToProcessName" xml:space="preserve"><value>Switched to the process-name rule. The executable path is still saved as well.</value></data>
+  <data name="Settings_Status_InvalidExecutablePathOrSelectProcess" xml:space="preserve"><value>Enter the absolute path of an existing .exe file, or select a running process.</value></data>
+  <data name="Settings_Status_ProcessNameUnresolved" xml:space="preserve"><value>Could not resolve the process name, so the exclusion was not saved.</value></data>
+  <data name="Settings_Status_ExclusionAlreadyExists" xml:space="preserve"><value>That target is already in the window-select exclusion list.</value></data>
+  <data name="Settings_Status_ExclusionUpgradedToFilePath" xml:space="preserve"><value>Resolved the executable path for {0} and switched to the file-path rule. The process name is still saved as well.</value></data>
+  <data name="Settings_Status_ExclusionAddedFilePath" xml:space="preserve"><value>Excluding {0} by file path. The process name was saved as well.</value></data>
+  <data name="Settings_Status_ExclusionAddedProcessName" xml:space="preserve"><value>Excluding {0} by process name.</value></data>
+  <data name="Settings_Status_TimerRangeInvalid" xml:space="preserve"><value>Enter the global timer as a number of seconds from 0 to 60.</value></data>
+  <data name="Settings_Status_ShortcutTimerRangeInvalid" xml:space="preserve"><value>Enter the timer hotkey delay as a number of seconds from 1 to 60.</value></data>
+  <data name="Settings_Status_HotkeyFormatInvalid" xml:space="preserve"><value>Enter the {0} hotkey in a format like Ctrl+Alt+R.</value></data>
+  <data name="Settings_Status_HotkeyRequired" xml:space="preserve"><value>Specify at least one hotkey for {0}.</value></data>
+  <data name="Settings_Status_HotkeysMustBeDistinct" xml:space="preserve"><value>All hotkey combinations must be different from each other.</value></data>
+  <data name="Settings_Status_DetectCancelled" xml:space="preserve"><value>Cancelled key detection.</value></data>
+  <data name="Settings_Status_HotkeyDetected" xml:space="preserve"><value>Set {0} {1} to {2}. Click Save to apply.</value></data>
+  <data name="Settings_Status_AssociationSummary" xml:space="preserve"><value>{0}/{1} associated</value></data>
+  <data name="Settings_Status_AssociationsRefreshed" xml:space="preserve"><value>{0}: Refreshed all extension association states. {1}</value></data>
+  <data name="Settings_Status_WindowsSettingsPrompt" xml:space="preserve"><value>{0} Change the current app for {1} to Mini Capture Viewer.</value></data>
+
+  <!-- Running process display -->
+  <data name="Settings_Process_DisplayNamePathUnknown" xml:space="preserve"><value>{0} (PID {1}, path unavailable)</value></data>
+  <data name="Settings_Process_DisplayName" xml:space="preserve"><value>{0} (PID {1})</value></data>
+
+  <!-- File association reader -->
+  <data name="FileAssoc_Unspecified" xml:space="preserve"><value>Not set</value></data>
+  <data name="FileAssoc_CheckFailed" xml:space="preserve"><value>Check failed</value></data>
+  <data name="FileAssoc_None" xml:space="preserve"><value>(none)</value></data>
+  <data name="FileAssoc_DetailNoCommand" xml:space="preserve"><value>UserChoice={0}, Default={1}</value></data>
+  <data name="FileAssoc_DetailWithCommand" xml:space="preserve"><value>UserChoice={0}, Default={1}, Command={2}</value></data>
+
+  <!-- Language section -->
+  <data name="Settings_Language_Subtitle" xml:space="preserve"><value>Choose the language shown in the app. Changes apply after a restart.</value></data>
+  <data name="Settings_Language_Label" xml:space="preserve"><value>Display Language</value></data>
+  <data name="Settings_Language_ApplyButton" xml:space="preserve"><value>Apply and Restart</value></data>
+  <data name="Settings_Language_RestartPromptTitle" xml:space="preserve"><value>Restart</value></data>
+  <data name="Settings_Language_RestartPromptBody" xml:space="preserve"><value>Mini Capture must restart to change the language. Restart now?</value></data>
+</root>

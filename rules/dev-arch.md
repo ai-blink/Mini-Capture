@@ -21,6 +21,7 @@ C# WPF for UI plus Win32 P/Invoke for overlays and window picking. Current captu
 - `FolderTreeModel`: quick access, This PC, capture folder, year/month/day nodes.
 - `MiniExplorer`: tree, address/search, details and icon views.
 - `ThumbnailService`: lazy thumbnails, cache, cancellation.
+- `MiniCapture.Resources.Strings` (`src/MiniCapture/Resources/`): hand-written resx accessor class (no VS single-file generator available under plain `dotnet build`) backing `Strings.resx` (neutral=Korean) + `Strings.en.resx`/`Strings.zh-CN.resx`/`Strings.ja.resx` satellites. `AppLanguage`/`LocalizationService` (`AppLanguage.cs`) map the persisted `MiniCaptureSettings.Language` to a `CultureInfo` applied once at startup (`Program.Main`); switching languages requires an app restart.
 
 ## Dependency Direction
 
@@ -38,3 +39,4 @@ Start with manual Windows validation for capture overlays, DPI, multi-monitor be
 - P3 done: internal image viewer, capture folder index, Explorer-style folder tree/file pane, details view, and small/medium/large icon views.
 - P4 done: DPI/package checks, overlay-free selection, editable raster markup, layout persistence, external-image activation, and extension settings.
 - Viewer reinforcement done: single-instance file handoff, cancellable background full-resolution decode, current-folder refresh, and sortable Details columns.
+- Multilingual UI in progress: `SettingsWindow` fully localized via the new `.resx` infra above; `ViewerWindow`/`MainWindow`/tray menu remain Korean-only.

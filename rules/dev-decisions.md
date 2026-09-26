@@ -20,6 +20,7 @@
 - D-007: Capture, save, file index, thumbnail, viewer, and explorer responsibilities remain separate.
 - D-010: P1/P2 capture uses GDI `CopyFromScreen` with DWM visible bounds for window capture; Windows.Graphics.Capture is deferred to hardening/fallback work.
 - D-011: `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)` is applied best-effort to floating and overlay windows where Windows supports it.
+- D-016: Multilingual UI (matching the README's EN/KO/ZH/JA promise) uses standard WPF `.resx` resources (`MiniCapture.Resources.Strings`, one independent setup per project — not shared with the sibling `pinte` app), with a hand-written `Strings.Designer.cs` since `dotnet build` alone (no Visual Studio) never runs the single-file generator that would normally produce it. Language switch takes effect after a restart (`CurrentUICulture` applied once at startup) rather than live XAML rebinding, and a self-restart must pass the exiting PID (`--restart-wait <pid>`) so the new process waits for the old single-instance mutex to release instead of racing it.
 
 ## Scope
 
