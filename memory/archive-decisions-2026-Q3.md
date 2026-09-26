@@ -5,3 +5,4 @@ Archived from `rules/dev-decisions-inbox.md` (Step 7 archive threshold, >10 item
 | ID | Date | One-liner | Section | Status |
 |---|---|---|---|---|
 | D-001 | 2026-07-02 | Product is capture-first and lightweight, not a PicPick/ShareX clone. | Vision | integrated |
+| D-002 | 2026-07-02 | Product optimizes fast capture/save/review. | Vision | integrated |

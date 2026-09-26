@@ -1643,3 +1643,35 @@ Allow users to exclude a window-selection target by choosing a running process o
 ### Follow-up
 
 - NEEDS_USER_UI_CHECK: 새 릴리스에서 설정 → 확장자 연결 UI를 열고, 등록된 형식과 다른 외부 이미지 파일을 연속으로 열어 현재 뷰어가 전환되는지 확인한다.
+
+## 선택 영역 모자이크 편집 객체화와 뷰어 창 위치 복구
+
+### Problem
+
+- 사용자가 "선택 영역 모자이크 기능이 사라졌다"고 보고했다. git 이력(`-S`/`-G` 검색)에는 모자이크 제거 커밋이 없었고, HEAD 코드 경로도 온전했다.
+- 실제 원인은 표시 위치였다. `settings.json`의 `ViewerLeft=-914`가 복원되면서 뷰어가 `-1157,1450`에 떴고, 창 왼쪽에 붙는 모자이크 설정 줄(`x=-954~-561`)이 3840×2160 단일 모니터 밖에 그려졌다. `ApplyStoredWindowBounds`는 화면과 겹치는지만 검사하고 창을 화면 안으로 끌어오지 않았다.
+- 사용 중 추가 요구: 즉시 적용 모자이크는 영역을 고칠 수 없다. 선택 영역·도형을 드래그로 옮길 수 없다. 적용한 모자이크를 선택 해제 후 다시 선택해 편집할 수 없다(Photoshop 기준 기대).
+
+### Changes
+
+- `ClampWindowBounds`: 저장된 뷰어 위치를 가상 화면 안으로 끌어오고, 화면보다 크면 줄인다. 화면과 전혀 겹치지 않으면 기존처럼 기본 위치를 쓴다.
+- 즉시 적용 모자이크 도구(`▦`, `ViewerEditTool.Mosaic`)와 그 미리보기·분기를 제거했다.
+- `▧` 영역 선택 도구에 "선택 영역 모자이크" 설정 줄(크기 6~64px, 블록/흐림, `모자이크 적용`)을 추가했다.
+- 모자이크를 `ViewerAnnotationKind.Mosaic` 비파괴 객체로 전환했다. 원본 이미지 영역에서 조각(`CreateMosaicPatch`)을 만들어 캐시하고, 이동·크기 조절·크기/종류 변경 때 다시 계산한다. 저장·복사 시 `ComposeImageForExport`가 합성한다.
+- 모자이크 객체를 선택하면 "모자이크 편집" 줄이 나타나고, 슬라이더·종류 버튼 변경이 선택한 객체에 바로 반영된다.
+- 블록 크기는 이제 이미지 픽셀 기준이다(예전에는 확대 배율로 나눴다).
+- 선택 영역 안을 끌면 이미지 경계 안에서 이동한다(`MovePixelRect`). 펜·화살표·네모·원 도구 중에도 기존 도형을 끌면 이동한다(텍스트 도구는 클릭 편집 보존을 위해 제외).
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: 경고 0개, 오류 0개.
+- `dotnet run --project tests/MiniCapture.Tests/MiniCapture.Tests.csproj --no-build`: 27/27 통과. 새 테스트 `ClampWindowBounds_PullsOffscreenViewerIntoArea`, `MovePixelRect_KeepsSelectionInsideImage`, `CreateMosaicPatch_AveragesBlocksInsideRegionOnly`.
+- 실행 중인 Debug exe UIA 확인: 뷰어가 `0,384`에 복원됨, `ViewerMosaicToolButton` 없음, `▧` 선택 시 크기·블록·흐림·적용 버튼이 화면 안에 표시됨, 네모 도구로 바꾸면 모자이크 줄이 숨겨짐, 선택 없이 적용하면 `먼저 모자이크할 영역을 선택하세요.` 표시.
+- 사용자 확인: 선택 영역 → 모자이크 적용 동작.
+- 커밋: `05b7bdd`.
+
+### Follow-up
+
+- NEEDS_USER_UI_CHECK: 모자이크 객체를 선택 해제 후 다시 선택해 이동·크기 조절·크기/종류 변경·저장한다. 다른 창이 뷰어를 덮고 있어 마우스 드래그 자동화는 실행하지 않았다.
+- 모자이크 객체는 도형과 같이 이미지 되돌리기(`Ctrl+Z`) 대상이 아니다. 흐림은 드래그 중 동기 재계산이며 성능은 측정하지 않았다.
+- 관측 1회: 빌드 직후 첫 실행에서 파일 인자로 뷰어가 열리지 않았다(같은 파일을 실행 중 인스턴스에 다시 전달하면 열림, 다음 첫 실행은 정상). 재현되면 조사한다.

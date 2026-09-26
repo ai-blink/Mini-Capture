@@ -10,7 +10,8 @@
 - D-003: The persistent entrypoint is a transparent always-on-top capture button.
 - D-004: The file browser follows Windows Explorer conventions: tree, address/search, details and icon views.
 - D-005: Image icon views support small, medium, and large thumbnail sizes.
-- D-013: The partial mosaic tool offers exactly two types — sharp block averaging (existing) and Gaussian blur — chosen by the user over a wider 3-type option (adding circular blocks); block size is user-adjustable via a slider (6-64px) instead of a fixed constant.
+- D-013: The partial mosaic tool offers exactly two types — sharp block averaging (existing) and Gaussian blur — chosen by the user over a wider 3-type option (adding circular blocks); block size is user-adjustable via a slider (6-64px) instead of a fixed constant. (Tool entry and apply model superseded by D-017; the two types and slider range remain.)
+- D-017: Mosaic has no immediate-apply tool. It is created from a pixel selection (`▧` → size/type → `모자이크 적용`) as a non-destructive `ViewerAnnotationKind.Mosaic` object that can be re-selected after deselect, moved, resized, re-typed/re-sized, or deleted, following the Photoshop-like expectation that an applied effect stays editable; it is composed into the bitmap only at save/copy (or when crop/cut/paste commits annotations). The patch is computed from the base image, so shapes beneath it are not pixelated. Block size means image pixels, no longer divided by the zoom factor. Like other annotations, it is outside the image undo stack.
 - D-015: `창 제외`에서 실행 중인 대상을 선택하면 제한 권한 조회로 확인 가능한 실행 파일 경로와 프로세스명을 함께 저장하고 파일 경로 기준을 기본값으로 사용한다. 이름 전용 항목은 나중에 경로가 확인될 때만 파일 경로 기본값으로 승격한다. 경로를 이미 가진 항목의 파일 경로·프로세스명 적용 기준은 라디오 버튼으로만 전환하며, 전환 중 다른 값을 삭제하거나 자동으로 재선택하지 않는다.
 
 ## Architecture
