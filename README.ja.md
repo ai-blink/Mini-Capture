@@ -16,7 +16,7 @@ Mini Capture は、画像のキャプチャ、確認、マークアップ、保�
 
 ## ポータブル版をダウンロード
 
-1. [最新リリース](https://github.com/ai-blink/Mini-Capture/releases/latest)から `MiniCapture-v0.1.6-win-x64-portable.zip` をダウンロードします。
+1. [最新リリース](https://github.com/ai-blink/Mini-Capture/releases/latest)から `MiniCapture-v0.2.0-win-x64-portable.zip` をダウンロードします。
 2. ZIP ファイルを任意のフォルダーに展開します。
 3. `MiniCapture.exe` を実行します。
 
@@ -40,6 +40,7 @@ Mini Capture は、画像のキャプチャ、確認、マークアップ、保�
 - ピクセル領域の選択、コピー、切り取り、貼り付け、画像端からのトリミング
 - ウィンドウキャプチャから除外する実行可能ファイルの一覧管理
 - ウィンドウ位置、ファイル表示方式、エクスプローラーパネル幅の保持
+- 日本語・英語・韓国語・中国語（簡体字）の画面と、ライト・ダーク・システム設定に従うテーマ（設定 → 言語とテーマ）
 
 ## 使い方
 
@@ -137,7 +138,7 @@ dotnet publish .\src\MiniCapture\MiniCapture.csproj `
   -p:IncludeNativeLibrariesForSelfExtract=true `
   -p:EnableCompressionInSingleFile=true `
   -p:DebugType=None `
-  -o .\artifacts\publish\MiniCapture-v0.1.6-win-x64-portable
+  -o .\artifacts\publish\MiniCapture-v0.2.0-win-x64-portable
 ```
 
 ## V1 の範囲
@@ -146,4 +147,4 @@ V1 は、安定した画面キャプチャ、自動保存、素早い確認、�
 
 ## バージョン
 
-- 現在公開中のポータブル版: `v0.1.6`
+- 現在公開中のポータブル版: `v0.2.0`

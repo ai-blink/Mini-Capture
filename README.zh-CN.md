@@ -16,7 +16,7 @@ Mini Capture 是一款轻量级 Windows 屏幕截图工具，可快速捕获、�
 
 ## 下载便携版
 
-1. 从[最新发行版](https://github.com/ai-blink/Mini-Capture/releases/latest)下载 `MiniCapture-v0.1.6-win-x64-portable.zip`。
+1. 从[最新发行版](https://github.com/ai-blink/Mini-Capture/releases/latest)下载 `MiniCapture-v0.2.0-win-x64-portable.zip`。
 2. 将 ZIP 文件解压到任意文件夹。
 3. 运行 `MiniCapture.exe`。
 
@@ -40,6 +40,7 @@ Mini Capture 是一款轻量级 Windows 屏幕截图工具，可快速捕获、�
 - 像素区域选择、复制、剪切、粘贴和从图像边缘裁剪
 - 管理应从窗口截图中排除的可执行文件
 - 记住窗口位置、文件视图方式和资源管理器面板宽度
+- 支持中文（简体）、英语、韩语和日语界面，并可选择浅色、深色或跟随系统主题（设置 → 语言和主题）
 
 ## 使用方法
 
@@ -137,7 +138,7 @@ dotnet publish .\src\MiniCapture\MiniCapture.csproj `
   -p:IncludeNativeLibrariesForSelfExtract=true `
   -p:EnableCompressionInSingleFile=true `
   -p:DebugType=None `
-  -o .\artifacts\publish\MiniCapture-v0.1.6-win-x64-portable
+  -o .\artifacts\publish\MiniCapture-v0.2.0-win-x64-portable
 ```
 
 ## V1 范围
@@ -146,4 +147,4 @@ V1 专注于可靠的屏幕截图、自动保存、快速查看、简单标注�
 
 ## 版本
 
-- 当前公开的便携版：`v0.1.6`
+- 当前公开的便携版：`v0.2.0`

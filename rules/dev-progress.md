@@ -31,25 +31,26 @@
 
 ## Next Actions
 
-- NEEDS_USER_UI_CHECK: switch the app language in Settings → 언어/Language to English/中文(简体)/日本語, confirm the restart prompt applies it, and re-confirm the floating capture button is transparent again afterward.
-- NEEDS_USER_UI_CHECK (i18n slice 2): in English/中文/日本語, check the floating button tooltip + right-click menu, mode/timer buttons (`3s`…), result panel buttons, tray menu, and the region/window capture overlay hints.
-- NEEDS_USER_UI_CHECK (i18n slice 3): in a non-Korean language, open the hotkey detect dialog from Settings and check the viewer folder tree root names (내 PC/빠른 실행/사진/캡처 루트/오늘/최근 캡처).
-- NEEDS_USER_UI_CHECK (i18n slice 4, viewer): in EN/ZH/JA check toolbar labels at normal width (longer English/Japanese labels may wrap or widen buttons), tooltips, left settings panel, crop panel, Details column headers/sort status, and status-bar messages.
-- After all windows are localized, re-verify the README's EN/ZH/JA promise actually matches the running app end-to-end.
-- NEEDS_USER_UI_CHECK: select an animated GIF in the viewer and confirm that it loops instead of remaining on its first frame.
-- NEEDS_USER_UI_CHECK: keep the viewer open while adding consecutive captures to its active folder, then confirm the new files appear without a whole-window freeze.
-- NEEDS_USER_UI_CHECK: open Mini Capture **설정 → 창 제외**, refresh the process list, add an accessible process, confirm both `파일 경로`/`프로세스명` radios retain the two values while toggling, and verify the file-picker button's right border at the minimum window width. Protected Windows processes may still report `경로 확인 불가`. In `new-alt`, open **전역 설정** at its minimum width and confirm the right card borders are fully visible.
-- Manually verify address-row/toolbar/F5 refresh, all four Details sort toggles, and tooltip capture exclusion.
-- Manually verify selected-area Ctrl+C/Ctrl+X/Ctrl+V plus 2-row left-sidebar crop sliders/numeric inputs and preview/apply behavior.
-- Manually verify toolbar wrapping/crop icon and register a visible process through `창 제외` before checking it cannot be selected.
-- Investigate only if it recurs: one cold start with a file argument did not open the viewer (forwarding the same file to the running instance opened it; later cold starts, including the phase-2 build, worked).
-- Run the full manual-GUI regression checklist for the `ViewerWindow.xaml.cs` split (`notes/subagents/deep-refactor/20260806_170229_design.md` §6, or Phase 4's consolidated single-pass priority order: edit tools → annotation select/move/resize/delete → restart-then-layout-restore → navigation/toolbar → keyboard) — every tool (pan/select/pixel-select/rectangle/ellipse/mosaic/text/pen/arrow), undo/redo, crop, annotation drag/resize/delete, and keyboard shortcuts, since no automated coverage exists for the WPF UI wiring itself. This is the only remaining step before the split can be called fully verified.
-- Run a true multi-monitor hardware pass when a multi-display setup is available.
-- Manually open a high-resolution external image repeatedly through the Windows association, then verify no duplicate MiniCapture process, responsive window interaction, and left/right sibling navigation.
-- Decide later whether V1 needs an installer or self-contained package; the current baseline is a framework-dependent `win-x64` publish folder.
-- If Mini Capture should appear as a Windows default app for PNG/JPG/JPEG, implement that in an installer/registry slice with versioned ProgIDs and quoted `%1` command registration.
-- Keep Windows.Graphics.Capture, protected/accelerated-window coverage, and deeper thumbnail cancellation/cache eviction as hardening follow-ups unless a release blocker appears.
+Consolidated 2026-09-28 (v0.2.0). Items verified by capture this day were removed: EN/JA viewer + settings window text, toolbar at minimum width (wraps to two rows, nothing clipped), light/dark theme on viewer + settings window incl. dark title bar.
 
+User checks, in priority order (the assistant cannot drive mouse input reliably here — other windows cover the app and input leaks):
+1. Editing: draw → move (V) → resize → delete, then `Ctrl+Z`×4 / `Ctrl+Y`×4 step one action at a time; text box undo in one step; mosaic size slider undo; rotate then undo restores editable annotations.
+2. Theme/language restart flow: Settings → 언어·테마 → change theme or language → "적용하고 재시작"; the app restarts once and the floating button stays transparent afterward.
+3. Non-Korean check of what capture could not reach: floating button tooltip + right-click menu, mode/timer buttons (`3s`…), result panel, tray menu, region/window capture overlay hints, hotkey detect dialog.
+4. Animated GIF in the viewer loops (not stuck on frame 1).
+5. Consecutive captures while the viewer is open appear without a whole-window freeze.
+6. `창 제외`: refresh process list, add an accessible process, both `파일 경로`/`프로세스명` radios keep their values while toggling; the added window cannot be selected in window capture.
+7. Address-row/toolbar/F5 refresh, the four Details sort toggles, tooltip capture exclusion.
+8. Pixel region Ctrl+C/X/V and the crop sliders/numeric inputs preview/apply.
+9. `ViewerWindow` split manual regression (`notes/subagents/deep-refactor/20260806_170229_design.md` §6) — largely overlaps items 1, 7, 8; mark done when those pass.
+10. High-resolution external image opened repeatedly through the Windows association: no duplicate process, left/right sibling navigation.
+
+Assistant-side follow-ups:
+- Push `main` and tag `v0.2.0`, then create the GitHub release with `artifacts/MiniCapture-v0.2.0-win-x64-portable.zip` — blocked on GitHub auth (`gh auth login` + `gh auth setup-git`).
+- Settings page subtitles are clipped on the right when long (also in Korean); wrap them.
+- Re-dragging the mosaic-size slider on the same object merges into the previous undo step; blur recompute cost during drag is unmeasured.
+- Investigate only if it recurs: one cold start with a file argument did not open the viewer.
+- Later/hardware: true multi-monitor pass; installer with versioned ProgIDs if default-app registration is wanted; Windows.Graphics.Capture and thumbnail cache hardening.
 ## Blockers
 
 - None currently recorded.

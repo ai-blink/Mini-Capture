@@ -1786,3 +1786,26 @@ Allow users to exclude a window-selection target by choosing a running process o
 - 설정 창을 라이트·다크 각각 `PrintWindow` 캡처: 배경·패널·버튼·입력·글자 전환, 다크 제목 표시줄 적용 확인.
 - 발견·수정: 확장자 연결 "현재 기본 앱" 열이 고정색 `LightGreen`/`LightSteelBlue`라 라이트에서 거의 안 보임 → 테마 키 `SettingsSuccessTextBrush`(#15803D/#90EE90)·`SettingsInfoTextBrush`(#3B6A96/#B0C4DE).
 - 빌드 0/0, 테스트 36/36, `C:\app` 교체(해시 일치). 남은 사용자 확인: 키 감지 대화상자.
+
+## v0.2.0 릴리스 (2026-09-28)
+
+### 포함
+
+- 마크업 객체 작업 되돌리기/다시 실행(동작 1회 = 1단계), 회전·자르기·잘라내기·붙여넣기 1단계 되돌리기.
+- 전체 UI 한국어·영어·중국어(간체)·일본어, 설정 → 언어·테마에서 선택(재시작 적용).
+- 라이트·다크·시스템 테마, 다크 제목 표시줄.
+- 단축키 등록 결과 구조화, 확장자 연결 상태색 테마화, 비활성 툴바 버튼 표시 수정.
+
+### 검증
+
+- `dotnet build MiniCapture.slnx -c Release`: 경고 0개, 오류 0개. `MiniCapture.Tests` Release 36/36 통과.
+- 영어·일본어로 뷰어(보통 폭·최소 폭 980)와 설정 창을 `PrintWindow` 캡처: 번역 표시, 최소 폭에서 툴바 2줄 줄바꿈·잘림 없음. 설정 창 부제목이 길면 오른쪽이 잘림(한국어도 동일, FOLLOW_UP).
+- 게시 exe 파일 버전 `0.2.0.0`, `C:\app` 교체 후 실행 확인.
+
+### Release Package
+
+- `artifacts/publish/MiniCapture-v0.2.0-win-x64-portable/MiniCapture.exe`
+- `artifacts/MiniCapture-v0.2.0-win-x64-portable.zip`
+- 실행 파일 SHA-256: `7F5D7E1BDC875E0F73A3B7BE0019C76BDDA1E513BE4B0AF20B3629F9402AC061`
+- ZIP SHA-256: `D6734598B636BBB75F4888D1B15F408AAA7280500ABE70CB39A1C82FB0F76B6F`
+- 푸시·GitHub 릴리스: GitHub 인증 실패(`gh` 401, git push 인증 실패)로 대기. 태그 `v0.2.0`은 로컬에만 있음.

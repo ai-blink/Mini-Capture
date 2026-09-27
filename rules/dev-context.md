@@ -2,20 +2,16 @@
 
 ## Resume Point
 
-- Branch: `main` (markup editing UX phase 2 committed; not pushed).
+- Branch: `main`, v0.2.0 tagged locally; not pushed (GitHub auth failed).
 - P0-P4 and V1 viewer/browser/editor reinforcement are code-complete; interactive-desktop validation and the `ViewerWindow` split's manual GUI regression pass remain outstanding (see `rules/dev-progress.md` Next Actions).
 - 2026-09-27 viewer editing UX: phase 1 (`00f3383`, D-017/D-018) user-checked in the running app; movement stays in `객체 선택`(V) by user decision. Phase 2 (D-019): `EditHistory<T>` + `EditSnapshot(image, cloned annotations)` — one undo step per gesture for add/move/resize/delete/mosaic property/text, typing and slider drags coalesced; rotate/crop/cut/paste undo in one step and restore editable annotations. Build 0/0, 33/33 tests, user-approved.
 - i18n: `.resx` infra + `SettingsWindow` localized with restart-to-apply (`--restart-wait <pid>` race fix). 2026-09-28 slice 2: `MainWindow`, tray, capture-mode texts, capture overlays (+52 keys, reflection-verified). 2026-09-28 slices 3-4: hotkey dialog, capture errors, folder tree, `ViewerWindow` (+233 keys). New UI text must go through `Strings.*` (add to all 4 `.resx` + `Strings.Designer.cs`).
 
 ## Immediate Next Step
 
-- Theme (D-020) verified by capture in both themes (viewer + settings window incl. dark title bar); remaining NEEDS_USER_UI_CHECK is the hotkey detect dialog and everyday use. `--settings` works — windows owned by MainWindow are not visible to a top-level UIA search; find them with Win32 `EnumWindows` (scratchpad `list-windows.ps1` pattern).
-
-- NEEDS_USER_UI_CHECK: i18n slice 2 screens in EN/ZH/JA (floating button tooltip/menu, mode/timer, result panel, tray, capture overlay hints).
-- i18n code-complete (slices 3-4 on 2026-09-28: hotkey dialog/registration result, capture errors, folder tree, full `ViewerWindow`). NEEDS_USER_UI_CHECK in EN/ZH/JA — watch toolbar label width in the viewer; then re-check the README language promise end-to-end.
-- FOLLOW_UP (editing): re-dragging the mosaic-size slider on the same object merges into the previous undo step; blur recompute cost during drag is unmeasured.
-- Observed once, not reproduced (phase-2 cold start worked): a cold start with a file argument did not open the viewer.
-- Pre-existing backlog: `ViewerWindow` split manual GUI regression, consecutive-capture list, F5/sort, crop sliders, `창 제외`, association/sibling navigation, multi-monitor, installer.
+- v0.2.0 is built, packaged (rtifacts/MiniCapture-v0.2.0-win-x64-portable.zip), deployed to C:\app, committed and tagged locally. Push + GitHub release are blocked on GitHub auth: ask the user to run `! gh auth login` and `! gh auth setup-git`, then git push origin main --follow-tags and gh release create v0.2.0 <zip> with the notes in doc/app-dev/05-run-report.md (v0.2.0 section).
+- User UI checks: the single ordered list in ules/dev-progress.md Next Actions.
+- Screen verification recipe (works here): launch the Debug exe, find windows with Win32 `EnumWindows` by title (UIA top-level search misses owned windows), capture with `PrintWindow`; change `%LOCALAPPDATA%\MiniCapture\settings.json` Language/Theme temporarily and restore it.
 
 ## Constraints
 

@@ -16,7 +16,7 @@ Mini Capture is a lightweight Windows screen-capture tool for quickly capturing,
 
 ## Download the Portable Version
 
-1. Download `MiniCapture-v0.1.6-win-x64-portable.zip` from the [latest release](https://github.com/ai-blink/Mini-Capture/releases/latest).
+1. Download `MiniCapture-v0.2.0-win-x64-portable.zip` from the [latest release](https://github.com/ai-blink/Mini-Capture/releases/latest).
 2. Extract the ZIP file to any folder you prefer.
 3. Run `MiniCapture.exe`.
 
@@ -40,6 +40,7 @@ No installation or separate .NET installation is required. If Windows SmartScree
 - Pixel-area selection, copy, cut, paste, and edge cropping
 - Manage executable files whose windows should be excluded from window capture
 - Remembers window position, file-view mode, and Explorer-panel width
+- English, Korean, Simplified Chinese, and Japanese interface, plus light, dark, or system theme (Settings → Language & Theme)
 
 ## How to Use
 
@@ -137,7 +138,7 @@ dotnet publish .\src\MiniCapture\MiniCapture.csproj `
   -p:IncludeNativeLibrariesForSelfExtract=true `
   -p:EnableCompressionInSingleFile=true `
   -p:DebugType=None `
-  -o .\artifacts\publish\MiniCapture-v0.1.6-win-x64-portable
+  -o .\artifacts\publish\MiniCapture-v0.2.0-win-x64-portable
 ```
 
 ## V1 Scope
@@ -146,4 +147,4 @@ V1 focuses on reliable screen capture, automatic saving, fast viewing, simple ma
 
 ## Version
 
-- Current portable public release: `v0.1.6`
+- Current portable public release: `v0.2.0`
