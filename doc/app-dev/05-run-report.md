@@ -1735,3 +1735,21 @@ Allow users to exclude a window-selection target by choosing a running process o
 
 - 모자이크 크기 슬라이더를 놓았다가 같은 객체에서 다시 끌면 두 조작이 한 단계로 묶인다(병합 키가 같은 객체·속성이면 유지). 문제가 되면 슬라이더 조작 종료 시 병합을 끊는다.
 - 흐림 모자이크 동기 재계산 성능은 여전히 미측정.
+
+## i18n 2차 — MainWindow·트레이·캡처 오버레이
+
+### Changes
+
+- `MainWindow.xaml`/`.xaml.cs`, 트레이 메뉴(`App.xaml.cs`), `CaptureModeInfo` 이름·안내, `RegionCaptureOverlay`·`WindowPickerOverlay` 안내문을 `Strings.*`로 교체(키 52개 × ko/en/zh-CN/ja). 타이머 3/5/7/10초 버튼은 `Content="3"` + `ContentStringFormat=Main_SecondsFormat`.
+- 범위 안 유일한 한국어 리터럴은 `MainWindow.xaml.cs`의 `hotkeyStatus.StartsWith("등록 실패")` — `CaptureHotkeyManager` 출력(이번 범위 밖, 한국어 유지)과 짝이라 의도적으로 남김.
+
+### Verification
+
+- `dotnet build`(테스트 프로젝트 경유): 경고 0개, 오류 0개. 회귀 테스트 33/33 통과.
+- 리플렉션(빌드된 `MiniCapture.dll`): 새 키 52개가 4개 문화권 모두 값 존재, en/zh-CN/ja 중 한국어와 같은 값 0개. 예: `Main_SecondsFormat` → 5초/5s/5秒/5秒.
+- Debug 빌드 실행: MainWindow 로드 정상, UIA 이름 `드래그 모드 선택됨`(새 키 조합) 확인 후 종료, 배포본 `C:\app\MiniCapture.exe` 재실행.
+- NEEDS_USER_UI_CHECK: 영어·중국어·일본어로 전환해 플로팅 버튼 툴팁·우클릭 메뉴, 모드·타이머 버튼, 결과 패널, 트레이 메뉴, 캡처 오버레이 안내문 확인.
+
+### Follow-up
+
+- 남은 비뷰어 문자열: `HotkeyDetectDialog`(9), `CaptureHotkeyManager`(6, 이후 `StartsWith` 판정을 구조화된 결과로 교체), `ScreenCaptureService`(4), `CaptureFileIndex`(6). 그다음 `ViewerWindow`.

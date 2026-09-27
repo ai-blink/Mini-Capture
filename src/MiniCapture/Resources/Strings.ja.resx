@@ -166,4 +166,56 @@ Windows のセキュリティポリシーにより、アプリが既存の既定
   <data name="Settings_Language_ApplyButton" xml:space="preserve"><value>適用して再起動</value></data>
   <data name="Settings_Language_RestartPromptTitle" xml:space="preserve"><value>再起動</value></data>
   <data name="Settings_Language_RestartPromptBody" xml:space="preserve"><value>言語を変更するには Mini Capture を再起動する必要があります。今すぐ再起動しますか?</value></data>
+  <data name="Main_CaptureButtonTooltip" xml:space="preserve"><value>キャプチャメニューを開きます。ドラッグで移動できます。右クリックで画像ビューアー・設定・終了メニューを開けます。</value></data>
+  <data name="Main_Menu_ImageViewer" xml:space="preserve"><value>画像ビューアー</value></data>
+  <data name="Main_Menu_Settings" xml:space="preserve"><value>設定</value></data>
+  <data name="Main_Menu_Exit" xml:space="preserve"><value>終了</value></data>
+  <data name="Main_Mode_Region" xml:space="preserve"><value>範囲</value></data>
+  <data name="Main_Mode_RegionTooltip" xml:space="preserve"><value>ドラッグした範囲をキャプチャ</value></data>
+  <data name="Main_Mode_Window" xml:space="preserve"><value>ウィンドウ</value></data>
+  <data name="Main_Mode_WindowTooltip" xml:space="preserve"><value>指定したウィンドウをキャプチャ</value></data>
+  <data name="Main_Mode_Full" xml:space="preserve"><value>全体</value></data>
+  <data name="Main_Mode_FullTooltip" xml:space="preserve"><value>画面全体をキャプチャ</value></data>
+  <data name="Main_Mode_Timer" xml:space="preserve"><value>タイマー</value></data>
+  <data name="Main_Mode_TimerTooltip" xml:space="preserve"><value>キャプチャ前の待ち時間を選択</value></data>
+  <data name="Main_SecondsFormat" xml:space="preserve"><value>{0}秒</value></data>
+  <data name="Main_Result_Saved" xml:space="preserve"><value>保存済み</value></data>
+  <data name="Main_Result_Open" xml:space="preserve"><value>開く</value></data>
+  <data name="Main_Result_Folder" xml:space="preserve"><value>フォルダー</value></data>
+  <data name="Main_Result_View" xml:space="preserve"><value>表示</value></data>
+  <data name="Main_Result_CopyPath" xml:space="preserve"><value>パスをコピー</value></data>
+  <data name="Main_Result_CopyImage" xml:space="preserve"><value>画像をコピー</value></data>
+  <data name="Main_CaptureButtonModeTooltip" xml:space="preserve"><value>{0}を選択中。ドラッグで移動できます。右クリックで画像ビューアー・設定・終了メニューを開けます。</value></data>
+  <data name="Main_CaptureButtonModeName" xml:space="preserve"><value>{0}モード選択中</value></data>
+  <data name="Main_CountdownName" xml:space="preserve"><value>{0}秒後にキャプチャ</value></data>
+  <data name="Main_SavedName" xml:space="preserve"><value>保存済み {0}</value></data>
+  <data name="Main_Status_GlobalDelaySet" xml:space="preserve"><value>{0}秒の全体遅延を設定しました。範囲・ウィンドウ・全体キャプチャに適用されます。</value></data>
+  <data name="Main_Status_Cancelled" xml:space="preserve"><value>キャプチャをキャンセルしました。</value></data>
+  <data name="Main_Status_CaptureFailed" xml:space="preserve"><value>キャプチャ失敗: {0}</value></data>
+  <data name="Main_Status_CapturingFull" xml:space="preserve"><value>画面全体をキャプチャします。</value></data>
+  <data name="Main_Status_CapturingTimerFull" xml:space="preserve"><value>タイマーで画面全体をキャプチャします。</value></data>
+  <data name="Main_Status_DragRegion" xml:space="preserve"><value>キャプチャする範囲をドラッグしてください。Escでキャンセルできます。</value></data>
+  <data name="Main_Status_FreezingTimer" xml:space="preserve"><value>タイマー時点の画面を固定します。</value></data>
+  <data name="Main_Status_DragRegionFrozen" xml:space="preserve"><value>静止画面でキャプチャする範囲をドラッグしてください。Escでキャンセルできます。</value></data>
+  <data name="Main_Status_PickWindow" xml:space="preserve"><value>キャプチャするウィンドウにマウスを合わせてクリックしてください。Escでキャンセルできます。</value></data>
+  <data name="Main_Status_PickWindowFrozen" xml:space="preserve"><value>静止画面でキャプチャするウィンドウをクリックしてください。Escでキャンセルできます。</value></data>
+  <data name="Main_Status_PathCopied" xml:space="preserve"><value>ファイルパスをクリップボードにコピーしました。</value></data>
+  <data name="Main_Status_PathCopyFailed" xml:space="preserve"><value>パスのコピーに失敗: {0}</value></data>
+  <data name="Main_Status_ImageCopied" xml:space="preserve"><value>画像をクリップボードにコピーしました。</value></data>
+  <data name="Main_Status_ImageCopyFailed" xml:space="preserve"><value>画像のコピーに失敗: {0}</value></data>
+  <data name="Main_Status_SettingsOpenFailed" xml:space="preserve"><value>設定を開けません: {0}</value></data>
+  <data name="Mode_Name_Drag" xml:space="preserve"><value>ドラッグ</value></data>
+  <data name="Mode_Name_Window" xml:space="preserve"><value>ウィンドウ指定</value></data>
+  <data name="Mode_Name_FullScreen" xml:space="preserve"><value>全画面</value></data>
+  <data name="Mode_Name_Timer" xml:space="preserve"><value>タイマー</value></data>
+  <data name="Mode_Placeholder_Drag" xml:space="preserve"><value>ドラッグモード選択中。保存する範囲をドラッグしてください。</value></data>
+  <data name="Mode_Placeholder_Window" xml:space="preserve"><value>ウィンドウ指定モード選択中。対象ウィンドウをクリックするとPNGで保存します。</value></data>
+  <data name="Mode_Placeholder_FullScreen" xml:space="preserve"><value>全画面モード選択中。画面全体をPNGで保存します。</value></data>
+  <data name="Mode_Placeholder_Timer" xml:space="preserve"><value>タイマーモード選択中。設定した待ち時間の後に画面全体をPNGで保存します。</value></data>
+  <data name="Tray_Open" xml:space="preserve"><value>開く</value></data>
+  <data name="Overlay_RegionHint" xml:space="preserve"><value>ドラッグでキャプチャ範囲を選択 / Escでキャンセル</value></data>
+  <data name="Overlay_RegionHintFrozen" xml:space="preserve"><value>静止画面でドラッグしてキャプチャ範囲を選択 / Escでキャンセル</value></data>
+  <data name="Overlay_WindowHint" xml:space="preserve"><value>キャプチャするウィンドウにマウスを合わせてクリック / Escでキャンセル</value></data>
+  <data name="Overlay_WindowHintFrozen" xml:space="preserve"><value>静止画面でキャプチャするウィンドウをクリック / Escでキャンセル</value></data>
+  <data name="Overlay_SelectedWindow" xml:space="preserve"><value>選択したウィンドウ</value></data>
 </root>

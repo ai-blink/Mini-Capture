@@ -1,4 +1,5 @@
 using System.IO;
+using MiniCapture.Resources;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -157,7 +158,7 @@ public partial class MainWindow : Window
         MiniCaptureSettingsStore.Save(_settings);
         ApplyTimerButtonText();
         TimerPopup.IsOpen = false;
-        ShowStatus($"{seconds}초 전역 지연이 설정되었습니다. 영역, 창, 전체 캡처에 적용됩니다.");
+        ShowStatus(string.Format(Strings.Main_Status_GlobalDelaySet, seconds));
     }
 
     private void OnExitClick(object sender, RoutedEventArgs e)
@@ -335,7 +336,7 @@ public partial class MainWindow : Window
 
     private void ApplyTimerButtonText()
     {
-        ModeTimerButton.Content = _captureDelaySeconds > 0 ? $"{_captureDelaySeconds}초" : "타이머";
+        ModeTimerButton.Content = _captureDelaySeconds > 0 ? string.Format(Strings.Main_SecondsFormat, _captureDelaySeconds) : Strings.Main_Mode_Timer;
         AutomationProperties.SetName(ModeTimerButton, _captureDelaySeconds > 0
             ? $"Timer delay {_captureDelaySeconds} seconds"
             : "Timer delay off");
@@ -389,8 +390,8 @@ public partial class MainWindow : Window
     private void SelectMode(CaptureMode mode, bool showStatus)
     {
         _selectedMode = mode;
-        CaptureButton.ToolTip = $"{CaptureModeInfo.DisplayName(mode)} 선택됨. 드래그하면 위치를 옮길 수 있습니다. 우클릭하면 이미지 뷰어, 설정, 종료 메뉴를 열 수 있습니다.";
-        AutomationProperties.SetName(CaptureButton, $"{CaptureModeInfo.DisplayName(mode)} 모드 선택됨");
+        CaptureButton.ToolTip = string.Format(Strings.Main_CaptureButtonModeTooltip, CaptureModeInfo.DisplayName(mode));
+        AutomationProperties.SetName(CaptureButton, string.Format(Strings.Main_CaptureButtonModeName, CaptureModeInfo.DisplayName(mode)));
         StatusText.Text = CaptureModeInfo.PlaceholderStatus(mode);
         StatusText.Foreground = WpfBrushes.White;
         AutomationProperties.SetName(StatusText, StatusText.Text);
@@ -427,7 +428,7 @@ public partial class MainWindow : Window
 
             if (string.IsNullOrWhiteSpace(savedPath))
             {
-                ShowStatus("캡처가 취소되었습니다.");
+                ShowStatus(Strings.Main_Status_Cancelled);
                 return;
             }
 
@@ -435,7 +436,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            ShowStatus($"캡처 실패: {ex.Message}");
+            ShowStatus(string.Format(Strings.Main_Status_CaptureFailed, ex.Message));
         }
         finally
         {
@@ -490,7 +491,7 @@ public partial class MainWindow : Window
             return null;
         }
 
-        ShowStatus("전체 화면을 캡처합니다.");
+        ShowStatus(Strings.Main_Status_CapturingFull);
         Hide();
         await Task.Delay(180);
         return ScreenCaptureService.CaptureFullScreen();
@@ -506,7 +507,7 @@ public partial class MainWindow : Window
             return null;
         }
 
-        ShowStatus("타이머 전체 화면을 캡처합니다.");
+        ShowStatus(Strings.Main_Status_CapturingTimerFull);
         Hide();
         await Task.Delay(180);
         return ScreenCaptureService.CaptureFullScreen();
@@ -514,7 +515,7 @@ public partial class MainWindow : Window
 
     private async Task<string?> CaptureDragRegionAsync()
     {
-        ShowStatus("캡처할 영역을 드래그하세요. Esc로 취소할 수 있습니다.");
+        ShowStatus(Strings.Main_Status_DragRegion);
         ModePopup.IsOpen = false;
         TimerPopup.IsOpen = false;
 
@@ -526,11 +527,11 @@ public partial class MainWindow : Window
                 return null;
             }
 
-            ShowStatus("타이머 시점 화면을 고정합니다.");
+            ShowStatus(Strings.Main_Status_FreezingTimer);
             Hide();
             await Task.Delay(180);
             frozenSnapshot = ScreenCaptureService.CaptureSnapshot();
-            ShowStatus("정지 화면에서 캡처할 영역을 드래그하세요. Esc로 취소할 수 있습니다.");
+            ShowStatus(Strings.Main_Status_DragRegionFrozen);
         }
         else
         {
@@ -562,7 +563,7 @@ public partial class MainWindow : Window
 
     private async Task<string?> CaptureWindowAsync()
     {
-        ShowStatus("캡처할 창 위에 마우스를 올리고 클릭하세요. Esc로 취소할 수 있습니다.");
+        ShowStatus(Strings.Main_Status_PickWindow);
         ModePopup.IsOpen = false;
         TimerPopup.IsOpen = false;
         if (!await RunCountdownIfNeededAsync())
@@ -570,7 +571,7 @@ public partial class MainWindow : Window
             return null;
         }
 
-        ShowStatus("캡처할 창 위에 마우스를 올리고 클릭하세요. Esc로 취소할 수 있습니다.");
+        ShowStatus(Strings.Main_Status_PickWindow);
         Hide();
 
         ScreenCaptureSnapshot? frozenSnapshot = null;
@@ -580,7 +581,7 @@ public partial class MainWindow : Window
             await Task.Delay(180);
             frozenTargets = WindowPickerService.GetSelectableTargetsInZOrder(Environment.ProcessId);
             frozenSnapshot = ScreenCaptureService.CaptureSnapshot();
-            ShowStatus("정지 화면에서 캡처할 창을 클릭하세요. Esc로 취소할 수 있습니다.");
+            ShowStatus(Strings.Main_Status_PickWindowFrozen);
         }
 
         try
@@ -624,7 +625,7 @@ public partial class MainWindow : Window
         for (var remaining = seconds; remaining > 0; remaining--)
         {
             StatusText.Text = $"{remaining}";
-            AutomationProperties.SetName(StatusText, $"{remaining}초 후 캡처");
+            AutomationProperties.SetName(StatusText, string.Format(Strings.Main_CountdownName, remaining));
             System.Media.SystemSounds.Beep.Play();
             await Task.Delay(TimeSpan.FromSeconds(1));
         }
@@ -638,7 +639,7 @@ public partial class MainWindow : Window
         _lastCapturePath = path;
         ResultPathText.Text = path;
         AutomationProperties.SetName(ResultPathText, path);
-        AutomationProperties.SetName(CaptureButton, $"저장됨 {path}");
+        AutomationProperties.SetName(CaptureButton, string.Format(Strings.Main_SavedName, path));
         StatusPopup.IsOpen = false;
         ResultPopup.IsOpen = true;
     }
@@ -687,11 +688,11 @@ public partial class MainWindow : Window
         try
         {
             await ClipboardService.SetTextAsync(_lastCapturePath);
-            ShowStatus("파일 경로를 클립보드에 복사했습니다.");
+            ShowStatus(Strings.Main_Status_PathCopied);
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
         {
-            ShowStatus($"경로 복사 실패: {ex.Message}");
+            ShowStatus(string.Format(Strings.Main_Status_PathCopyFailed, ex.Message));
         }
     }
 
@@ -712,11 +713,11 @@ public partial class MainWindow : Window
             image.EndInit();
             image.Freeze();
             ClipboardService.SetImage(image);
-            ShowStatus("이미지를 클립보드에 복사했습니다.");
+            ShowStatus(Strings.Main_Status_ImageCopied);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or System.Runtime.InteropServices.ExternalException)
         {
-            ShowStatus($"이미지 복사 실패: {ex.Message}");
+            ShowStatus(string.Format(Strings.Main_Status_ImageCopyFailed, ex.Message));
         }
     }
 
@@ -771,7 +772,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex) when (ex is InvalidOperationException or XamlParseException)
         {
-            ShowStatus($"설정을 열 수 없습니다: {ex.Message}");
+            ShowStatus(string.Format(Strings.Main_Status_SettingsOpenFailed, ex.Message));
         }
     }
 

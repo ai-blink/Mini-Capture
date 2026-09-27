@@ -1,3 +1,5 @@
+using MiniCapture.Resources;
+
 namespace MiniCapture;
 
 public enum CaptureMode
@@ -25,10 +27,10 @@ public static class CaptureModeInfo
     {
         return mode switch
         {
-            CaptureMode.Window => "창 지정",
-            CaptureMode.FullScreen => "전체",
-            CaptureMode.Timer => "타이머",
-            _ => "드래그"
+            CaptureMode.Window => Strings.Mode_Name_Window,
+            CaptureMode.FullScreen => Strings.Mode_Name_FullScreen,
+            CaptureMode.Timer => Strings.Mode_Name_Timer,
+            _ => Strings.Mode_Name_Drag
         };
     }
 
@@ -47,10 +49,10 @@ public static class CaptureModeInfo
     {
         return mode switch
         {
-            CaptureMode.Window => "창 지정 모드 선택됨. 대상 창을 클릭하면 PNG로 저장합니다.",
-            CaptureMode.FullScreen => "전체 모드 선택됨. 전체 화면을 PNG로 저장합니다.",
-            CaptureMode.Timer => "타이머 모드 선택됨. 설정된 지연 후 전체 화면을 PNG로 저장합니다.",
-            _ => "드래그 모드 선택됨. 저장할 영역을 드래그하세요."
+            CaptureMode.Window => Strings.Mode_Placeholder_Window,
+            CaptureMode.FullScreen => Strings.Mode_Placeholder_FullScreen,
+            CaptureMode.Timer => Strings.Mode_Placeholder_Timer,
+            _ => Strings.Mode_Placeholder_Drag
         };
     }
 }

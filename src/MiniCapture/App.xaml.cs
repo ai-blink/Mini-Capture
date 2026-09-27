@@ -1,4 +1,5 @@
 using System.IO;
+using MiniCapture.Resources;
 using System.Windows;
 using System.Windows.Threading;
 using Drawing = System.Drawing;
@@ -143,9 +144,9 @@ public partial class App : System.Windows.Application
     private Forms.ContextMenuStrip BuildTrayMenu()
     {
         var menu = new Forms.ContextMenuStrip();
-        menu.Items.Add("열기", null, (_, _) => Dispatcher.Invoke(ShowCaptureWindow));
-        menu.Items.Add("설정", null, (_, _) => Dispatcher.Invoke(ShowSettingsWindow));
-        menu.Items.Add("종료", null, (_, _) => Dispatcher.Invoke(ExitApplication));
+        menu.Items.Add(Strings.Tray_Open, null, (_, _) => Dispatcher.Invoke(ShowCaptureWindow));
+        menu.Items.Add(Strings.Main_Menu_Settings, null, (_, _) => Dispatcher.Invoke(ShowSettingsWindow));
+        menu.Items.Add(Strings.Main_Menu_Exit, null, (_, _) => Dispatcher.Invoke(ExitApplication));
         return menu;
     }
 

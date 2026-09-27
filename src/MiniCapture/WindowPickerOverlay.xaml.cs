@@ -1,3 +1,4 @@
+using MiniCapture.Resources;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -60,7 +61,7 @@ public partial class WindowPickerOverlay : Window
             {
                 Stretch = Stretch.Fill
             };
-            HintText.Text = "정지 화면에서 캡처할 창을 클릭 / Esc 취소";
+            HintText.Text = Strings.Overlay_WindowHintFrozen;
             ShowHintNearCursor(System.Windows.Forms.Cursor.Position);
         }
         else
@@ -150,7 +151,7 @@ public partial class WindowPickerOverlay : Window
             HighlightBorder.Visibility = Visibility.Visible;
 
             HintText.Visibility = Visibility.Collapsed;
-            TargetText.Text = string.IsNullOrWhiteSpace(title) ? "선택된 창" : title;
+            TargetText.Text = string.IsNullOrWhiteSpace(title) ? Strings.Overlay_SelectedWindow : title;
             System.Windows.Controls.Canvas.SetLeft(TargetText, Math.Max(0, left + 8));
             System.Windows.Controls.Canvas.SetTop(TargetText, Math.Max(0, top + 8));
             TargetText.MaxWidth = Math.Max(120, Math.Min(420, Width - left - 16));
@@ -170,7 +171,7 @@ public partial class WindowPickerOverlay : Window
         HighlightBorder.Height = Height;
         HighlightBorder.Visibility = Visibility.Visible;
 
-        TargetText.Text = string.IsNullOrWhiteSpace(title) ? "선택된 창" : title;
+        TargetText.Text = string.IsNullOrWhiteSpace(title) ? Strings.Overlay_SelectedWindow : title;
         System.Windows.Controls.Canvas.SetLeft(TargetText, 8);
         System.Windows.Controls.Canvas.SetTop(TargetText, 8);
         TargetText.Visibility = Visibility.Visible;

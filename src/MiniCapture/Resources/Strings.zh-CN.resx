@@ -166,4 +166,56 @@
   <data name="Settings_Language_ApplyButton" xml:space="preserve"><value>应用并重启</value></data>
   <data name="Settings_Language_RestartPromptTitle" xml:space="preserve"><value>重新启动</value></data>
   <data name="Settings_Language_RestartPromptBody" xml:space="preserve"><value>更改语言需要重新启动 Mini Capture。是否立即重新启动？</value></data>
+  <data name="Main_CaptureButtonTooltip" xml:space="preserve"><value>打开截图菜单。拖动可移动位置。右键可打开图片查看器、设置和退出菜单。</value></data>
+  <data name="Main_Menu_ImageViewer" xml:space="preserve"><value>图片查看器</value></data>
+  <data name="Main_Menu_Settings" xml:space="preserve"><value>设置</value></data>
+  <data name="Main_Menu_Exit" xml:space="preserve"><value>退出</value></data>
+  <data name="Main_Mode_Region" xml:space="preserve"><value>区域</value></data>
+  <data name="Main_Mode_RegionTooltip" xml:space="preserve"><value>拖动选择区域截图</value></data>
+  <data name="Main_Mode_Window" xml:space="preserve"><value>窗口</value></data>
+  <data name="Main_Mode_WindowTooltip" xml:space="preserve"><value>截取指定窗口</value></data>
+  <data name="Main_Mode_Full" xml:space="preserve"><value>全屏</value></data>
+  <data name="Main_Mode_FullTooltip" xml:space="preserve"><value>截取全屏</value></data>
+  <data name="Main_Mode_Timer" xml:space="preserve"><value>定时</value></data>
+  <data name="Main_Mode_TimerTooltip" xml:space="preserve"><value>选择截图前的延迟</value></data>
+  <data name="Main_SecondsFormat" xml:space="preserve"><value>{0}秒</value></data>
+  <data name="Main_Result_Saved" xml:space="preserve"><value>已保存</value></data>
+  <data name="Main_Result_Open" xml:space="preserve"><value>打开</value></data>
+  <data name="Main_Result_Folder" xml:space="preserve"><value>文件夹</value></data>
+  <data name="Main_Result_View" xml:space="preserve"><value>查看</value></data>
+  <data name="Main_Result_CopyPath" xml:space="preserve"><value>复制路径</value></data>
+  <data name="Main_Result_CopyImage" xml:space="preserve"><value>复制图片</value></data>
+  <data name="Main_CaptureButtonModeTooltip" xml:space="preserve"><value>已选择{0}。拖动可移动位置。右键可打开图片查看器、设置和退出菜单。</value></data>
+  <data name="Main_CaptureButtonModeName" xml:space="preserve"><value>已选择{0}模式</value></data>
+  <data name="Main_CountdownName" xml:space="preserve"><value>{0} 秒后截图</value></data>
+  <data name="Main_SavedName" xml:space="preserve"><value>已保存 {0}</value></data>
+  <data name="Main_Status_GlobalDelaySet" xml:space="preserve"><value>已设置 {0} 秒全局延迟。适用于区域、窗口和全屏截图。</value></data>
+  <data name="Main_Status_Cancelled" xml:space="preserve"><value>已取消截图。</value></data>
+  <data name="Main_Status_CaptureFailed" xml:space="preserve"><value>截图失败：{0}</value></data>
+  <data name="Main_Status_CapturingFull" xml:space="preserve"><value>正在截取全屏。</value></data>
+  <data name="Main_Status_CapturingTimerFull" xml:space="preserve"><value>定时截取全屏。</value></data>
+  <data name="Main_Status_DragRegion" xml:space="preserve"><value>拖动选择要截图的区域。按 Esc 取消。</value></data>
+  <data name="Main_Status_FreezingTimer" xml:space="preserve"><value>在定时时刻冻结屏幕。</value></data>
+  <data name="Main_Status_DragRegionFrozen" xml:space="preserve"><value>在冻结的屏幕上拖动选择要截图的区域。按 Esc 取消。</value></data>
+  <data name="Main_Status_PickWindow" xml:space="preserve"><value>将鼠标移到要截图的窗口上并单击。按 Esc 取消。</value></data>
+  <data name="Main_Status_PickWindowFrozen" xml:space="preserve"><value>在冻结的屏幕上单击要截图的窗口。按 Esc 取消。</value></data>
+  <data name="Main_Status_PathCopied" xml:space="preserve"><value>已将文件路径复制到剪贴板。</value></data>
+  <data name="Main_Status_PathCopyFailed" xml:space="preserve"><value>复制路径失败：{0}</value></data>
+  <data name="Main_Status_ImageCopied" xml:space="preserve"><value>已将图片复制到剪贴板。</value></data>
+  <data name="Main_Status_ImageCopyFailed" xml:space="preserve"><value>复制图片失败：{0}</value></data>
+  <data name="Main_Status_SettingsOpenFailed" xml:space="preserve"><value>无法打开设置：{0}</value></data>
+  <data name="Mode_Name_Drag" xml:space="preserve"><value>拖动</value></data>
+  <data name="Mode_Name_Window" xml:space="preserve"><value>指定窗口</value></data>
+  <data name="Mode_Name_FullScreen" xml:space="preserve"><value>全屏</value></data>
+  <data name="Mode_Name_Timer" xml:space="preserve"><value>定时</value></data>
+  <data name="Mode_Placeholder_Drag" xml:space="preserve"><value>已选择拖动模式。拖动选择要保存的区域。</value></data>
+  <data name="Mode_Placeholder_Window" xml:space="preserve"><value>已选择指定窗口模式。单击目标窗口即可保存为 PNG。</value></data>
+  <data name="Mode_Placeholder_FullScreen" xml:space="preserve"><value>已选择全屏模式。将整个屏幕保存为 PNG。</value></data>
+  <data name="Mode_Placeholder_Timer" xml:space="preserve"><value>已选择定时模式。在设定的延迟后将整个屏幕保存为 PNG。</value></data>
+  <data name="Tray_Open" xml:space="preserve"><value>打开</value></data>
+  <data name="Overlay_RegionHint" xml:space="preserve"><value>拖动选择截图区域 / Esc 取消</value></data>
+  <data name="Overlay_RegionHintFrozen" xml:space="preserve"><value>在冻结的屏幕上拖动选择截图区域 / Esc 取消</value></data>
+  <data name="Overlay_WindowHint" xml:space="preserve"><value>将鼠标移到要截图的窗口上并单击 / Esc 取消</value></data>
+  <data name="Overlay_WindowHintFrozen" xml:space="preserve"><value>在冻结的屏幕上单击要截图的窗口 / Esc 取消</value></data>
+  <data name="Overlay_SelectedWindow" xml:space="preserve"><value>所选窗口</value></data>
 </root>

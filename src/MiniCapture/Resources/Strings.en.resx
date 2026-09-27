@@ -166,4 +166,56 @@ Due to Windows security policy, an app cannot silently change the existing defau
   <data name="Settings_Language_ApplyButton" xml:space="preserve"><value>Apply and Restart</value></data>
   <data name="Settings_Language_RestartPromptTitle" xml:space="preserve"><value>Restart</value></data>
   <data name="Settings_Language_RestartPromptBody" xml:space="preserve"><value>Mini Capture must restart to change the language. Restart now?</value></data>
+  <data name="Main_CaptureButtonTooltip" xml:space="preserve"><value>Open the capture menu. Drag to move it. Right-click for Image Viewer, Settings, and Exit.</value></data>
+  <data name="Main_Menu_ImageViewer" xml:space="preserve"><value>Image Viewer</value></data>
+  <data name="Main_Menu_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Main_Menu_Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="Main_Mode_Region" xml:space="preserve"><value>Region</value></data>
+  <data name="Main_Mode_RegionTooltip" xml:space="preserve"><value>Capture a dragged region</value></data>
+  <data name="Main_Mode_Window" xml:space="preserve"><value>Window</value></data>
+  <data name="Main_Mode_WindowTooltip" xml:space="preserve"><value>Capture a selected window</value></data>
+  <data name="Main_Mode_Full" xml:space="preserve"><value>Full</value></data>
+  <data name="Main_Mode_FullTooltip" xml:space="preserve"><value>Capture the full screen</value></data>
+  <data name="Main_Mode_Timer" xml:space="preserve"><value>Timer</value></data>
+  <data name="Main_Mode_TimerTooltip" xml:space="preserve"><value>Choose a delay before capture</value></data>
+  <data name="Main_SecondsFormat" xml:space="preserve"><value>{0}s</value></data>
+  <data name="Main_Result_Saved" xml:space="preserve"><value>Saved</value></data>
+  <data name="Main_Result_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Main_Result_Folder" xml:space="preserve"><value>Folder</value></data>
+  <data name="Main_Result_View" xml:space="preserve"><value>View</value></data>
+  <data name="Main_Result_CopyPath" xml:space="preserve"><value>Copy Path</value></data>
+  <data name="Main_Result_CopyImage" xml:space="preserve"><value>Copy Image</value></data>
+  <data name="Main_CaptureButtonModeTooltip" xml:space="preserve"><value>{0} selected. Drag to move it. Right-click for Image Viewer, Settings, and Exit.</value></data>
+  <data name="Main_CaptureButtonModeName" xml:space="preserve"><value>{0} mode selected</value></data>
+  <data name="Main_CountdownName" xml:space="preserve"><value>Capture in {0}s</value></data>
+  <data name="Main_SavedName" xml:space="preserve"><value>Saved {0}</value></data>
+  <data name="Main_Status_GlobalDelaySet" xml:space="preserve"><value>A {0}-second delay is set. It applies to region, window, and full-screen captures.</value></data>
+  <data name="Main_Status_Cancelled" xml:space="preserve"><value>Capture cancelled.</value></data>
+  <data name="Main_Status_CaptureFailed" xml:space="preserve"><value>Capture failed: {0}</value></data>
+  <data name="Main_Status_CapturingFull" xml:space="preserve"><value>Capturing the full screen.</value></data>
+  <data name="Main_Status_CapturingTimerFull" xml:space="preserve"><value>Capturing the full screen after the timer.</value></data>
+  <data name="Main_Status_DragRegion" xml:space="preserve"><value>Drag the area to capture. Press Esc to cancel.</value></data>
+  <data name="Main_Status_FreezingTimer" xml:space="preserve"><value>Freezing the screen at the timer moment.</value></data>
+  <data name="Main_Status_DragRegionFrozen" xml:space="preserve"><value>Drag the area to capture on the frozen screen. Press Esc to cancel.</value></data>
+  <data name="Main_Status_PickWindow" xml:space="preserve"><value>Hover over the window to capture and click. Press Esc to cancel.</value></data>
+  <data name="Main_Status_PickWindowFrozen" xml:space="preserve"><value>Click the window to capture on the frozen screen. Press Esc to cancel.</value></data>
+  <data name="Main_Status_PathCopied" xml:space="preserve"><value>Copied the file path to the clipboard.</value></data>
+  <data name="Main_Status_PathCopyFailed" xml:space="preserve"><value>Failed to copy path: {0}</value></data>
+  <data name="Main_Status_ImageCopied" xml:space="preserve"><value>Copied the image to the clipboard.</value></data>
+  <data name="Main_Status_ImageCopyFailed" xml:space="preserve"><value>Failed to copy image: {0}</value></data>
+  <data name="Main_Status_SettingsOpenFailed" xml:space="preserve"><value>Cannot open settings: {0}</value></data>
+  <data name="Mode_Name_Drag" xml:space="preserve"><value>Drag</value></data>
+  <data name="Mode_Name_Window" xml:space="preserve"><value>Window</value></data>
+  <data name="Mode_Name_FullScreen" xml:space="preserve"><value>Full screen</value></data>
+  <data name="Mode_Name_Timer" xml:space="preserve"><value>Timer</value></data>
+  <data name="Mode_Placeholder_Drag" xml:space="preserve"><value>Drag mode selected. Drag the area to save.</value></data>
+  <data name="Mode_Placeholder_Window" xml:space="preserve"><value>Window mode selected. Click a target window to save it as PNG.</value></data>
+  <data name="Mode_Placeholder_FullScreen" xml:space="preserve"><value>Full screen mode selected. Saves the whole screen as PNG.</value></data>
+  <data name="Mode_Placeholder_Timer" xml:space="preserve"><value>Timer mode selected. Saves the whole screen as PNG after the set delay.</value></data>
+  <data name="Tray_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Overlay_RegionHint" xml:space="preserve"><value>Drag to select a capture area / Esc to cancel</value></data>
+  <data name="Overlay_RegionHintFrozen" xml:space="preserve"><value>Drag on the frozen screen to select a capture area / Esc to cancel</value></data>
+  <data name="Overlay_WindowHint" xml:space="preserve"><value>Hover over a window and click to capture / Esc to cancel</value></data>
+  <data name="Overlay_WindowHintFrozen" xml:space="preserve"><value>Click the window to capture on the frozen screen / Esc to cancel</value></data>
+  <data name="Overlay_SelectedWindow" xml:space="preserve"><value>Selected window</value></data>
 </root>

@@ -1,3 +1,4 @@
+using MiniCapture.Resources;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -51,7 +52,7 @@ public partial class RegionCaptureOverlay : Window
             {
                 Stretch = Stretch.Fill
             };
-            HintText.Text = "정지 화면에서 드래그해서 캡처 영역 선택 / Esc 취소";
+            HintText.Text = Strings.Overlay_RegionHintFrozen;
         }
 
         Activate();
