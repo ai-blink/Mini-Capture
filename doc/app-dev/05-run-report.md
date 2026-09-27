@@ -1675,3 +1675,36 @@ Allow users to exclude a window-selection target by choosing a running process o
 - NEEDS_USER_UI_CHECK: 모자이크 객체를 선택 해제 후 다시 선택해 이동·크기 조절·크기/종류 변경·저장한다. 다른 창이 뷰어를 덮고 있어 마우스 드래그 자동화는 실행하지 않았다.
 - 모자이크 객체는 도형과 같이 이미지 되돌리기(`Ctrl+Z`) 대상이 아니다. 흐림은 드래그 중 동기 재계산이며 성능은 측정하지 않았다.
 - 관측 1회: 빌드 직후 첫 실행에서 파일 인자로 뷰어가 열리지 않았다(같은 파일을 실행 중 인스턴스에 다시 전달하면 열림, 다음 첫 실행은 정상). 재현되면 조사한다.
+
+## 마크업 편집 UX 1차 — 캡처 편집기 관례 정렬
+
+### Problem
+
+- 사용자 피드백: 선택 영역을 어떤 버튼으로 어떻게 옮기고 고치는지, 텍스트 상자 추가 등이 난해하다. 모자이크 도구에서 드래그·클릭할 때마다 새로 생겨 선택할 방법을 몰랐고, 툴바에서 객체 선택 버튼을 찾지 못했다(점선 아이콘이 픽셀 영역처럼 보임).
+- Codex 읽기 전용 UX 리뷰(판정 CHANGES_REQUESTED): `선택` 상태 문구가 "편집하지 않습니다"로 실제 동작과 반대, `선택`/`영역 선택` 명칭 충돌, 텍스트 도구로 도형 클릭 시 새 텍스트 상자 생성 버그, 스페이스 팬 후 커서 복귀 버그, 객체 작업이 Undo에 없음.
+
+### Research
+
+- Codex `terra`/`high` 병렬 조사 3건(공식 문서: PicPick·Paint.NET / 코드: Greenshot `Surface`·`DrawableContainer`, ShareX `ShapeManager` / 코드+이슈: Flameshot `CaptureWidget`, kImageAnnotator `AnnotationArea`).
+- 캡처 편집기 4종 모두 모자이크·블러를 도구 드래그로 만드는 편집 가능한 객체로 두고 export 시 합성하며, 객체 추가·이동·크기·삭제를 Undo에 포함한다. 이동 규칙은 Greenshot·Flameshot·ksnip이 "그리기 도구는 새로 그림, 이동은 선택 도구", ShareX만 객체 위 누름 우선(Ctrl로 겹쳐 그리기). 핸들은 Greenshot·Flameshot 8개. 텍스트 재편집은 더블클릭(3종). `Ctrl+D`는 Paint.NET·PicPick(선택 해제)과 ShareX(복제)가 충돌.
+
+### Changes (`00f3383`)
+
+- 모자이크 도구 `▦`(B) 복원: 드래그하면 편집 가능한 모자이크 객체. `▧` 픽셀 영역은 복사·잘라내기·붙여넣기 전용.
+- 새로 그린 객체는 도구 전환 없이 선택 유지. 그리기 도구에서 4px 미만 클릭은 누른 객체 선택(빈 곳이면 해제), 드래그는 새로 그림.
+- 본문 드래그 이동은 `객체 선택`(V)에서만. 핸들 8개(`ResizeBounds`, 방향별 커서). `객체 선택`에서 텍스트 더블클릭 편집, Esc·바깥 클릭으로 종료.
+- Esc 단계: 자르기 취소 → 그리기 취소 → 선택 해제 → 객체 선택 도구. 단축키 V/M/R/E/A/T/P/B/H.
+- 버그 수정: 텍스트 도구 도형 클릭 시 텍스트 상자 생성, 스페이스 팬 후 커서, 움직이지 않은 클릭의 수정 표시.
+- 툴바: 객체 선택 아이콘을 일반 화살표로, 모든 아이콘 버튼 아래 라벨(`AutomationProperties.Name` 단일 출처), 영역 복사·잘라내기·붙여넣기 아이콘화, 툴팁에 단축키.
+
+### Verification
+
+- `dotnet build MiniCapture.slnx`: 경고 0개, 오류 0개. 회귀 테스트 30/30 통과(새 테스트: `ResizeBounds_MovesOnlyGrabbedEdgesAndKeepsMinimum`, `ToolShortcuts_MapConventionalKeys`, `IsClickGesture_SeparatesClickFromDrag`).
+- UIA: 모자이크 도구·툴팁 존재, `모자이크 적용` 버튼 제거, 모자이크 도구에서만 모자이크 설정 줄 표시, 도구별 상태 문구.
+- `PrintWindow` 툴바 캡처: 모든 아이콘 버튼에 라벨 1개씩 표시. 첫 캡처에서 이미지 콘텐츠 버튼(핸드·객체 선택)에 라벨이 두 번 붙는 문제를 발견해 수정했다(명시한 `ContentTemplate`은 UIElement 콘텐츠에도 적용됨).
+
+### Follow-up
+
+- NEEDS_USER_UI_CHECK: 마우스·키보드 조작 전체(모자이크 드래그, 클릭 선택, 8방향 크기 조절, V 이동, 텍스트 더블클릭, Esc 단계, 단축키).
+- 2차: 객체 작업 포함 Undo/Redo(동작 1회당 스냅샷 1개).
+- 사용자 결정 대기: Snagit·ShareX식 객체 위 누름 우선 이동으로 바꿀지.
