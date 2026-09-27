@@ -1753,3 +1753,10 @@ Allow users to exclude a window-selection target by choosing a running process o
 ### Follow-up
 
 - 남은 비뷰어 문자열: `HotkeyDetectDialog`(9), `CaptureHotkeyManager`(6, 이후 `StartsWith` 판정을 구조화된 결과로 교체), `ScreenCaptureService`(4), `CaptureFileIndex`(6). 그다음 `ViewerWindow`.
+
+## i18n 3차 — 비뷰어 잔여 문자열
+
+- `HotkeyDetectDialog`, `CaptureHotkeyManager`(그룹 이름은 기존 `Hotkey_*` 재사용), `ScreenCaptureService` 예외 문구, `CaptureFileIndex` 폴더 트리 이름을 `Strings.*`로 교체(+19키).
+- `CaptureHotkeyManager.Register`가 `HotkeyRegistrationResult(Succeeded, Message)`를 반환 — `MainWindow`의 한국어 접두어 판정 `StartsWith("등록 실패")` 제거(번역 후에도 실패 판정 유지).
+- 검증: 빌드 경고 0·오류 0, 테스트 33/33, 리플렉션 19/19 키가 4개 문화권에서 번역값. 뷰어 밖 한국어 리터럴은 `AppLanguage`의 자국어 이름 `한국어`(의도)만 남음.
+- NEEDS_USER_UI_CHECK: 비한국어로 키 감지 대화상자와 뷰어 폴더 트리 루트 이름 확인.

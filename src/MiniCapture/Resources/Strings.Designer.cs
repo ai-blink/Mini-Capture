@@ -197,4 +197,24 @@ public static class Strings
     public static string Overlay_WindowHint => Get(nameof(Overlay_WindowHint));
     public static string Overlay_WindowHintFrozen => Get(nameof(Overlay_WindowHintFrozen));
     public static string Overlay_SelectedWindow => Get(nameof(Overlay_SelectedWindow));
+
+    public static string Common_Cancel => Get(nameof(Common_Cancel));
+    public static string HotkeyDialog_TitleFormat => Get(nameof(HotkeyDialog_TitleFormat));
+    public static string HotkeyDialog_TimedMainKey => Get(nameof(HotkeyDialog_TimedMainKey));
+    public static string HotkeyDialog_TimedModifier => Get(nameof(HotkeyDialog_TimedModifier));
+    public static string HotkeyDialog_NeedModifier => Get(nameof(HotkeyDialog_NeedModifier));
+    public static string HotkeyDialog_NeedMainKey => Get(nameof(HotkeyDialog_NeedMainKey));
+    public static string HotkeyDialog_Remaining => Get(nameof(HotkeyDialog_Remaining));
+    public static string Hotkey_Registered => Get(nameof(Hotkey_Registered));
+    public static string Hotkey_RegisterFailed => Get(nameof(Hotkey_RegisterFailed));
+    public static string Capture_Error_TooSmall => Get(nameof(Capture_Error_TooSmall));
+    public static string Capture_Error_OutsideFrozen => Get(nameof(Capture_Error_OutsideFrozen));
+    public static string Capture_Error_NoScreen => Get(nameof(Capture_Error_NoScreen));
+    public static string Capture_Error_NoUniqueName => Get(nameof(Capture_Error_NoUniqueName));
+    public static string Folder_CaptureRoot => Get(nameof(Folder_CaptureRoot));
+    public static string Folder_RecentCapture => Get(nameof(Folder_RecentCapture));
+    public static string Folder_Today => Get(nameof(Folder_Today));
+    public static string Folder_Pictures => Get(nameof(Folder_Pictures));
+    public static string Folder_QuickAccess => Get(nameof(Folder_QuickAccess));
+    public static string Folder_ThisPc => Get(nameof(Folder_ThisPc));
 }

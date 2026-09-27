@@ -1,3 +1,4 @@
+using MiniCapture.Resources;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -14,10 +15,10 @@ public partial class HotkeyDetectDialog : Window
     {
         InitializeComponent();
         _part = part;
-        TitleText.Text = $"{label} {DisplayName(part)} 감지";
+        TitleText.Text = string.Format(Strings.HotkeyDialog_TitleFormat, label, DisplayName(part));
         InstructionText.Text = part == CaptureHotkeyPart.Main
-            ? "5초 안에 문자 또는 숫자 키를 누르세요."
-            : "5초 안에 Ctrl, Alt, Shift, Win 중 하나를 누르세요.";
+            ? Strings.HotkeyDialog_TimedMainKey
+            : Strings.HotkeyDialog_TimedModifier;
 
         _timer = new DispatcherTimer
         {
@@ -45,7 +46,7 @@ public partial class HotkeyDetectDialog : Window
         {
             if (!TryGetModifierName(key, out var modifierName))
             {
-                InstructionText.Text = "Ctrl, Alt, Shift, Win 중 하나를 누르세요.";
+                InstructionText.Text = Strings.HotkeyDialog_NeedModifier;
                 e.Handled = true;
                 return;
             }
@@ -58,7 +59,7 @@ public partial class HotkeyDetectDialog : Window
 
         if (IsModifierKey(key))
         {
-            InstructionText.Text = "문자 또는 숫자 키를 누르세요.";
+            InstructionText.Text = Strings.HotkeyDialog_NeedMainKey;
             e.Handled = true;
             return;
         }
@@ -88,7 +89,7 @@ public partial class HotkeyDetectDialog : Window
             return;
         }
 
-        CountdownText.Text = $"{remaining}초 남음";
+        CountdownText.Text = string.Format(Strings.HotkeyDialog_Remaining, remaining);
     }
 
     private static bool IsModifierKey(Key key) =>
@@ -112,8 +113,8 @@ public partial class HotkeyDetectDialog : Window
     private static string DisplayName(CaptureHotkeyPart part) =>
         part switch
         {
-            CaptureHotkeyPart.First => "첫 번째 키",
-            CaptureHotkeyPart.Second => "두 번째 키",
-            _ => "세 번째 키"
+            CaptureHotkeyPart.First => Strings.Hotkey_FirstKeyPart,
+            CaptureHotkeyPart.Second => Strings.Hotkey_SecondKeyPart,
+            _ => Strings.Hotkey_MainKeyPart
         };
 }

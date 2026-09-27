@@ -218,4 +218,23 @@
   <data name="Overlay_WindowHint" xml:space="preserve"><value>将鼠标移到要截图的窗口上并单击 / Esc 取消</value></data>
   <data name="Overlay_WindowHintFrozen" xml:space="preserve"><value>在冻结的屏幕上单击要截图的窗口 / Esc 取消</value></data>
   <data name="Overlay_SelectedWindow" xml:space="preserve"><value>所选窗口</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="HotkeyDialog_TitleFormat" xml:space="preserve"><value>检测 {0} {1}</value></data>
+  <data name="HotkeyDialog_TimedMainKey" xml:space="preserve"><value>请在 5 秒内按下字母或数字键。</value></data>
+  <data name="HotkeyDialog_TimedModifier" xml:space="preserve"><value>请在 5 秒内按下 Ctrl、Alt、Shift 或 Win 之一。</value></data>
+  <data name="HotkeyDialog_NeedModifier" xml:space="preserve"><value>请按下 Ctrl、Alt、Shift 或 Win 之一。</value></data>
+  <data name="HotkeyDialog_NeedMainKey" xml:space="preserve"><value>请按下字母或数字键。</value></data>
+  <data name="HotkeyDialog_Remaining" xml:space="preserve"><value>剩余 {0} 秒</value></data>
+  <data name="Hotkey_Registered" xml:space="preserve"><value>快捷键已注册。</value></data>
+  <data name="Hotkey_RegisterFailed" xml:space="preserve"><value>注册失败：{0}</value></data>
+  <data name="Capture_Error_TooSmall" xml:space="preserve"><value>截图区域太小。</value></data>
+  <data name="Capture_Error_OutsideFrozen" xml:space="preserve"><value>截图区域超出了冻结的屏幕。</value></data>
+  <data name="Capture_Error_NoScreen" xml:space="preserve"><value>找不到要截图的屏幕。</value></data>
+  <data name="Capture_Error_NoUniqueName" xml:space="preserve"><value>无法生成唯一的截图文件名。</value></data>
+  <data name="Folder_CaptureRoot" xml:space="preserve"><value>截图根目录</value></data>
+  <data name="Folder_RecentCapture" xml:space="preserve"><value>最近截图</value></data>
+  <data name="Folder_Today" xml:space="preserve"><value>今天</value></data>
+  <data name="Folder_Pictures" xml:space="preserve"><value>图片</value></data>
+  <data name="Folder_QuickAccess" xml:space="preserve"><value>快速访问</value></data>
+  <data name="Folder_ThisPc" xml:space="preserve"><value>此电脑</value></data>
 </root>

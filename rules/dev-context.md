@@ -10,7 +10,7 @@
 ## Immediate Next Step
 
 - NEEDS_USER_UI_CHECK: i18n slice 2 screens in EN/ZH/JA (floating button tooltip/menu, mode/timer, result panel, tray, capture overlay hints).
-- i18n next: small leftovers (`HotkeyDetectDialog`, `CaptureHotkeyManager` + its `StartsWith("등록 실패")` coupling in `MainWindow.xaml.cs`, `ScreenCaptureService`, `CaptureFileIndex`), then `ViewerWindow` (12 partial files; read `notes/subagents/deep-refactor/20260806_170229_design.md` first).
+- i18n slice 3 done (hotkey dialog/registration result, capture errors, folder tree names; NEEDS_USER_UI_CHECK). Next: `ViewerWindow` (12 partial files; read `notes/subagents/deep-refactor/20260806_170229_design.md` first).
 - FOLLOW_UP (editing): re-dragging the mosaic-size slider on the same object merges into the previous undo step; blur recompute cost during drag is unmeasured.
 - Observed once, not reproduced (phase-2 cold start worked): a cold start with a file argument did not open the viewer.
 - Pre-existing backlog: `ViewerWindow` split manual GUI regression, consecutive-capture list, F5/sort, crop sliders, `창 제외`, association/sibling navigation, multi-monitor, installer.

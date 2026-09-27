@@ -264,4 +264,23 @@ Windows 보안 정책 때문에 앱이 기존 기본 앱을 몰래 바꿀 수는
   <data name="Overlay_WindowHint" xml:space="preserve"><value>캡처할 창 위에 마우스를 올리고 클릭 / Esc 취소</value></data>
   <data name="Overlay_WindowHintFrozen" xml:space="preserve"><value>정지 화면에서 캡처할 창을 클릭 / Esc 취소</value></data>
   <data name="Overlay_SelectedWindow" xml:space="preserve"><value>선택된 창</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="HotkeyDialog_TitleFormat" xml:space="preserve"><value>{0} {1} 감지</value></data>
+  <data name="HotkeyDialog_TimedMainKey" xml:space="preserve"><value>5초 안에 문자 또는 숫자 키를 누르세요.</value></data>
+  <data name="HotkeyDialog_TimedModifier" xml:space="preserve"><value>5초 안에 Ctrl, Alt, Shift, Win 중 하나를 누르세요.</value></data>
+  <data name="HotkeyDialog_NeedModifier" xml:space="preserve"><value>Ctrl, Alt, Shift, Win 중 하나를 누르세요.</value></data>
+  <data name="HotkeyDialog_NeedMainKey" xml:space="preserve"><value>문자 또는 숫자 키를 누르세요.</value></data>
+  <data name="HotkeyDialog_Remaining" xml:space="preserve"><value>{0}초 남음</value></data>
+  <data name="Hotkey_Registered" xml:space="preserve"><value>단축키가 등록되었습니다.</value></data>
+  <data name="Hotkey_RegisterFailed" xml:space="preserve"><value>등록 실패: {0}</value></data>
+  <data name="Capture_Error_TooSmall" xml:space="preserve"><value>캡처 영역이 너무 작습니다.</value></data>
+  <data name="Capture_Error_OutsideFrozen" xml:space="preserve"><value>캡처 영역이 정지 화면 밖에 있습니다.</value></data>
+  <data name="Capture_Error_NoScreen" xml:space="preserve"><value>캡처할 화면을 찾을 수 없습니다.</value></data>
+  <data name="Capture_Error_NoUniqueName" xml:space="preserve"><value>고유한 캡처 파일 이름을 만들 수 없습니다.</value></data>
+  <data name="Folder_CaptureRoot" xml:space="preserve"><value>캡처 루트</value></data>
+  <data name="Folder_RecentCapture" xml:space="preserve"><value>최근 캡처</value></data>
+  <data name="Folder_Today" xml:space="preserve"><value>오늘</value></data>
+  <data name="Folder_Pictures" xml:space="preserve"><value>사진</value></data>
+  <data name="Folder_QuickAccess" xml:space="preserve"><value>빠른 실행</value></data>
+  <data name="Folder_ThisPc" xml:space="preserve"><value>내 PC</value></data>
 </root>

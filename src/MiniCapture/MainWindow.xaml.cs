@@ -69,10 +69,10 @@ public partial class MainWindow : Window
         if (HwndSource.FromHwnd(helper.Handle) is { } source)
         {
             _hotkeyManager = new CaptureHotkeyManager(source, mode => Dispatcher.Invoke(() => ExecuteModeFromHotkey(mode)));
-            var hotkeyStatus = _hotkeyManager.Register(_settings);
-            if (hotkeyStatus.StartsWith("등록 실패", StringComparison.Ordinal))
+            var registration = _hotkeyManager.Register(_settings);
+            if (!registration.Succeeded)
             {
-                ShowStatus(hotkeyStatus);
+                ShowStatus(registration.Message);
             }
         }
     }
@@ -478,7 +478,7 @@ public partial class MainWindow : Window
 
         if (_hotkeyManager is not null)
         {
-            ShowStatus(_hotkeyManager.Register(_settings));
+            ShowStatus(_hotkeyManager.Register(_settings).Message);
         }
     }
 
@@ -761,7 +761,7 @@ public partial class MainWindow : Window
                     _settingsWindow = null;
                     if (_hotkeyManager is not null)
                     {
-                        ShowStatus(_hotkeyManager.Register(_settings));
+                        ShowStatus(_hotkeyManager.Register(_settings).Message);
                     }
                 };
                 _settingsWindow.Show();

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -49,7 +50,7 @@ public static class CaptureFileIndex
         Directory.CreateDirectory(root);
         var normalizedTargetFolder = NormalizeFolder(targetFolder) ?? root;
 
-        var miniCaptureQuick = BuildDirectoryNode("MiniCapture", root, "캡처 루트");
+        var miniCaptureQuick = BuildDirectoryNode("MiniCapture", root, Strings.Folder_CaptureRoot);
         miniCaptureQuick.IsExpanded = true;
         var miniCaptureUnderPictures = CloneNode(miniCaptureQuick);
         miniCaptureUnderPictures.IsExpanded = true;
@@ -57,24 +58,24 @@ public static class CaptureFileIndex
         var latest = knownLatest;
         if (latest is not null && IsUnderRoot(latest.FolderPath))
         {
-            miniCaptureQuick.Children.Insert(0, new FolderTreeNode("최근 캡처", latest.FolderPath, "\uE81C", latest.ModifiedText));
+            miniCaptureQuick.Children.Insert(0, new FolderTreeNode(Strings.Folder_RecentCapture, latest.FolderPath, "\uE81C", latest.ModifiedText));
         }
 
         var todayFolder = Path.Combine(root, DateTime.Now.ToString("yyyy"), DateTime.Now.ToString("MM"), DateTime.Now.ToString("dd"));
         if (Directory.Exists(todayFolder))
         {
-            miniCaptureQuick.Children.Insert(0, new FolderTreeNode("오늘", todayFolder, "\uE787", DateTime.Now.ToString("yyyy-MM-dd")));
+            miniCaptureQuick.Children.Insert(0, new FolderTreeNode(Strings.Folder_Today, todayFolder, "\uE787", DateTime.Now.ToString("yyyy-MM-dd")));
         }
 
-        var pictures = new FolderTreeNode("사진", null, "\uEB9F");
+        var pictures = new FolderTreeNode(Strings.Folder_Pictures, null, "\uEB9F");
         pictures.Children.Add(miniCaptureUnderPictures);
         pictures.IsExpanded = true;
 
-        var quickAccess = new FolderTreeNode("빠른 실행", null, "\uE734");
+        var quickAccess = new FolderTreeNode(Strings.Folder_QuickAccess, null, "\uE734");
         quickAccess.Children.Add(miniCaptureQuick);
         quickAccess.IsExpanded = true;
 
-        var thisPc = new FolderTreeNode("내 PC", null, "\uEC4E");
+        var thisPc = new FolderTreeNode(Strings.Folder_ThisPc, null, "\uEC4E");
         thisPc.Children.Add(pictures);
         if (!IsUnderRoot(normalizedTargetFolder) && BuildExternalPathNode(normalizedTargetFolder) is { } externalPath)
         {

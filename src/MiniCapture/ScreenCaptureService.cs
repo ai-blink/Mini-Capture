@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using FormsScreen = System.Windows.Forms.Screen;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -21,7 +22,7 @@ public static class ScreenCaptureService
     {
         if (region.Width <= 0 || region.Height <= 0)
         {
-            throw new InvalidOperationException("캡처 영역이 너무 작습니다.");
+            throw new InvalidOperationException(Strings.Capture_Error_TooSmall);
         }
 
         var filePath = CreateCapturePath(DateTime.Now);
@@ -46,7 +47,7 @@ public static class ScreenCaptureService
         var clipped = Rectangle.Intersect(region, snapshot.Bounds);
         if (clipped.Width <= 0 || clipped.Height <= 0)
         {
-            throw new InvalidOperationException("캡처 영역이 정지 화면 밖에 있습니다.");
+            throw new InvalidOperationException(Strings.Capture_Error_OutsideFrozen);
         }
 
         var sourceRegion = new Rectangle(
@@ -72,7 +73,7 @@ public static class ScreenCaptureService
         var screens = FormsScreen.AllScreens;
         if (screens.Length == 0)
         {
-            throw new InvalidOperationException("캡처할 화면을 찾을 수 없습니다.");
+            throw new InvalidOperationException(Strings.Capture_Error_NoScreen);
         }
 
         var bounds = screens[0].Bounds;
@@ -100,6 +101,6 @@ public static class ScreenCaptureService
             }
         }
 
-        throw new IOException("고유한 캡처 파일 이름을 만들 수 없습니다.");
+        throw new IOException(Strings.Capture_Error_NoUniqueName);
     }
 }

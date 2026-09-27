@@ -218,4 +218,23 @@ Due to Windows security policy, an app cannot silently change the existing defau
   <data name="Overlay_WindowHint" xml:space="preserve"><value>Hover over a window and click to capture / Esc to cancel</value></data>
   <data name="Overlay_WindowHintFrozen" xml:space="preserve"><value>Click the window to capture on the frozen screen / Esc to cancel</value></data>
   <data name="Overlay_SelectedWindow" xml:space="preserve"><value>Selected window</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="HotkeyDialog_TitleFormat" xml:space="preserve"><value>Detect {0} {1}</value></data>
+  <data name="HotkeyDialog_TimedMainKey" xml:space="preserve"><value>Press a letter or number key within 5 seconds.</value></data>
+  <data name="HotkeyDialog_TimedModifier" xml:space="preserve"><value>Press Ctrl, Alt, Shift, or Win within 5 seconds.</value></data>
+  <data name="HotkeyDialog_NeedModifier" xml:space="preserve"><value>Press Ctrl, Alt, Shift, or Win.</value></data>
+  <data name="HotkeyDialog_NeedMainKey" xml:space="preserve"><value>Press a letter or number key.</value></data>
+  <data name="HotkeyDialog_Remaining" xml:space="preserve"><value>{0}s left</value></data>
+  <data name="Hotkey_Registered" xml:space="preserve"><value>Hotkeys registered.</value></data>
+  <data name="Hotkey_RegisterFailed" xml:space="preserve"><value>Registration failed: {0}</value></data>
+  <data name="Capture_Error_TooSmall" xml:space="preserve"><value>The capture area is too small.</value></data>
+  <data name="Capture_Error_OutsideFrozen" xml:space="preserve"><value>The capture area is outside the frozen screen.</value></data>
+  <data name="Capture_Error_NoScreen" xml:space="preserve"><value>Cannot find a screen to capture.</value></data>
+  <data name="Capture_Error_NoUniqueName" xml:space="preserve"><value>Cannot create a unique capture file name.</value></data>
+  <data name="Folder_CaptureRoot" xml:space="preserve"><value>Capture root</value></data>
+  <data name="Folder_RecentCapture" xml:space="preserve"><value>Recent capture</value></data>
+  <data name="Folder_Today" xml:space="preserve"><value>Today</value></data>
+  <data name="Folder_Pictures" xml:space="preserve"><value>Pictures</value></data>
+  <data name="Folder_QuickAccess" xml:space="preserve"><value>Quick access</value></data>
+  <data name="Folder_ThisPc" xml:space="preserve"><value>This PC</value></data>
 </root>

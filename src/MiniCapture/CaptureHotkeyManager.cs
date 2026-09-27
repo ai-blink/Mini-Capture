@@ -2,8 +2,12 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows.Input;
 using System.Windows.Interop;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
+
+// 성공 여부는 메시지 문구(언어별로 달라짐)가 아니라 이 값으로 판정한다.
+internal readonly record struct HotkeyRegistrationResult(bool Succeeded, string Message);
 
 internal sealed class CaptureHotkeyManager : IDisposable
 {
@@ -26,20 +30,20 @@ internal sealed class CaptureHotkeyManager : IDisposable
         _source.AddHook(OnWindowMessage);
     }
 
-    public string Register(MiniCaptureSettings settings)
+    public HotkeyRegistrationResult Register(MiniCaptureSettings settings)
     {
         UnregisterAll();
 
         var failures = new List<string>();
         var id = 1;
-        RegisterGroup(ref id, CaptureMode.Window, settings.GetHotkeySlots(CaptureHotkeyKind.Window), "창 선택", failures);
-        RegisterGroup(ref id, CaptureMode.Drag, settings.GetHotkeySlots(CaptureHotkeyKind.Region), "영역 선택", failures);
-        RegisterGroup(ref id, CaptureMode.FullScreen, settings.GetHotkeySlots(CaptureHotkeyKind.FullScreen), "전체 화면", failures);
-        RegisterGroup(ref id, CaptureMode.Timer, settings.GetHotkeySlots(CaptureHotkeyKind.Timer), "타이머", failures);
+        RegisterGroup(ref id, CaptureMode.Window, settings.GetHotkeySlots(CaptureHotkeyKind.Window), Strings.Hotkey_Window, failures);
+        RegisterGroup(ref id, CaptureMode.Drag, settings.GetHotkeySlots(CaptureHotkeyKind.Region), Strings.Hotkey_Region, failures);
+        RegisterGroup(ref id, CaptureMode.FullScreen, settings.GetHotkeySlots(CaptureHotkeyKind.FullScreen), Strings.Hotkey_FullScreen, failures);
+        RegisterGroup(ref id, CaptureMode.Timer, settings.GetHotkeySlots(CaptureHotkeyKind.Timer), Strings.Hotkey_Timer, failures);
 
         return failures.Count == 0
-            ? "단축키가 등록되었습니다."
-            : $"등록 실패: {string.Join(", ", failures)}";
+            ? new HotkeyRegistrationResult(true, Strings.Hotkey_Registered)
+            : new HotkeyRegistrationResult(false, string.Format(Strings.Hotkey_RegisterFailed, string.Join(", ", failures)));
     }
 
     public void Dispose()
