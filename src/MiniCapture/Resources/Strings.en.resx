@@ -237,4 +237,218 @@ Due to Windows security policy, an app cannot silently change the existing defau
   <data name="Folder_Pictures" xml:space="preserve"><value>Pictures</value></data>
   <data name="Folder_QuickAccess" xml:space="preserve"><value>Quick access</value></data>
   <data name="Folder_ThisPc" xml:space="preserve"><value>This PC</value></data>
+  <data name="Viewer_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Viewer_SaveTip" xml:space="preserve"><value>Save (Ctrl+S)</value></data>
+  <data name="Viewer_CopyImage" xml:space="preserve"><value>Copy Image</value></data>
+  <data name="Viewer_CopyImageTip" xml:space="preserve"><value>Copy image (Ctrl+C)</value></data>
+  <data name="Viewer_CopyFilePath" xml:space="preserve"><value>Copy File Path</value></data>
+  <data name="Viewer_CopyPath" xml:space="preserve"><value>Copy Path</value></data>
+  <data name="Viewer_CopyFilePathTip" xml:space="preserve"><value>Copy file path (Ctrl+Shift+C)</value></data>
+  <data name="Viewer_Group_File" xml:space="preserve"><value>File</value></data>
+  <data name="Viewer_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Viewer_OpenFolder" xml:space="preserve"><value>Open Folder</value></data>
+  <data name="Viewer_CopyImageWithMarkupTip" xml:space="preserve"><value>Copy the image including markup</value></data>
+  <data name="Viewer_Group_View" xml:space="preserve"><value>View</value></data>
+  <data name="Viewer_Previous" xml:space="preserve"><value>Previous</value></data>
+  <data name="Viewer_PreviousTip" xml:space="preserve"><value>Previous image</value></data>
+  <data name="Viewer_Next" xml:space="preserve"><value>Next</value></data>
+  <data name="Viewer_NextTip" xml:space="preserve"><value>Next image</value></data>
+  <data name="Viewer_Fit" xml:space="preserve"><value>Fit</value></data>
+  <data name="Viewer_FitTip" xml:space="preserve"><value>Fit to window</value></data>
+  <data name="Viewer_Actual" xml:space="preserve"><value>Actual</value></data>
+  <data name="Viewer_ActualTip" xml:space="preserve"><value>Actual size</value></data>
+  <data name="Viewer_ZoomOut" xml:space="preserve"><value>Zoom Out</value></data>
+  <data name="Viewer_ZoomPercent" xml:space="preserve"><value>Zoom percent</value></data>
+  <data name="Viewer_ZoomPercentTip" xml:space="preserve"><value>Type a zoom percent (10%–800%)</value></data>
+  <data name="Viewer_ZoomIn" xml:space="preserve"><value>Zoom In</value></data>
+  <data name="Viewer_Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Viewer_RefreshTip" xml:space="preserve"><value>Refresh file list (F5)</value></data>
+  <data name="Viewer_Group_Markup" xml:space="preserve"><value>Markup</value></data>
+  <data name="Viewer_Tool_Hand" xml:space="preserve"><value>Hand</value></data>
+  <data name="Viewer_Tool_HandTip" xml:space="preserve"><value>Hand (H) — Drag: pan the view. In other tools, hold Space and drag</value></data>
+  <data name="Viewer_Tool_Select" xml:space="preserve"><value>Select</value></data>
+  <data name="Viewer_Tool_SelectTip" xml:space="preserve"><value>Select (V, Esc) — Click: select / Drag: move / Border handles: resize / Double-click text: edit / Delete: delete</value></data>
+  <data name="Viewer_Tool_Pen" xml:space="preserve"><value>Pen</value></data>
+  <data name="Viewer_Tool_PenTip" xml:space="preserve"><value>Pen (P) — Drag: freehand line</value></data>
+  <data name="Viewer_Tool_Arrow" xml:space="preserve"><value>Arrow</value></data>
+  <data name="Viewer_Tool_ArrowTip" xml:space="preserve"><value>Arrow (A) — Drag: arrow</value></data>
+  <data name="Viewer_Tool_Rectangle" xml:space="preserve"><value>Rectangle</value></data>
+  <data name="Viewer_Tool_RectangleTip" xml:space="preserve"><value>Rectangle (R) — Drag: rectangle</value></data>
+  <data name="Viewer_Tool_Ellipse" xml:space="preserve"><value>Ellipse</value></data>
+  <data name="Viewer_Tool_EllipseTip" xml:space="preserve"><value>Ellipse (E) — Drag: ellipse</value></data>
+  <data name="Viewer_Tool_Text" xml:space="preserve"><value>Text</value></data>
+  <data name="Viewer_Tool_TextTip" xml:space="preserve"><value>Text (T) — Click: new text box. Click an existing box to edit it directly</value></data>
+  <data name="Viewer_Tool_Mosaic" xml:space="preserve"><value>Mosaic</value></data>
+  <data name="Viewer_Tool_MosaicTip" xml:space="preserve"><value>Mosaic (B) — Drag: add a mosaic over the area to hide. Afterwards, move it or change its size and type with Select</value></data>
+  <data name="Viewer_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Viewer_DeleteTip" xml:space="preserve"><value>Delete selected item</value></data>
+  <data name="Viewer_Undo" xml:space="preserve"><value>Undo</value></data>
+  <data name="Viewer_Redo" xml:space="preserve"><value>Redo</value></data>
+  <data name="Viewer_RedoTip" xml:space="preserve"><value>Redo the last undone action</value></data>
+  <data name="Viewer_RotateLeft" xml:space="preserve"><value>Rotate Left</value></data>
+  <data name="Viewer_RotateLeftTip" xml:space="preserve"><value>Rotate left</value></data>
+  <data name="Viewer_RotateRight" xml:space="preserve"><value>Rotate Right</value></data>
+  <data name="Viewer_RotateRightTip" xml:space="preserve"><value>Rotate right</value></data>
+  <data name="Viewer_Group_Region" xml:space="preserve"><value>Region</value></data>
+  <data name="Viewer_Tool_PixelRegion" xml:space="preserve"><value>Pixel Region</value></data>
+  <data name="Viewer_Tool_PixelRegionTip" xml:space="preserve"><value>Pixel region (M) — Drag: select an area / Drag inside: move / Copy·Cut·Paste / Esc: clear</value></data>
+  <data name="Viewer_Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="Viewer_CopyRegionTip" xml:space="preserve"><value>Copy pixel region (Ctrl+C)</value></data>
+  <data name="Viewer_Cut" xml:space="preserve"><value>Cut</value></data>
+  <data name="Viewer_CutRegionTip" xml:space="preserve"><value>Cut pixel region to the clipboard (Ctrl+X)</value></data>
+  <data name="Viewer_Paste" xml:space="preserve"><value>Paste</value></data>
+  <data name="Viewer_PasteTip" xml:space="preserve"><value>Paste at the pixel region, or centered if there is none (Ctrl+V)</value></data>
+  <data name="Viewer_Crop" xml:space="preserve"><value>Crop</value></data>
+  <data name="Viewer_CropTip" xml:space="preserve"><value>Crop the top, bottom, and sides of the image</value></data>
+  <data name="Viewer_ToolSettings" xml:space="preserve"><value>Tool settings</value></data>
+  <data name="Viewer_Settings_Pen" xml:space="preserve"><value>Pen settings</value></data>
+  <data name="Viewer_Color" xml:space="preserve"><value>Color</value></data>
+  <data name="Viewer_Color_Red" xml:space="preserve"><value>Red</value></data>
+  <data name="Viewer_Color_Yellow" xml:space="preserve"><value>Yellow</value></data>
+  <data name="Viewer_Color_Green" xml:space="preserve"><value>Green</value></data>
+  <data name="Viewer_Color_Blue" xml:space="preserve"><value>Blue</value></data>
+  <data name="Viewer_Color_White" xml:space="preserve"><value>White</value></data>
+  <data name="Viewer_Color_Black" xml:space="preserve"><value>Black</value></data>
+  <data name="Viewer_Thickness" xml:space="preserve"><value>Thickness</value></data>
+  <data name="Viewer_DefaultText" xml:space="preserve"><value>Default text</value></data>
+  <data name="Viewer_DefaultTextTip" xml:space="preserve"><value>Text placed in a new text box when you click the image. After that, edit it directly in the box on the image.</value></data>
+  <data name="Viewer_Size" xml:space="preserve"><value>Size</value></data>
+  <data name="Viewer_MosaicSize" xml:space="preserve"><value>Mosaic size</value></data>
+  <data name="Viewer_Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Viewer_MosaicBlock" xml:space="preserve"><value>Block mosaic</value></data>
+  <data name="Viewer_Block" xml:space="preserve"><value>Block</value></data>
+  <data name="Viewer_MosaicBlockTip" xml:space="preserve"><value>Square block mosaic</value></data>
+  <data name="Viewer_MosaicBlur" xml:space="preserve"><value>Blur mosaic</value></data>
+  <data name="Viewer_Blur" xml:space="preserve"><value>Blur</value></data>
+  <data name="Viewer_BlurTip" xml:space="preserve"><value>Gaussian blur</value></data>
+  <data name="Viewer_RefreshFiles" xml:space="preserve"><value>Refresh file list</value></data>
+  <data name="Viewer_RefreshFilesTip" xml:space="preserve"><value>Refresh the current folder&apos;s file list (F5)</value></data>
+  <data name="Viewer_View_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Viewer_View_Small" xml:space="preserve"><value>Small</value></data>
+  <data name="Viewer_View_Medium" xml:space="preserve"><value>Medium</value></data>
+  <data name="Viewer_View_Large" xml:space="preserve"><value>Large</value></data>
+  <data name="Viewer_CropSettings" xml:space="preserve"><value>Crop settings</value></data>
+  <data name="Viewer_Side_Left" xml:space="preserve"><value>Left</value></data>
+  <data name="Viewer_Side_Right" xml:space="preserve"><value>Right</value></data>
+  <data name="Viewer_Side_Top" xml:space="preserve"><value>Top</value></data>
+  <data name="Viewer_Side_Bottom" xml:space="preserve"><value>Bottom</value></data>
+  <data name="Viewer_CropLeft" xml:space="preserve"><value>Crop left</value></data>
+  <data name="Viewer_CropLeftPixels" xml:space="preserve"><value>Left crop pixels</value></data>
+  <data name="Viewer_CropRight" xml:space="preserve"><value>Crop right</value></data>
+  <data name="Viewer_CropRightPixels" xml:space="preserve"><value>Right crop pixels</value></data>
+  <data name="Viewer_CropTop" xml:space="preserve"><value>Crop top</value></data>
+  <data name="Viewer_CropTopPixels" xml:space="preserve"><value>Top crop pixels</value></data>
+  <data name="Viewer_CropBottom" xml:space="preserve"><value>Crop bottom</value></data>
+  <data name="Viewer_CropBottomPixels" xml:space="preserve"><value>Bottom crop pixels</value></data>
+  <data name="Viewer_CropCancel" xml:space="preserve"><value>Cancel crop</value></data>
+  <data name="Viewer_CropApply" xml:space="preserve"><value>Apply crop</value></data>
+  <data name="Viewer_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Viewer_NoImage" xml:space="preserve"><value>No image to display.</value></data>
+  <data name="Viewer_Idle" xml:space="preserve"><value>Idle</value></data>
+  <data name="Viewer_Zoom" xml:space="preserve"><value>Zoom</value></data>
+  <data name="Viewer_Status_EditingText" xml:space="preserve"><value>Editing text: press Esc or click outside when you are done.</value></data>
+  <data name="Viewer_Status_SelectionModified" xml:space="preserve"><value>Modified the selected item.</value></data>
+  <data name="Viewer_Status_SelectionDeleted" xml:space="preserve"><value>Deleted the selected item.</value></data>
+  <data name="Viewer_Status_EllipseAdded" xml:space="preserve"><value>Added an ellipse.</value></data>
+  <data name="Viewer_Status_RectangleAdded" xml:space="preserve"><value>Added a rectangle.</value></data>
+  <data name="Viewer_Status_BlurMosaicAdded" xml:space="preserve"><value>Added a blur mosaic.</value></data>
+  <data name="Viewer_Status_MosaicAdded" xml:space="preserve"><value>Added a mosaic.</value></data>
+  <data name="Viewer_Status_MosaicAddedHint" xml:space="preserve"><value> Resize it with the handles, or change size and type in the settings bar above. Use Select (V) to move it.</value></data>
+  <data name="Viewer_Status_TextBoxAdded" xml:space="preserve"><value>Added a text box.</value></data>
+  <data name="Viewer_Status_PenAdded" xml:space="preserve"><value>Added a pen line.</value></data>
+  <data name="Viewer_Status_ArrowAdded" xml:space="preserve"><value>Added an arrow.</value></data>
+  <data name="Viewer_Status_TextModified" xml:space="preserve"><value>Edited the text.</value></data>
+  <data name="Viewer_ResizeHandleTip" xml:space="preserve"><value>Drag to resize</value></data>
+  <data name="Viewer_ResizeHandle" xml:space="preserve"><value>Resize handle</value></data>
+  <data name="Viewer_Status_RefreshingFolder" xml:space="preserve"><value>Refreshing the current folder&apos;s file list.</value></data>
+  <data name="Viewer_ExternalFolder" xml:space="preserve"><value>The external folder</value></data>
+  <data name="Viewer_FileCountFiles" xml:space="preserve"><value>{0:0} files</value></data>
+  <data name="Viewer_Status_DetailsOnly" xml:space="preserve"><value>{0} can only be shown in Details view. Icon views are limited for responsiveness.</value></data>
+  <data name="Viewer_Status_NothingToSave" xml:space="preserve"><value>No image to save.</value></data>
+  <data name="Viewer_Status_NoSaveTarget" xml:space="preserve"><value>Cannot choose a file to save to.</value></data>
+  <data name="Viewer_Status_Saved" xml:space="preserve"><value>Saved: {0}</value></data>
+  <data name="Viewer_Status_SaveFailed" xml:space="preserve"><value>Save failed: {0}</value></data>
+  <data name="Viewer_FileCount" xml:space="preserve"><value>{0:0} files</value></data>
+  <data name="Viewer_Status_NothingToOpen" xml:space="preserve"><value>No file to open.</value></data>
+  <data name="Viewer_Status_Opened" xml:space="preserve"><value>Open: {0}</value></data>
+  <data name="Viewer_Status_FolderOpened" xml:space="preserve"><value>Open folder: {0}</value></data>
+  <data name="Viewer_Status_NoPathToCopy" xml:space="preserve"><value>No file path to copy.</value></data>
+  <data name="Viewer_Status_ClipboardCopyFailed" xml:space="preserve"><value>Clipboard copy failed: {0}</value></data>
+  <data name="Viewer_Status_NoImageToCopy" xml:space="preserve"><value>No image to copy.</value></data>
+  <data name="Viewer_Status_Undone" xml:space="preserve"><value>Undone.</value></data>
+  <data name="Viewer_Status_Redone" xml:space="preserve"><value>Redone.</value></data>
+  <data name="Viewer_Status_CommittedBeforeRotate" xml:space="preserve"><value>Applied annotations to the image before rotating.</value></data>
+  <data name="Viewer_Status_RotatedLeft" xml:space="preserve"><value>Rotated left.</value></data>
+  <data name="Viewer_Status_RotatedRight" xml:space="preserve"><value>Rotated right.</value></data>
+  <data name="Viewer_Status_CropValueInvalid" xml:space="preserve"><value>Enter crop values as whole numbers of 0 or more.</value></data>
+  <data name="Viewer_Status_CropNoChange" xml:space="preserve"><value>No crop values, so the original was kept.</value></data>
+  <data name="Viewer_Status_CommittedBeforeCrop" xml:space="preserve"><value>Applied annotations to the image before cropping.</value></data>
+  <data name="Viewer_Status_Cropped" xml:space="preserve"><value>Cropped the image to {0} × {1}px.</value></data>
+  <data name="Viewer_Status_MosaicSizeChanged" xml:space="preserve"><value>Changed the mosaic size to {0}px.</value></data>
+  <data name="Viewer_Status_ChangedToBlur" xml:space="preserve"><value>Changed to blur mosaic.</value></data>
+  <data name="Viewer_Status_ChangedToBlock" xml:space="preserve"><value>Changed to block mosaic.</value></data>
+  <data name="Viewer_Hint_Move" xml:space="preserve"><value> Use Select (V) to move it.</value></data>
+  <data name="Viewer_ToolHint_Pan" xml:space="preserve"><value>Hand (H): drag the image to pan the view.</value></data>
+  <data name="Viewer_ToolHint_Select" xml:space="preserve"><value>Select (V): click shapes, text, or mosaics to select them, drag to move, and use the border handles to resize. Double-click text to edit it and press Delete to remove.</value></data>
+  <data name="Viewer_ToolHint_PixelSelect" xml:space="preserve"><value>Pixel region (M): drag to select an area and drag inside it to move. Used for copy, cut, and paste. Press Esc to clear.</value></data>
+  <data name="Viewer_ToolHint_Rectangle" xml:space="preserve"><value>Rectangle (R): drag to draw a new rectangle.</value></data>
+  <data name="Viewer_ToolHint_Ellipse" xml:space="preserve"><value>Ellipse (E): drag to draw a new ellipse.</value></data>
+  <data name="Viewer_ToolHint_Mosaic" xml:space="preserve"><value>Mosaic (B): drag over an area to hide it with a mosaic. Afterwards you can change its size and type with the handles and the settings bar above.</value></data>
+  <data name="Viewer_ToolHint_Pen" xml:space="preserve"><value>Pen (P): drag to draw a freehand line.</value></data>
+  <data name="Viewer_ToolHint_Arrow" xml:space="preserve"><value>Arrow (A): drag to show a direction.</value></data>
+  <data name="Viewer_ToolHint_Text" xml:space="preserve"><value>Text (T): click the image to create a new text box and start typing.</value></data>
+  <data name="Viewer_Status_TextEditEnded" xml:space="preserve"><value>Finished editing text.</value></data>
+  <data name="Viewer_Status_NothingToCrop" xml:space="preserve"><value>No image to crop.</value></data>
+  <data name="Viewer_Status_CropCancelled" xml:space="preserve"><value>Crop cancelled.</value></data>
+  <data name="Viewer_Status_CropStarted" xml:space="preserve"><value>Crop: adjust the values in the left panel, then apply.</value></data>
+  <data name="Viewer_Status_ColorSelected" xml:space="preserve"><value>Color selected.</value></data>
+  <data name="Viewer_Status_SelectionClearedDrawHint" xml:space="preserve"><value>Selection cleared. Drag to draw a new one.</value></data>
+  <data name="Viewer_Status_SelectedDrawHint" xml:space="preserve"><value>Selected. Resize it with the handles and use Select (V) to move it. Drag to draw a new one.</value></data>
+  <data name="Viewer_Status_PixelRegion" xml:space="preserve"><value>Pixel region: {0} × {1}px ({2}, {3})</value></data>
+  <data name="Viewer_Status_PixelRegionCleared" xml:space="preserve"><value>Pixel region cleared.</value></data>
+  <data name="Viewer_Status_PixelRegionHint" xml:space="preserve"><value>Pixel region: {0} × {1}px — drag inside to move, Ctrl+C/X to copy or cut, Esc to clear.</value></data>
+  <data name="Viewer_Status_FileSort" xml:space="preserve"><value>Sort files: {0} {1}</value></data>
+  <data name="Viewer_Column_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Viewer_Column_ModifiedDate" xml:space="preserve"><value>Date modified</value></data>
+  <data name="Viewer_Column_Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Viewer_Column_Size" xml:space="preserve"><value>Size</value></data>
+  <data name="Viewer_SortByFormat" xml:space="preserve"><value>Sort by {0}</value></data>
+  <data name="Viewer_SortAscending" xml:space="preserve"><value>ascending</value></data>
+  <data name="Viewer_SortDescending" xml:space="preserve"><value>descending</value></data>
+  <data name="Viewer_Status_ReadingLibrary" xml:space="preserve"><value>Reading the capture library.</value></data>
+  <data name="Viewer_Status_ReadingFolder" xml:space="preserve"><value>Reading the folder.</value></data>
+  <data name="Viewer_Reading" xml:space="preserve"><value>Reading...</value></data>
+  <data name="Viewer_FullPath" xml:space="preserve"><value>Full path</value></data>
+  <data name="Viewer_Status_NoImagesInFolder" xml:space="preserve"><value>The selected folder has no images.</value></data>
+  <data name="Viewer_ExternalFolderDetailsSuffix" xml:space="preserve"><value> · External folders are shown in Details view for responsiveness.</value></data>
+  <data name="Viewer_LargeFolderDetailsSuffix" xml:space="preserve"><value> · Large folders are shown in Details view.</value></data>
+  <data name="Viewer_Status_FolderLoaded" xml:space="preserve"><value>Folder loaded: {0:0} files, {1:0}ms{2}</value></data>
+  <data name="Viewer_FilePosition" xml:space="preserve"><value>{0:0}/{1:0} files</value></data>
+  <data name="Viewer_Status_ReadingExternalFolder" xml:space="preserve"><value>Reading the external image folder.</value></data>
+  <data name="Viewer_Status_DrawingCancelled" xml:space="preserve"><value>Drawing cancelled.</value></data>
+  <data name="Viewer_Status_SelectionCleared" xml:space="preserve"><value>Selection cleared.</value></data>
+  <data name="Viewer_Status_SelectRegionToCopy" xml:space="preserve"><value>Select an area to copy first.</value></data>
+  <data name="Viewer_Status_RegionCopied" xml:space="preserve"><value>Copied the selection to the clipboard: {0} × {1}px</value></data>
+  <data name="Viewer_Status_RegionCopyFailed" xml:space="preserve"><value>Failed to copy the selection: {0}</value></data>
+  <data name="Viewer_Status_SelectRegionToCut" xml:space="preserve"><value>Select an area to cut first.</value></data>
+  <data name="Viewer_Status_CommittedBeforeCut" xml:space="preserve"><value>Applied annotations to the image before cutting.</value></data>
+  <data name="Viewer_Status_RegionCut" xml:space="preserve"><value>Cut the selection.</value></data>
+  <data name="Viewer_Status_NothingToPasteInto" xml:space="preserve"><value>No image to paste into.</value></data>
+  <data name="Viewer_Status_ClipboardUnreadable" xml:space="preserve"><value>Cannot read the clipboard: {0}</value></data>
+  <data name="Viewer_Status_ClipboardNoImage" xml:space="preserve"><value>The clipboard has no image to paste.</value></data>
+  <data name="Viewer_Status_NoPasteArea" xml:space="preserve"><value>No image area to paste into.</value></data>
+  <data name="Viewer_Status_CommittedBeforePaste" xml:space="preserve"><value>Applied annotations to the image before pasting.</value></data>
+  <data name="Viewer_Status_Pasted" xml:space="preserve"><value>Pasted the image at the selection.</value></data>
+  <data name="Viewer_Modified" xml:space="preserve"><value>Modified</value></data>
+  <data name="Viewer_Settings_SelectedMosaic" xml:space="preserve"><value>Selected mosaic</value></data>
+  <data name="Viewer_Settings_Arrow" xml:space="preserve"><value>Arrow settings</value></data>
+  <data name="Viewer_Settings_Rectangle" xml:space="preserve"><value>Rectangle settings</value></data>
+  <data name="Viewer_Settings_Ellipse" xml:space="preserve"><value>Ellipse settings</value></data>
+  <data name="Viewer_Settings_Text" xml:space="preserve"><value>Text settings</value></data>
+  <data name="Viewer_Settings_Mosaic" xml:space="preserve"><value>Mosaic settings</value></data>
+  <data name="Viewer_ReadFailed" xml:space="preserve"><value>Read failed</value></data>
+  <data name="Viewer_Status_FolderUnreadable" xml:space="preserve"><value>Cannot read the folder: {0}</value></data>
+  <data name="Viewer_Status_LoadingImage" xml:space="preserve"><value>Loading the image.</value></data>
+  <data name="Viewer_Status_ImageOpenFailed" xml:space="preserve"><value>Cannot open the image: {0}</value></data>
+  <data name="Viewer_Status_ZoomInvalid" xml:space="preserve"><value>Enter a zoom value between 10% and 800%.</value></data>
 </root>

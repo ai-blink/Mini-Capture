@@ -25,6 +25,7 @@ using WpfPath = System.Windows.Shapes.Path;
 using WpfPen = System.Windows.Media.Pen;
 using WpfRectangle = System.Windows.Shapes.Rectangle;
 using WpfShape = System.Windows.Shapes.Shape;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -74,7 +75,7 @@ public partial class ViewerWindow
         Title = string.IsNullOrWhiteSpace(fileName)
             ? "Mini Capture Viewer"
             : $"{prefix}{fileName} - Mini Capture Viewer";
-        SaveStateText.Text = _isDirty ? "변경됨" : "저장됨";
+        SaveStateText.Text = _isDirty ? Strings.Viewer_Modified : Strings.Main_Result_Saved;
         SaveStateText.Foreground = _isDirty
             ? new SolidColorBrush(WpfColor.FromRgb(250, 204, 21))
             : new SolidColorBrush(WpfColor.FromRgb(94, 234, 212));
@@ -186,14 +187,14 @@ public partial class ViewerWindow
             SetViewButtonState(MosaicTypeBlurButton, _mosaicType == ViewerMosaicType.Blur);
         }
 
-        ContextToolName.Text = editsMosaic ? "선택한 모자이크" : _editTool switch
+        ContextToolName.Text = editsMosaic ? Strings.Viewer_Settings_SelectedMosaic : _editTool switch
         {
-            ViewerEditTool.Pen => "펜 설정",
-            ViewerEditTool.Arrow => "화살표 설정",
-            ViewerEditTool.Rectangle => "네모 설정",
-            ViewerEditTool.Ellipse => "원 설정",
-            ViewerEditTool.Text => "텍스트 설정",
-            ViewerEditTool.Mosaic => "모자이크 설정",
+            ViewerEditTool.Pen => Strings.Viewer_Settings_Pen,
+            ViewerEditTool.Arrow => Strings.Viewer_Settings_Arrow,
+            ViewerEditTool.Rectangle => Strings.Viewer_Settings_Rectangle,
+            ViewerEditTool.Ellipse => Strings.Viewer_Settings_Ellipse,
+            ViewerEditTool.Text => Strings.Viewer_Settings_Text,
+            ViewerEditTool.Mosaic => Strings.Viewer_Settings_Mosaic,
             _ => string.Empty
         };
     }
@@ -226,8 +227,8 @@ public partial class ViewerWindow
 
     private void ShowFolderLoadFailure(Exception ex)
     {
-        FileCountText.Text = "읽기 실패";
-        SetViewerStatus($"폴더를 읽을 수 없습니다: {ex.Message}");
+        FileCountText.Text = Strings.Viewer_ReadFailed;
+        SetViewerStatus(string.Format(Strings.Viewer_Status_FolderUnreadable, ex.Message));
     }
 
     private static void SetViewButtonState(System.Windows.Controls.Button button, bool selected)

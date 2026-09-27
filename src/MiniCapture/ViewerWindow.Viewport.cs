@@ -26,6 +26,7 @@ using WpfPath = System.Windows.Shapes.Path;
 using WpfPen = System.Windows.Media.Pen;
 using WpfRectangle = System.Windows.Shapes.Rectangle;
 using WpfShape = System.Windows.Shapes.Shape;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -54,7 +55,7 @@ public partial class ViewerWindow
         if (file is null)
         {
             CancelImageLoad();
-            ClearImage("표시할 이미지가 없습니다.");
+            ClearImage(Strings.Viewer_NoImage);
             return;
         }
 
@@ -66,7 +67,7 @@ public partial class ViewerWindow
             FlushCurrentImageViewState();
         }
 
-        SetViewerStatus("이미지를 불러오는 중입니다.");
+        SetViewerStatus(Strings.Viewer_Status_LoadingImage);
 
         BitmapSource image;
         try
@@ -90,7 +91,7 @@ public partial class ViewerWindow
         {
             if (IsCurrentImageLoad(load))
             {
-                ClearImage($"이미지를 열 수 없습니다: {ex.Message}");
+                ClearImage(string.Format(Strings.Viewer_Status_ImageOpenFailed, ex.Message));
             }
 
             return;
@@ -177,7 +178,7 @@ public partial class ViewerWindow
         CurrentFileText.Text = string.Empty;
         StatusText.Text = message;
         StatusMetaText.Text = string.Empty;
-        SaveStateText.Text = "대기";
+        SaveStateText.Text = Strings.Viewer_Idle;
         EmptyMessage.Text = message;
         EmptyMessage.Visibility = Visibility.Visible;
         ZoomText.Text = "-";
@@ -236,7 +237,7 @@ public partial class ViewerWindow
         if (!parsed || !double.IsFinite(percent))
         {
             RestoreZoomText();
-            SetViewerStatus("확대/축소 값은 10%~800% 사이의 숫자로 입력하세요.");
+            SetViewerStatus(Strings.Viewer_Status_ZoomInvalid);
             return false;
         }
 

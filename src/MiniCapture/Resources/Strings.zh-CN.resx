@@ -237,4 +237,218 @@
   <data name="Folder_Pictures" xml:space="preserve"><value>图片</value></data>
   <data name="Folder_QuickAccess" xml:space="preserve"><value>快速访问</value></data>
   <data name="Folder_ThisPc" xml:space="preserve"><value>此电脑</value></data>
+  <data name="Viewer_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Viewer_SaveTip" xml:space="preserve"><value>保存 (Ctrl+S)</value></data>
+  <data name="Viewer_CopyImage" xml:space="preserve"><value>复制图片</value></data>
+  <data name="Viewer_CopyImageTip" xml:space="preserve"><value>复制图片 (Ctrl+C)</value></data>
+  <data name="Viewer_CopyFilePath" xml:space="preserve"><value>复制文件路径</value></data>
+  <data name="Viewer_CopyPath" xml:space="preserve"><value>复制路径</value></data>
+  <data name="Viewer_CopyFilePathTip" xml:space="preserve"><value>复制文件路径 (Ctrl+Shift+C)</value></data>
+  <data name="Viewer_Group_File" xml:space="preserve"><value>文件</value></data>
+  <data name="Viewer_Open" xml:space="preserve"><value>打开</value></data>
+  <data name="Viewer_OpenFolder" xml:space="preserve"><value>打开文件夹</value></data>
+  <data name="Viewer_CopyImageWithMarkupTip" xml:space="preserve"><value>复制含标注的图片</value></data>
+  <data name="Viewer_Group_View" xml:space="preserve"><value>查看</value></data>
+  <data name="Viewer_Previous" xml:space="preserve"><value>上一张</value></data>
+  <data name="Viewer_PreviousTip" xml:space="preserve"><value>上一张图片</value></data>
+  <data name="Viewer_Next" xml:space="preserve"><value>下一张</value></data>
+  <data name="Viewer_NextTip" xml:space="preserve"><value>下一张图片</value></data>
+  <data name="Viewer_Fit" xml:space="preserve"><value>适应</value></data>
+  <data name="Viewer_FitTip" xml:space="preserve"><value>适应窗口</value></data>
+  <data name="Viewer_Actual" xml:space="preserve"><value>原始</value></data>
+  <data name="Viewer_ActualTip" xml:space="preserve"><value>原始大小</value></data>
+  <data name="Viewer_ZoomOut" xml:space="preserve"><value>缩小</value></data>
+  <data name="Viewer_ZoomPercent" xml:space="preserve"><value>缩放百分比</value></data>
+  <data name="Viewer_ZoomPercentTip" xml:space="preserve"><value>直接输入缩放百分比 (10%~800%)</value></data>
+  <data name="Viewer_ZoomIn" xml:space="preserve"><value>放大</value></data>
+  <data name="Viewer_Refresh" xml:space="preserve"><value>刷新</value></data>
+  <data name="Viewer_RefreshTip" xml:space="preserve"><value>刷新文件列表 (F5)</value></data>
+  <data name="Viewer_Group_Markup" xml:space="preserve"><value>标注</value></data>
+  <data name="Viewer_Tool_Hand" xml:space="preserve"><value>抓手</value></data>
+  <data name="Viewer_Tool_HandTip" xml:space="preserve"><value>抓手 (H) — 拖动：移动画面。使用其他工具时按住 Space 拖动</value></data>
+  <data name="Viewer_Tool_Select" xml:space="preserve"><value>选择对象</value></data>
+  <data name="Viewer_Tool_SelectTip" xml:space="preserve"><value>选择对象 (V, Esc) — 单击：选择 / 拖动：移动 / 边框手柄：调整大小 / 双击文本：编辑 / Delete：删除</value></data>
+  <data name="Viewer_Tool_Pen" xml:space="preserve"><value>画笔</value></data>
+  <data name="Viewer_Tool_PenTip" xml:space="preserve"><value>画笔 (P) — 拖动：自由线</value></data>
+  <data name="Viewer_Tool_Arrow" xml:space="preserve"><value>箭头</value></data>
+  <data name="Viewer_Tool_ArrowTip" xml:space="preserve"><value>箭头 (A) — 拖动：箭头</value></data>
+  <data name="Viewer_Tool_Rectangle" xml:space="preserve"><value>矩形</value></data>
+  <data name="Viewer_Tool_RectangleTip" xml:space="preserve"><value>矩形 (R) — 拖动：矩形</value></data>
+  <data name="Viewer_Tool_Ellipse" xml:space="preserve"><value>椭圆</value></data>
+  <data name="Viewer_Tool_EllipseTip" xml:space="preserve"><value>椭圆 (E) — 拖动：椭圆</value></data>
+  <data name="Viewer_Tool_Text" xml:space="preserve"><value>文本</value></data>
+  <data name="Viewer_Tool_TextTip" xml:space="preserve"><value>文本 (T) — 单击：新建文本框。单击已有文本框可直接修改</value></data>
+  <data name="Viewer_Tool_Mosaic" xml:space="preserve"><value>马赛克</value></data>
+  <data name="Viewer_Tool_MosaicTip" xml:space="preserve"><value>马赛克 (B) — 拖动：在要遮挡的区域添加马赛克。创建后可用选择对象移动或更改大小和类型</value></data>
+  <data name="Viewer_Delete" xml:space="preserve"><value>删除</value></data>
+  <data name="Viewer_DeleteTip" xml:space="preserve"><value>删除所选项</value></data>
+  <data name="Viewer_Undo" xml:space="preserve"><value>撤销</value></data>
+  <data name="Viewer_Redo" xml:space="preserve"><value>重做</value></data>
+  <data name="Viewer_RedoTip" xml:space="preserve"><value>重做上一步撤销的操作</value></data>
+  <data name="Viewer_RotateLeft" xml:space="preserve"><value>左转</value></data>
+  <data name="Viewer_RotateLeftTip" xml:space="preserve"><value>向左旋转</value></data>
+  <data name="Viewer_RotateRight" xml:space="preserve"><value>右转</value></data>
+  <data name="Viewer_RotateRightTip" xml:space="preserve"><value>向右旋转</value></data>
+  <data name="Viewer_Group_Region" xml:space="preserve"><value>区域</value></data>
+  <data name="Viewer_Tool_PixelRegion" xml:space="preserve"><value>像素区域</value></data>
+  <data name="Viewer_Tool_PixelRegionTip" xml:space="preserve"><value>像素区域 (M) — 拖动：指定区域 / 在区域内拖动：移动 / 复制·剪切·粘贴 / Esc：取消</value></data>
+  <data name="Viewer_Copy" xml:space="preserve"><value>复制</value></data>
+  <data name="Viewer_CopyRegionTip" xml:space="preserve"><value>复制像素区域 (Ctrl+C)</value></data>
+  <data name="Viewer_Cut" xml:space="preserve"><value>剪切</value></data>
+  <data name="Viewer_CutRegionTip" xml:space="preserve"><value>将像素区域剪切到剪贴板 (Ctrl+X)</value></data>
+  <data name="Viewer_Paste" xml:space="preserve"><value>粘贴</value></data>
+  <data name="Viewer_PasteTip" xml:space="preserve"><value>粘贴到像素区域位置，无区域时居中 (Ctrl+V)</value></data>
+  <data name="Viewer_Crop" xml:space="preserve"><value>裁剪</value></data>
+  <data name="Viewer_CropTip" xml:space="preserve"><value>裁剪图片的上下左右</value></data>
+  <data name="Viewer_ToolSettings" xml:space="preserve"><value>工具设置</value></data>
+  <data name="Viewer_Settings_Pen" xml:space="preserve"><value>画笔设置</value></data>
+  <data name="Viewer_Color" xml:space="preserve"><value>颜色</value></data>
+  <data name="Viewer_Color_Red" xml:space="preserve"><value>红色</value></data>
+  <data name="Viewer_Color_Yellow" xml:space="preserve"><value>黄色</value></data>
+  <data name="Viewer_Color_Green" xml:space="preserve"><value>绿色</value></data>
+  <data name="Viewer_Color_Blue" xml:space="preserve"><value>蓝色</value></data>
+  <data name="Viewer_Color_White" xml:space="preserve"><value>白色</value></data>
+  <data name="Viewer_Color_Black" xml:space="preserve"><value>黑色</value></data>
+  <data name="Viewer_Thickness" xml:space="preserve"><value>粗细</value></data>
+  <data name="Viewer_DefaultText" xml:space="preserve"><value>新文本默认内容</value></data>
+  <data name="Viewer_DefaultTextTip" xml:space="preserve"><value>单击图片新建文本框时预先填入的文字。创建后请直接在图片上的文本框中修改。</value></data>
+  <data name="Viewer_Size" xml:space="preserve"><value>大小</value></data>
+  <data name="Viewer_MosaicSize" xml:space="preserve"><value>马赛克大小</value></data>
+  <data name="Viewer_Type" xml:space="preserve"><value>类型</value></data>
+  <data name="Viewer_MosaicBlock" xml:space="preserve"><value>块状马赛克</value></data>
+  <data name="Viewer_Block" xml:space="preserve"><value>块状</value></data>
+  <data name="Viewer_MosaicBlockTip" xml:space="preserve"><value>方块马赛克</value></data>
+  <data name="Viewer_MosaicBlur" xml:space="preserve"><value>模糊马赛克</value></data>
+  <data name="Viewer_Blur" xml:space="preserve"><value>模糊</value></data>
+  <data name="Viewer_BlurTip" xml:space="preserve"><value>高斯模糊</value></data>
+  <data name="Viewer_RefreshFiles" xml:space="preserve"><value>刷新文件列表</value></data>
+  <data name="Viewer_RefreshFilesTip" xml:space="preserve"><value>刷新当前文件夹的文件列表 (F5)</value></data>
+  <data name="Viewer_View_Details" xml:space="preserve"><value>详细信息</value></data>
+  <data name="Viewer_View_Small" xml:space="preserve"><value>小</value></data>
+  <data name="Viewer_View_Medium" xml:space="preserve"><value>中</value></data>
+  <data name="Viewer_View_Large" xml:space="preserve"><value>大</value></data>
+  <data name="Viewer_CropSettings" xml:space="preserve"><value>裁剪设置</value></data>
+  <data name="Viewer_Side_Left" xml:space="preserve"><value>左</value></data>
+  <data name="Viewer_Side_Right" xml:space="preserve"><value>右</value></data>
+  <data name="Viewer_Side_Top" xml:space="preserve"><value>上</value></data>
+  <data name="Viewer_Side_Bottom" xml:space="preserve"><value>下</value></data>
+  <data name="Viewer_CropLeft" xml:space="preserve"><value>裁剪左侧</value></data>
+  <data name="Viewer_CropLeftPixels" xml:space="preserve"><value>左侧裁剪像素</value></data>
+  <data name="Viewer_CropRight" xml:space="preserve"><value>裁剪右侧</value></data>
+  <data name="Viewer_CropRightPixels" xml:space="preserve"><value>右侧裁剪像素</value></data>
+  <data name="Viewer_CropTop" xml:space="preserve"><value>裁剪顶部</value></data>
+  <data name="Viewer_CropTopPixels" xml:space="preserve"><value>顶部裁剪像素</value></data>
+  <data name="Viewer_CropBottom" xml:space="preserve"><value>裁剪底部</value></data>
+  <data name="Viewer_CropBottomPixels" xml:space="preserve"><value>底部裁剪像素</value></data>
+  <data name="Viewer_CropCancel" xml:space="preserve"><value>取消裁剪</value></data>
+  <data name="Viewer_CropApply" xml:space="preserve"><value>应用裁剪</value></data>
+  <data name="Viewer_Apply" xml:space="preserve"><value>应用</value></data>
+  <data name="Viewer_NoImage" xml:space="preserve"><value>没有可显示的图片。</value></data>
+  <data name="Viewer_Idle" xml:space="preserve"><value>等待</value></data>
+  <data name="Viewer_Zoom" xml:space="preserve"><value>缩放</value></data>
+  <data name="Viewer_Status_EditingText" xml:space="preserve"><value>正在编辑文本：完成后按 Esc 或单击外部。</value></data>
+  <data name="Viewer_Status_SelectionModified" xml:space="preserve"><value>已修改所选项。</value></data>
+  <data name="Viewer_Status_SelectionDeleted" xml:space="preserve"><value>已删除所选项。</value></data>
+  <data name="Viewer_Status_EllipseAdded" xml:space="preserve"><value>已添加椭圆。</value></data>
+  <data name="Viewer_Status_RectangleAdded" xml:space="preserve"><value>已添加矩形。</value></data>
+  <data name="Viewer_Status_BlurMosaicAdded" xml:space="preserve"><value>已添加模糊马赛克。</value></data>
+  <data name="Viewer_Status_MosaicAdded" xml:space="preserve"><value>已添加马赛克。</value></data>
+  <data name="Viewer_Status_MosaicAddedHint" xml:space="preserve"><value> 可用手柄调整大小，或在上方设置栏更改大小和类型。移动请使用选择对象 (V)。</value></data>
+  <data name="Viewer_Status_TextBoxAdded" xml:space="preserve"><value>已添加文本框。</value></data>
+  <data name="Viewer_Status_PenAdded" xml:space="preserve"><value>已添加画笔线条。</value></data>
+  <data name="Viewer_Status_ArrowAdded" xml:space="preserve"><value>已添加箭头。</value></data>
+  <data name="Viewer_Status_TextModified" xml:space="preserve"><value>已修改文本。</value></data>
+  <data name="Viewer_ResizeHandleTip" xml:space="preserve"><value>拖动调整大小</value></data>
+  <data name="Viewer_ResizeHandle" xml:space="preserve"><value>调整大小手柄</value></data>
+  <data name="Viewer_Status_RefreshingFolder" xml:space="preserve"><value>正在刷新当前文件夹的文件列表。</value></data>
+  <data name="Viewer_ExternalFolder" xml:space="preserve"><value>外部文件夹</value></data>
+  <data name="Viewer_FileCountFiles" xml:space="preserve"><value>{0:0} 个文件</value></data>
+  <data name="Viewer_Status_DetailsOnly" xml:space="preserve"><value>{0}仅在详细信息视图中显示。为保证响应速度，图标视图受限。</value></data>
+  <data name="Viewer_Status_NothingToSave" xml:space="preserve"><value>没有可保存的图片。</value></data>
+  <data name="Viewer_Status_NoSaveTarget" xml:space="preserve"><value>无法选择要保存的文件。</value></data>
+  <data name="Viewer_Status_Saved" xml:space="preserve"><value>已保存：{0}</value></data>
+  <data name="Viewer_Status_SaveFailed" xml:space="preserve"><value>保存失败：{0}</value></data>
+  <data name="Viewer_FileCount" xml:space="preserve"><value>{0:0} 个</value></data>
+  <data name="Viewer_Status_NothingToOpen" xml:space="preserve"><value>没有可打开的文件。</value></data>
+  <data name="Viewer_Status_Opened" xml:space="preserve"><value>打开：{0}</value></data>
+  <data name="Viewer_Status_FolderOpened" xml:space="preserve"><value>打开文件夹：{0}</value></data>
+  <data name="Viewer_Status_NoPathToCopy" xml:space="preserve"><value>没有可复制的文件路径。</value></data>
+  <data name="Viewer_Status_ClipboardCopyFailed" xml:space="preserve"><value>复制到剪贴板失败：{0}</value></data>
+  <data name="Viewer_Status_NoImageToCopy" xml:space="preserve"><value>没有可复制的图片。</value></data>
+  <data name="Viewer_Status_Undone" xml:space="preserve"><value>已撤销。</value></data>
+  <data name="Viewer_Status_Redone" xml:space="preserve"><value>已重做。</value></data>
+  <data name="Viewer_Status_CommittedBeforeRotate" xml:space="preserve"><value>旋转前已将标注应用到图片。</value></data>
+  <data name="Viewer_Status_RotatedLeft" xml:space="preserve"><value>已向左旋转。</value></data>
+  <data name="Viewer_Status_RotatedRight" xml:space="preserve"><value>已向右旋转。</value></data>
+  <data name="Viewer_Status_CropValueInvalid" xml:space="preserve"><value>裁剪值请输入 0 以上的整数。</value></data>
+  <data name="Viewer_Status_CropNoChange" xml:space="preserve"><value>没有裁剪值，已保留原图。</value></data>
+  <data name="Viewer_Status_CommittedBeforeCrop" xml:space="preserve"><value>裁剪前已将标注应用到图片。</value></data>
+  <data name="Viewer_Status_Cropped" xml:space="preserve"><value>已将图片裁剪为 {0} × {1}px。</value></data>
+  <data name="Viewer_Status_MosaicSizeChanged" xml:space="preserve"><value>已将马赛克大小改为 {0}px。</value></data>
+  <data name="Viewer_Status_ChangedToBlur" xml:space="preserve"><value>已改为模糊马赛克。</value></data>
+  <data name="Viewer_Status_ChangedToBlock" xml:space="preserve"><value>已改为块状马赛克。</value></data>
+  <data name="Viewer_Hint_Move" xml:space="preserve"><value> 移动请使用选择对象 (V)。</value></data>
+  <data name="Viewer_ToolHint_Pan" xml:space="preserve"><value>抓手 (H)：拖动图片移动画面。</value></data>
+  <data name="Viewer_ToolHint_Select" xml:space="preserve"><value>选择对象 (V)：单击形状、文本或马赛克进行选择，拖动移动，用边框手柄调整大小。双击文本进行修改，按 Delete 删除。</value></data>
+  <data name="Viewer_ToolHint_PixelSelect" xml:space="preserve"><value>像素区域 (M)：拖动选取区域，在区域内拖动可移动。用于复制、剪切和粘贴。按 Esc 取消。</value></data>
+  <data name="Viewer_ToolHint_Rectangle" xml:space="preserve"><value>矩形 (R)：拖动绘制新矩形。</value></data>
+  <data name="Viewer_ToolHint_Ellipse" xml:space="preserve"><value>椭圆 (E)：拖动绘制新椭圆。</value></data>
+  <data name="Viewer_ToolHint_Mosaic" xml:space="preserve"><value>马赛克 (B)：拖动要遮挡的区域即可生成马赛克。创建后仍可用手柄和上方设置栏更改大小和类型。</value></data>
+  <data name="Viewer_ToolHint_Pen" xml:space="preserve"><value>画笔 (P)：拖动绘制自由线。</value></data>
+  <data name="Viewer_ToolHint_Arrow" xml:space="preserve"><value>箭头 (A)：拖动标示方向。</value></data>
+  <data name="Viewer_ToolHint_Text" xml:space="preserve"><value>文本 (T)：单击图片即可新建文本框并直接输入。</value></data>
+  <data name="Viewer_Status_TextEditEnded" xml:space="preserve"><value>已完成文本编辑。</value></data>
+  <data name="Viewer_Status_NothingToCrop" xml:space="preserve"><value>没有可裁剪的图片。</value></data>
+  <data name="Viewer_Status_CropCancelled" xml:space="preserve"><value>已取消裁剪。</value></data>
+  <data name="Viewer_Status_CropStarted" xml:space="preserve"><value>裁剪：在左侧面板调整数值后应用。</value></data>
+  <data name="Viewer_Status_ColorSelected" xml:space="preserve"><value>已选择颜色。</value></data>
+  <data name="Viewer_Status_SelectionClearedDrawHint" xml:space="preserve"><value>已取消选择。拖动即可新绘制。</value></data>
+  <data name="Viewer_Status_SelectedDrawHint" xml:space="preserve"><value>已选择。可用手柄调整大小，移动请使用选择对象 (V)。拖动即可新绘制。</value></data>
+  <data name="Viewer_Status_PixelRegion" xml:space="preserve"><value>像素区域：{0} × {1}px ({2}, {3})</value></data>
+  <data name="Viewer_Status_PixelRegionCleared" xml:space="preserve"><value>已取消像素区域。</value></data>
+  <data name="Viewer_Status_PixelRegionHint" xml:space="preserve"><value>像素区域：{0} × {1}px — 在区域内拖动可移动，Ctrl+C/X 复制或剪切，Esc 取消。</value></data>
+  <data name="Viewer_Status_FileSort" xml:space="preserve"><value>文件排序：{0} {1}</value></data>
+  <data name="Viewer_Column_Name" xml:space="preserve"><value>名称</value></data>
+  <data name="Viewer_Column_ModifiedDate" xml:space="preserve"><value>修改日期</value></data>
+  <data name="Viewer_Column_Type" xml:space="preserve"><value>类型</value></data>
+  <data name="Viewer_Column_Size" xml:space="preserve"><value>大小</value></data>
+  <data name="Viewer_SortByFormat" xml:space="preserve"><value>按{0}排序</value></data>
+  <data name="Viewer_SortAscending" xml:space="preserve"><value>升序</value></data>
+  <data name="Viewer_SortDescending" xml:space="preserve"><value>降序</value></data>
+  <data name="Viewer_Status_ReadingLibrary" xml:space="preserve"><value>正在读取截图库。</value></data>
+  <data name="Viewer_Status_ReadingFolder" xml:space="preserve"><value>正在读取文件夹。</value></data>
+  <data name="Viewer_Reading" xml:space="preserve"><value>读取中...</value></data>
+  <data name="Viewer_FullPath" xml:space="preserve"><value>完整路径</value></data>
+  <data name="Viewer_Status_NoImagesInFolder" xml:space="preserve"><value>所选文件夹中没有图片。</value></data>
+  <data name="Viewer_ExternalFolderDetailsSuffix" xml:space="preserve"><value> · 为保证响应速度，外部文件夹以详细信息视图显示。</value></data>
+  <data name="Viewer_LargeFolderDetailsSuffix" xml:space="preserve"><value> · 大型文件夹以详细信息视图显示。</value></data>
+  <data name="Viewer_Status_FolderLoaded" xml:space="preserve"><value>文件夹加载完成：{0:0} 个，{1:0}ms{2}</value></data>
+  <data name="Viewer_FilePosition" xml:space="preserve"><value>{0:0}/{1:0} 个</value></data>
+  <data name="Viewer_Status_ReadingExternalFolder" xml:space="preserve"><value>正在读取外部图片文件夹。</value></data>
+  <data name="Viewer_Status_DrawingCancelled" xml:space="preserve"><value>已取消绘制。</value></data>
+  <data name="Viewer_Status_SelectionCleared" xml:space="preserve"><value>已取消选择。</value></data>
+  <data name="Viewer_Status_SelectRegionToCopy" xml:space="preserve"><value>请先选择要复制的区域。</value></data>
+  <data name="Viewer_Status_RegionCopied" xml:space="preserve"><value>已将所选区域复制到剪贴板：{0} × {1}px</value></data>
+  <data name="Viewer_Status_RegionCopyFailed" xml:space="preserve"><value>复制所选区域失败：{0}</value></data>
+  <data name="Viewer_Status_SelectRegionToCut" xml:space="preserve"><value>请先选择要剪切的区域。</value></data>
+  <data name="Viewer_Status_CommittedBeforeCut" xml:space="preserve"><value>剪切前已将标注应用到图片。</value></data>
+  <data name="Viewer_Status_RegionCut" xml:space="preserve"><value>已剪切所选区域。</value></data>
+  <data name="Viewer_Status_NothingToPasteInto" xml:space="preserve"><value>没有可粘贴到的图片。</value></data>
+  <data name="Viewer_Status_ClipboardUnreadable" xml:space="preserve"><value>无法读取剪贴板：{0}</value></data>
+  <data name="Viewer_Status_ClipboardNoImage" xml:space="preserve"><value>剪贴板中没有可粘贴的图片。</value></data>
+  <data name="Viewer_Status_NoPasteArea" xml:space="preserve"><value>没有可粘贴的图片区域。</value></data>
+  <data name="Viewer_Status_CommittedBeforePaste" xml:space="preserve"><value>粘贴前已将标注应用到图片。</value></data>
+  <data name="Viewer_Status_Pasted" xml:space="preserve"><value>已将图片粘贴到所选区域位置。</value></data>
+  <data name="Viewer_Modified" xml:space="preserve"><value>已修改</value></data>
+  <data name="Viewer_Settings_SelectedMosaic" xml:space="preserve"><value>所选马赛克</value></data>
+  <data name="Viewer_Settings_Arrow" xml:space="preserve"><value>箭头设置</value></data>
+  <data name="Viewer_Settings_Rectangle" xml:space="preserve"><value>矩形设置</value></data>
+  <data name="Viewer_Settings_Ellipse" xml:space="preserve"><value>椭圆设置</value></data>
+  <data name="Viewer_Settings_Text" xml:space="preserve"><value>文本设置</value></data>
+  <data name="Viewer_Settings_Mosaic" xml:space="preserve"><value>马赛克设置</value></data>
+  <data name="Viewer_ReadFailed" xml:space="preserve"><value>读取失败</value></data>
+  <data name="Viewer_Status_FolderUnreadable" xml:space="preserve"><value>无法读取文件夹：{0}</value></data>
+  <data name="Viewer_Status_LoadingImage" xml:space="preserve"><value>正在加载图片。</value></data>
+  <data name="Viewer_Status_ImageOpenFailed" xml:space="preserve"><value>无法打开图片：{0}</value></data>
+  <data name="Viewer_Status_ZoomInvalid" xml:space="preserve"><value>缩放值请输入 10%~800% 之间的数字。</value></data>
 </root>

@@ -25,6 +25,7 @@ using WpfPath = System.Windows.Shapes.Path;
 using WpfPen = System.Windows.Media.Pen;
 using WpfRectangle = System.Windows.Shapes.Rectangle;
 using WpfShape = System.Windows.Shapes.Shape;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -249,7 +250,7 @@ public partial class ViewerWindow : Window
         {
             _files.Insert(GetSortedFileInsertIndex(imageFile), imageFile);
             _activeFolderFileCount = _files.Count;
-            FileCountText.Text = $"{_files.Count:0}개";
+            FileCountText.Text = string.Format(Strings.Viewer_FileCount, _files.Count);
             UpdateNavigationButtons();
             file = imageFile;
         }

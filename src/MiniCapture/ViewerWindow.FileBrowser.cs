@@ -25,6 +25,7 @@ using WpfPath = System.Windows.Shapes.Path;
 using WpfPen = System.Windows.Media.Pen;
 using WpfRectangle = System.Windows.Shapes.Rectangle;
 using WpfShape = System.Windows.Shapes.Shape;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -36,7 +37,7 @@ public partial class ViewerWindow
         var stopwatch = Stopwatch.StartNew();
         var requestedPath = _pendingPath;
         _pendingPath = null;
-        SetViewerStatus("캡처 라이브러리를 읽는 중입니다.");
+        SetViewerStatus(Strings.Viewer_Status_ReadingLibrary);
 
         try
         {
@@ -110,8 +111,8 @@ public partial class ViewerWindow
     {
         var stopwatch = existingStopwatch ?? Stopwatch.StartNew();
         _currentFolderPath = folderPath;
-        SetViewerStatus("폴더를 읽는 중입니다.");
-        FileCountText.Text = "읽는 중...";
+        SetViewerStatus(Strings.Viewer_Status_ReadingFolder);
+        FileCountText.Text = Strings.Viewer_Reading;
 
         IReadOnlyList<CaptureImageFile> files;
         var requestedSortColumn = _fileSortColumn;
@@ -156,7 +157,7 @@ public partial class ViewerWindow
         _isExternalFolder = !CaptureFileIndex.IsUnderRoot(folderPath);
         _files.Clear();
         AddressText.Text = folderPath;
-        FolderTreeScopeText.Text = CaptureFileIndex.IsUnderRoot(folderPath) ? "캡처 루트" : "전체 경로";
+        FolderTreeScopeText.Text = CaptureFileIndex.IsUnderRoot(folderPath) ? Strings.Folder_CaptureRoot : Strings.Viewer_FullPath;
 
         var switchedToDetailsForLargeFolder = RequiresDetailsView(_activeFolderFileCount) &&
             _viewMode != ExplorerViewMode.Details;
@@ -189,7 +190,7 @@ public partial class ViewerWindow
             return;
         }
 
-        FileCountText.Text = $"{_files.Count:0}개";
+        FileCountText.Text = string.Format(Strings.Viewer_FileCount, _files.Count);
 
         var selected = preferredIsInFolder
             ? FindFile(preferredPath) ?? FindFile(_currentFile?.Path) ?? _files.FirstOrDefault()
@@ -213,15 +214,15 @@ public partial class ViewerWindow
 
         if (_currentFile is null)
         {
-            ClearImage("선택한 폴더에 이미지가 없습니다.");
+            ClearImage(Strings.Viewer_Status_NoImagesInFolder);
         }
 
         var largeFolderSuffix = switchedToDetailsForLargeFolder
             ? _isExternalFolder
-                ? " · 외부 폴더는 응답성을 위해 세부 정보 보기로 표시합니다."
-                : " · 대용량 폴더는 세부 정보 보기로 표시합니다."
+                ? Strings.Viewer_ExternalFolderDetailsSuffix
+                : Strings.Viewer_LargeFolderDetailsSuffix
             : string.Empty;
-        SetViewerStatus($"폴더 로딩 완료: {_files.Count:0}개, {stopwatch.ElapsedMilliseconds:0}ms{largeFolderSuffix}");
+        SetViewerStatus(string.Format(Strings.Viewer_Status_FolderLoaded, _files.Count, stopwatch.ElapsedMilliseconds, largeFolderSuffix));
     }
 
     private async Task PopulateFilesAsync(
@@ -236,7 +237,7 @@ public partial class ViewerWindow
 
             if ((index + 1) % FilePopulateBatchSize == 0)
             {
-                FileCountText.Text = $"{index + 1:0}/{files.Count:0}개";
+                FileCountText.Text = string.Format(Strings.Viewer_FilePosition, index + 1, files.Count);
                 await Dispatcher.Yield(DispatcherPriority.Background);
             }
         }
@@ -431,7 +432,7 @@ public partial class ViewerWindow
     {
         var load = StartNewLoad();
         var stopwatch = Stopwatch.StartNew();
-        SetViewerStatus("외부 이미지 폴더를 읽는 중입니다.");
+        SetViewerStatus(Strings.Viewer_Status_ReadingExternalFolder);
 
         try
         {

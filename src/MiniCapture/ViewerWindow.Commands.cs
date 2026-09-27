@@ -24,6 +24,7 @@ using WpfPath = System.Windows.Shapes.Path;
 using WpfPen = System.Windows.Media.Pen;
 using WpfRectangle = System.Windows.Shapes.Rectangle;
 using WpfShape = System.Windows.Shapes.Shape;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -74,7 +75,7 @@ public partial class ViewerWindow
             preferredPath = _currentFile?.Path;
         }
 
-        SetViewerStatus("현재 폴더 파일 목록을 새로고침하는 중입니다.");
+        SetViewerStatus(Strings.Viewer_Status_RefreshingFolder);
 
         try
         {
@@ -100,9 +101,9 @@ public partial class ViewerWindow
         if (mode != ExplorerViewMode.Details && RequiresDetailsView(_activeFolderFileCount))
         {
             var scope = _isExternalFolder
-                ? "외부 폴더"
-                : $"{_activeFolderFileCount:0}개 파일";
-            SetViewerStatus($"{scope}은(는) 세부 정보 보기에서만 표시합니다. 아이콘 보기는 응답성을 위해 제한됩니다.");
+                ? Strings.Viewer_ExternalFolder
+                : string.Format(Strings.Viewer_FileCountFiles, _activeFolderFileCount);
+            SetViewerStatus(string.Format(Strings.Viewer_Status_DetailsOnly, scope));
             return;
         }
 
@@ -113,14 +114,14 @@ public partial class ViewerWindow
     {
         if (_editableImage is null)
         {
-            SetViewerStatus("저장할 이미지가 없습니다.");
+            SetViewerStatus(Strings.Viewer_Status_NothingToSave);
             return;
         }
 
         var targetPath = GetSaveTargetPath();
         if (targetPath is null)
         {
-            SetViewerStatus("저장할 파일을 선택할 수 없습니다.");
+            SetViewerStatus(Strings.Viewer_Status_NoSaveTarget);
             return;
         }
 
@@ -132,11 +133,11 @@ public partial class ViewerWindow
             _isDirty = false;
             UpdateDirtyIndicator();
             UpdateNavigationButtons();
-            SetViewerStatus($"저장됨: {targetPath}");
+            SetViewerStatus(string.Format(Strings.Viewer_Status_Saved, targetPath));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
         {
-            SetViewerStatus($"저장 실패: {ex.Message}");
+            SetViewerStatus(string.Format(Strings.Viewer_Status_SaveFailed, ex.Message));
         }
     }
 
@@ -169,7 +170,7 @@ public partial class ViewerWindow
             FileList.ScrollIntoView(fileToSelect);
             _isLoadingSelection = false;
             _currentFile = fileToSelect;
-            FileCountText.Text = $"{_files.Count:0}개";
+            FileCountText.Text = string.Format(Strings.Viewer_FileCount, _files.Count);
         }
         else if (matchesCurrentFile && _currentFile is not null)
         {
@@ -191,12 +192,12 @@ public partial class ViewerWindow
         var path = GetActiveFilePath();
         if (path is null || !File.Exists(path))
         {
-            SetViewerStatus("열 파일이 없습니다.");
+            SetViewerStatus(Strings.Viewer_Status_NothingToOpen);
             return;
         }
 
         ShellService.OpenFile(path);
-        SetViewerStatus($"열기: {path}");
+        SetViewerStatus(string.Format(Strings.Viewer_Status_Opened, path));
     }
 
     private void OnOpenFolderClick(object sender, RoutedEventArgs e)
@@ -205,12 +206,12 @@ public partial class ViewerWindow
         if (path is null)
         {
             ShellService.OpenFile(CaptureFileIndex.RootDirectory);
-            SetViewerStatus($"폴더 열기: {CaptureFileIndex.RootDirectory}");
+            SetViewerStatus(string.Format(Strings.Viewer_Status_FolderOpened, CaptureFileIndex.RootDirectory));
             return;
         }
 
         ShellService.OpenContainingFolder(path);
-        SetViewerStatus($"폴더 열기: {path}");
+        SetViewerStatus(string.Format(Strings.Viewer_Status_FolderOpened, path));
     }
 
     private async void OnCopyPathClick(object sender, RoutedEventArgs e)
@@ -218,18 +219,18 @@ public partial class ViewerWindow
         var path = GetActiveFilePath();
         if (path is null)
         {
-            SetViewerStatus("복사할 파일 경로가 없습니다.");
+            SetViewerStatus(Strings.Viewer_Status_NoPathToCopy);
             return;
         }
 
         try
         {
             await ClipboardService.SetTextAsync(path);
-            SetViewerStatus("파일 경로를 클립보드에 복사했습니다.");
+            SetViewerStatus(Strings.Main_Status_PathCopied);
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
         {
-            SetViewerStatus($"클립보드 복사 실패: {ex.Message}");
+            SetViewerStatus(string.Format(Strings.Viewer_Status_ClipboardCopyFailed, ex.Message));
         }
     }
 
@@ -237,18 +238,18 @@ public partial class ViewerWindow
     {
         if (_editableImage is null)
         {
-            SetViewerStatus("복사할 이미지가 없습니다.");
+            SetViewerStatus(Strings.Viewer_Status_NoImageToCopy);
             return;
         }
 
         try
         {
             ClipboardService.SetImage(ComposeImageForExport());
-            SetViewerStatus("이미지를 클립보드에 복사했습니다.");
+            SetViewerStatus(Strings.Main_Status_ImageCopied);
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.ExternalException)
         {
-            SetViewerStatus($"이미지 복사 실패: {ex.Message}");
+            SetViewerStatus(string.Format(Strings.Main_Status_ImageCopyFailed, ex.Message));
         }
     }
 

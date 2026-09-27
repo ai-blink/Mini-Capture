@@ -25,6 +25,7 @@ using WpfPath = System.Windows.Shapes.Path;
 using WpfPen = System.Windows.Media.Pen;
 using WpfRectangle = System.Windows.Shapes.Rectangle;
 using WpfShape = System.Windows.Shapes.Shape;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -79,7 +80,7 @@ public partial class ViewerWindow
             PushUndoSnapshot((mosaic, nameof(EditableAnnotation.MosaicBlockSize)));
             mosaic.MosaicBlockSize = _mosaicBlockSize;
             RefreshAnnotationVisual(mosaic);
-            MarkAnnotationChanged($"모자이크 크기를 {_mosaicBlockSize}px로 바꿨습니다.");
+            MarkAnnotationChanged(string.Format(Strings.Viewer_Status_MosaicSizeChanged, _mosaicBlockSize));
         }
     }
 
@@ -98,7 +99,7 @@ public partial class ViewerWindow
             PushUndoSnapshot();
             mosaic.MosaicType = _mosaicType;
             RefreshAnnotationVisual(mosaic);
-            MarkAnnotationChanged(_mosaicType == ViewerMosaicType.Blur ? "흐림 모자이크로 바꿨습니다." : "블록 모자이크로 바꿨습니다.");
+            MarkAnnotationChanged(_mosaicType == ViewerMosaicType.Blur ? Strings.Viewer_Status_ChangedToBlur : Strings.Viewer_Status_ChangedToBlock);
         }
 
         UpdateToolContext();
@@ -131,18 +132,18 @@ public partial class ViewerWindow
         }
 
         UpdateToolButtons();
-        const string moveHint = " 옮기려면 객체 선택(V)을 쓰세요.";
+        var moveHint = Strings.Viewer_Hint_Move;
         SetViewerStatus(tool switch
         {
-            ViewerEditTool.Pan => "핸드툴(H): 이미지를 끌어 화면을 이동합니다.",
-            ViewerEditTool.Select => "객체 선택(V): 도형·텍스트·모자이크를 클릭해 선택하고, 끌어서 옮기고, 테두리 핸들로 크기를 바꿉니다. 텍스트는 더블클릭해 고치고, Delete로 삭제합니다.",
-            ViewerEditTool.PixelSelect => "픽셀 영역(M): 드래그해 영역을 잡고, 영역 안을 끌어 옮깁니다. 복사·잘라내기·붙여넣기에 씁니다. Esc로 해제합니다.",
-            ViewerEditTool.Rectangle => "네모(R): 드래그해 새 네모를 그립니다." + moveHint,
-            ViewerEditTool.Ellipse => "동그라미(E): 드래그해 새 동그라미를 그립니다." + moveHint,
-            ViewerEditTool.Mosaic => "모자이크(B): 가릴 영역을 드래그하면 모자이크가 생깁니다. 만든 뒤에도 핸들과 위 설정 줄로 크기·종류를 바꿀 수 있습니다." + moveHint,
-            ViewerEditTool.Pen => "펜(P): 드래그해 자유선을 그립니다." + moveHint,
-            ViewerEditTool.Arrow => "화살표(A): 드래그해 방향을 표시합니다." + moveHint,
-            _ => "텍스트(T): 이미지를 클릭하면 새 텍스트 상자가 생기고 바로 입력합니다." + moveHint
+            ViewerEditTool.Pan => Strings.Viewer_ToolHint_Pan,
+            ViewerEditTool.Select => Strings.Viewer_ToolHint_Select,
+            ViewerEditTool.PixelSelect => Strings.Viewer_ToolHint_PixelSelect,
+            ViewerEditTool.Rectangle => Strings.Viewer_ToolHint_Rectangle + moveHint,
+            ViewerEditTool.Ellipse => Strings.Viewer_ToolHint_Ellipse + moveHint,
+            ViewerEditTool.Mosaic => Strings.Viewer_ToolHint_Mosaic + moveHint,
+            ViewerEditTool.Pen => Strings.Viewer_ToolHint_Pen + moveHint,
+            ViewerEditTool.Arrow => Strings.Viewer_ToolHint_Arrow + moveHint,
+            _ => Strings.Viewer_ToolHint_Text + moveHint
         });
     }
 
@@ -154,7 +155,7 @@ public partial class ViewerWindow
         if (IsEditingAnnotationText())
         {
             Focus();
-            SetViewerStatus("텍스트 편집을 마쳤습니다.");
+            SetViewerStatus(Strings.Viewer_Status_TextEditEnded);
         }
     }
 
@@ -162,14 +163,14 @@ public partial class ViewerWindow
     {
         if (_editableImage is null)
         {
-            SetViewerStatus("자를 이미지가 없습니다.");
+            SetViewerStatus(Strings.Viewer_Status_NothingToCrop);
             return;
         }
 
         if (_isCropMode)
         {
             CloseCropMode();
-            SetViewerStatus("자르기를 취소했습니다.");
+            SetViewerStatus(Strings.Viewer_Status_CropCancelled);
             return;
         }
 
@@ -180,7 +181,7 @@ public partial class ViewerWindow
         CropPanel.Visibility = Visibility.Visible;
         UpdateToolButtons();
         RenderAnnotations();
-        SetViewerStatus("자르기: 왼쪽 패널에서 값을 조절한 뒤 적용하세요.");
+        SetViewerStatus(Strings.Viewer_Status_CropStarted);
     }
 
     private void OnCropValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -213,7 +214,7 @@ public partial class ViewerWindow
     private void OnCancelCropClick(object sender, RoutedEventArgs e)
     {
         CloseCropMode();
-        SetViewerStatus("자르기를 취소했습니다.");
+        SetViewerStatus(Strings.Viewer_Status_CropCancelled);
     }
 
     private void OnApplyCropClick(object sender, RoutedEventArgs e)
@@ -232,7 +233,7 @@ public partial class ViewerWindow
         {
             _selectedColor = color;
             UpdateColorSwatches();
-            SetViewerStatus("색상을 선택했습니다.");
+            SetViewerStatus(Strings.Viewer_Status_ColorSelected);
         }
     }
 
@@ -377,8 +378,8 @@ public partial class ViewerWindow
     {
         SelectAnnotation(annotation);
         SetViewerStatus(annotation is null
-            ? "선택을 해제했습니다. 끌면 새로 그립니다."
-            : "선택했습니다. 핸들로 크기를 바꾸고, 옮기려면 객체 선택(V)을 쓰세요. 끌면 새로 그립니다.");
+            ? Strings.Viewer_Status_SelectionClearedDrawHint
+            : Strings.Viewer_Status_SelectedDrawHint);
     }
 
     // 픽셀 영역 도구에서 영역 안에 올리면 이동 커서를 보여 준다. 객체 위 이동 커서는 요소 Cursor가 맡는다.
@@ -423,7 +424,7 @@ public partial class ViewerWindow
             UpdateHoverCursor(ClampToSurface(e.GetPosition(AnnotationOverlay)));
             if (_pixelSelection is { } moved)
             {
-                SetViewerStatus($"픽셀 영역: {moved.Width} × {moved.Height}px ({moved.X}, {moved.Y})");
+                SetViewerStatus(string.Format(Strings.Viewer_Status_PixelRegion, moved.Width, moved.Height, moved.X, moved.Y));
             }
 
             e.Handled = true;
@@ -477,8 +478,8 @@ public partial class ViewerWindow
             RenderAnnotations();
             UpdateToolContext();
             SetViewerStatus(_pixelSelection is null
-                ? "픽셀 영역을 해제했습니다."
-                : $"픽셀 영역: {rect.Width} × {rect.Height}px — 영역 안을 끌어 옮기고, Ctrl+C/X로 복사·잘라내기, Esc로 해제합니다.");
+                ? Strings.Viewer_Status_PixelRegionCleared
+                : string.Format(Strings.Viewer_Status_PixelRegionHint, rect.Width, rect.Height));
             e.Handled = true;
             return;
         }

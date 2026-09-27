@@ -25,6 +25,7 @@ using WpfPath = System.Windows.Shapes.Path;
 using WpfPen = System.Windows.Media.Pen;
 using WpfRectangle = System.Windows.Shapes.Rectangle;
 using WpfShape = System.Windows.Shapes.Shape;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -68,7 +69,7 @@ public partial class ViewerWindow
             AnnotationOverlay.ReleaseMouseCapture();
             textBox.Focus();
             textBox.CaretIndex = textBox.Text.Length;
-            SetViewerStatus("텍스트 편집 중: 입력을 마치면 Esc를 누르거나 바깥을 클릭하세요.");
+            SetViewerStatus(Strings.Viewer_Status_EditingText);
             e.Handled = true;
             return;
         }
@@ -117,7 +118,7 @@ public partial class ViewerWindow
                 RecordUndo(before);
             }
 
-            MarkAnnotationChanged("선택 항목을 수정했습니다.");
+            MarkAnnotationChanged(Strings.Viewer_Status_SelectionModified);
         }
 
         _dragStartSnapshot = null;
@@ -266,7 +267,7 @@ public partial class ViewerWindow
         PushUndoSnapshot();
         _annotations.Remove(_selectedAnnotation);
         SelectAnnotation(null);
-        MarkAnnotationChanged("선택 항목을 삭제했습니다.");
+        MarkAnnotationChanged(Strings.Viewer_Status_SelectionDeleted);
     }
 
     private void ClearAnnotations()

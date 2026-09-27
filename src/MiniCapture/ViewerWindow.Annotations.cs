@@ -25,6 +25,7 @@ using WpfPath = System.Windows.Shapes.Path;
 using WpfPen = System.Windows.Media.Pen;
 using WpfRectangle = System.Windows.Shapes.Rectangle;
 using WpfShape = System.Windows.Shapes.Shape;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -40,7 +41,7 @@ public partial class ViewerWindow
             PixelBounds = new WpfRect(pixelRect.X, pixelRect.Y, pixelRect.Width, pixelRect.Height)
         };
 
-        AddAnnotation(annotation, ellipse ? "동그라미를 추가했습니다." : "네모를 추가했습니다.");
+        AddAnnotation(annotation, ellipse ? Strings.Viewer_Status_EllipseAdded : Strings.Viewer_Status_RectangleAdded);
     }
 
     private void AddMosaicAnnotation(Int32Rect pixelRect)
@@ -55,8 +56,8 @@ public partial class ViewerWindow
             MosaicBlockSize = _mosaicBlockSize
         };
 
-        AddAnnotation(annotation, (_mosaicType == ViewerMosaicType.Blur ? "흐림 모자이크를 추가했습니다." : "모자이크를 추가했습니다.") +
-            " 핸들로 크기를, 위 설정 줄로 크기·종류를 바로 바꿀 수 있습니다. 옮기려면 객체 선택(V)을 쓰세요.");
+        AddAnnotation(annotation, (_mosaicType == ViewerMosaicType.Blur ? Strings.Viewer_Status_BlurMosaicAdded : Strings.Viewer_Status_MosaicAdded) +
+            Strings.Viewer_Status_MosaicAddedHint);
     }
 
     private void AddTextAnnotation(WpfPoint displayPoint)
@@ -83,7 +84,7 @@ public partial class ViewerWindow
             Text = text
         };
 
-        AddAnnotation(annotation, "텍스트 상자를 추가했습니다.");
+        AddAnnotation(annotation, Strings.Viewer_Status_TextBoxAdded);
         // 만든 직후 이어서 입력한 글자는 "텍스트 상자 추가"와 한 동작으로 되돌린다.
         _undoCoalesceKey = TextUndoKey(annotation);
         if (annotation.Element is System.Windows.Controls.TextBox textBox)
@@ -112,7 +113,7 @@ public partial class ViewerWindow
         }
 
         annotation.PixelBounds = GetPixelPointsBounds(annotation.PixelPoints);
-        AddAnnotation(annotation, "펜 선을 추가했습니다.");
+        AddAnnotation(annotation, Strings.Viewer_Status_PenAdded);
     }
 
     private void AddArrowAnnotation(WpfPoint displayStart, WpfPoint displayEnd)
@@ -126,7 +127,7 @@ public partial class ViewerWindow
         annotation.PixelPoints.Add(DisplayToPixel(displayStart));
         annotation.PixelPoints.Add(DisplayToPixel(displayEnd));
         annotation.PixelBounds = GetPixelPointsBounds(annotation.PixelPoints);
-        AddAnnotation(annotation, "화살표를 추가했습니다.");
+        AddAnnotation(annotation, Strings.Viewer_Status_ArrowAdded);
     }
 
     private void AddAnnotation(EditableAnnotation annotation, string status)
@@ -298,7 +299,7 @@ public partial class ViewerWindow
         {
             PushUndoSnapshot(TextUndoKey(annotation));
             annotation.Text = textBox.Text;
-            MarkAnnotationChanged("텍스트를 수정했습니다.");
+            MarkAnnotationChanged(Strings.Viewer_Status_TextModified);
         };
         textBox.GotKeyboardFocus += (_, _) =>
         {
@@ -400,10 +401,10 @@ public partial class ViewerWindow
                 Stroke = WpfBrushes.White,
                 StrokeThickness = 1,
                 Cursor = GetResizeCursor(edges),
-                ToolTip = "끌어서 크기 변경",
+                ToolTip = Strings.Viewer_ResizeHandleTip,
                 Tag = edges
             };
-            AutomationProperties.SetName(handle, "크기 변경 핸들");
+            AutomationProperties.SetName(handle, Strings.Viewer_ResizeHandle);
             handle.PreviewMouseLeftButtonDown += OnResizeHandleMouseLeftButtonDown;
             var x = edges.Horizontal switch { < 0 => rect.Left, 0 => rect.Left + rect.Width / 2, _ => rect.Right };
             var y = edges.Vertical switch { < 0 => rect.Top, 0 => rect.Top + rect.Height / 2, _ => rect.Bottom };

@@ -25,6 +25,7 @@ using WpfPath = System.Windows.Shapes.Path;
 using WpfPen = System.Windows.Media.Pen;
 using WpfRectangle = System.Windows.Shapes.Rectangle;
 using WpfShape = System.Windows.Shapes.Shape;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -61,7 +62,7 @@ public partial class ViewerWindow
         FinishAnnotationGesture();
         if (CaptureEditSnapshot() is { } current && _editHistory.TryUndo(current, out var previous))
         {
-            RestoreEditSnapshot(previous, "되돌렸습니다.");
+            RestoreEditSnapshot(previous, Strings.Viewer_Status_Undone);
         }
     }
 
@@ -70,7 +71,7 @@ public partial class ViewerWindow
         FinishAnnotationGesture();
         if (CaptureEditSnapshot() is { } current && _editHistory.TryRedo(current, out var next))
         {
-            RestoreEditSnapshot(next, "다시 적용했습니다.");
+            RestoreEditSnapshot(next, Strings.Viewer_Status_Redone);
         }
     }
 
@@ -119,11 +120,11 @@ public partial class ViewerWindow
         }
 
         PushUndoSnapshot();
-        CommitAnnotationsToBitmap("회전 전 주석을 이미지에 적용했습니다.");
+        CommitAnnotationsToBitmap(Strings.Viewer_Status_CommittedBeforeRotate);
         var source = ConvertToPbgra32(_editableImage);
         var transformed = new TransformedBitmap(source, new RotateTransform(angle));
         transformed.Freeze();
-        SetEditableImage(transformed, angle < 0 ? "왼쪽으로 회전했습니다." : "오른쪽으로 회전했습니다.");
+        SetEditableImage(transformed, angle < 0 ? Strings.Viewer_Status_RotatedLeft : Strings.Viewer_Status_RotatedRight);
     }
 
     private void ResetCropControls()
@@ -190,7 +191,7 @@ public partial class ViewerWindow
         if (!int.TryParse(textBox.Text, NumberStyles.Integer, CultureInfo.CurrentCulture, out var value) || value < 0)
         {
             SynchronizeCropControls();
-            SetViewerStatus("자르기 값은 0 이상의 정수로 입력하세요.");
+            SetViewerStatus(Strings.Viewer_Status_CropValueInvalid);
             return;
         }
 
@@ -253,17 +254,17 @@ public partial class ViewerWindow
         if (crop.Width == _editableImage.PixelWidth && crop.Height == _editableImage.PixelHeight)
         {
             CloseCropMode();
-            SetViewerStatus("자르기 값이 없어 원본을 유지했습니다.");
+            SetViewerStatus(Strings.Viewer_Status_CropNoChange);
             return;
         }
 
         PushUndoSnapshot();
-        CommitAnnotationsToBitmap("자르기 전 주석을 이미지에 적용했습니다.");
+        CommitAnnotationsToBitmap(Strings.Viewer_Status_CommittedBeforeCrop);
         var cropped = new CroppedBitmap(ConvertToPbgra32(_editableImage), crop);
         cropped.Freeze();
         _pixelSelection = null;
         CloseCropMode();
-        SetEditableImage(cropped, $"이미지를 {crop.Width} × {crop.Height}px로 잘랐습니다.");
+        SetEditableImage(cropped, string.Format(Strings.Viewer_Status_Cropped, crop.Width, crop.Height));
     }
 
     private void CloseCropMode()

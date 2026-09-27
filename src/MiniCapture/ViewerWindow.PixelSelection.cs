@@ -25,6 +25,7 @@ using WpfPath = System.Windows.Shapes.Path;
 using WpfPen = System.Windows.Media.Pen;
 using WpfRectangle = System.Windows.Shapes.Rectangle;
 using WpfShape = System.Windows.Shapes.Shape;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -59,18 +60,18 @@ public partial class ViewerWindow
     {
         if (!TryGetPixelSelection(out var selection))
         {
-            SetViewerStatus("먼저 복사할 영역을 선택하세요.");
+            SetViewerStatus(Strings.Viewer_Status_SelectRegionToCopy);
             return;
         }
 
         try
         {
             CopyPixelSelectionToClipboard(selection);
-            SetViewerStatus($"선택 영역을 클립보드에 복사했습니다: {selection.Width} × {selection.Height}px");
+            SetViewerStatus(string.Format(Strings.Viewer_Status_RegionCopied, selection.Width, selection.Height));
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.ExternalException)
         {
-            SetViewerStatus($"선택 영역 복사 실패: {ex.Message}");
+            SetViewerStatus(string.Format(Strings.Viewer_Status_RegionCopyFailed, ex.Message));
         }
     }
 
@@ -78,7 +79,7 @@ public partial class ViewerWindow
     {
         if (!TryGetPixelSelection(out var selection))
         {
-            SetViewerStatus("먼저 잘라낼 영역을 선택하세요.");
+            SetViewerStatus(Strings.Viewer_Status_SelectRegionToCut);
             return;
         }
 
@@ -88,7 +89,7 @@ public partial class ViewerWindow
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.ExternalException)
         {
-            SetViewerStatus($"선택 영역 복사 실패: {ex.Message}");
+            SetViewerStatus(string.Format(Strings.Viewer_Status_RegionCopyFailed, ex.Message));
             return;
         }
 
@@ -98,15 +99,15 @@ public partial class ViewerWindow
         }
 
         PushUndoSnapshot();
-        CommitAnnotationsToBitmap("잘라내기 전 주석을 이미지에 적용했습니다.");
-        SetEditableImage(ClearPixelRectangle(_editableImage, selection), "선택 영역을 잘라냈습니다.");
+        CommitAnnotationsToBitmap(Strings.Viewer_Status_CommittedBeforeCut);
+        SetEditableImage(ClearPixelRectangle(_editableImage, selection), Strings.Viewer_Status_RegionCut);
     }
 
     private void PasteIntoPixelSelection()
     {
         if (_editableImage is null)
         {
-            SetViewerStatus("붙여넣을 이미지가 없습니다.");
+            SetViewerStatus(Strings.Viewer_Status_NothingToPasteInto);
             return;
         }
 
@@ -117,27 +118,27 @@ public partial class ViewerWindow
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
         {
-            SetViewerStatus($"클립보드를 읽을 수 없습니다: {ex.Message}");
+            SetViewerStatus(string.Format(Strings.Viewer_Status_ClipboardUnreadable, ex.Message));
             return;
         }
 
         if (clipboardImage is null || clipboardImage.PixelWidth < 1 || clipboardImage.PixelHeight < 1)
         {
-            SetViewerStatus("클립보드에 붙여넣을 이미지가 없습니다.");
+            SetViewerStatus(Strings.Viewer_Status_ClipboardNoImage);
             return;
         }
 
         var target = GetPasteTarget(clipboardImage);
         if (target.Width < 1 || target.Height < 1)
         {
-            SetViewerStatus("붙여넣을 수 있는 이미지 영역이 없습니다.");
+            SetViewerStatus(Strings.Viewer_Status_NoPasteArea);
             return;
         }
 
         PushUndoSnapshot();
-        CommitAnnotationsToBitmap("붙여넣기 전 주석을 이미지에 적용했습니다.");
+        CommitAnnotationsToBitmap(Strings.Viewer_Status_CommittedBeforePaste);
         _pixelSelection = target;
-        SetEditableImage(PasteBitmap(_editableImage, clipboardImage, target), "선택 영역 위치에 이미지를 붙여넣었습니다.");
+        SetEditableImage(PasteBitmap(_editableImage, clipboardImage, target), Strings.Viewer_Status_Pasted);
     }
 
     private void CopyPixelSelectionToClipboard(Int32Rect selection)

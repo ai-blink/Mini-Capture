@@ -237,4 +237,218 @@ Windows のセキュリティポリシーにより、アプリが既存の既定
   <data name="Folder_Pictures" xml:space="preserve"><value>ピクチャ</value></data>
   <data name="Folder_QuickAccess" xml:space="preserve"><value>クイックアクセス</value></data>
   <data name="Folder_ThisPc" xml:space="preserve"><value>PC</value></data>
+  <data name="Viewer_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Viewer_SaveTip" xml:space="preserve"><value>保存 (Ctrl+S)</value></data>
+  <data name="Viewer_CopyImage" xml:space="preserve"><value>画像をコピー</value></data>
+  <data name="Viewer_CopyImageTip" xml:space="preserve"><value>画像をコピー (Ctrl+C)</value></data>
+  <data name="Viewer_CopyFilePath" xml:space="preserve"><value>ファイルパスをコピー</value></data>
+  <data name="Viewer_CopyPath" xml:space="preserve"><value>パスをコピー</value></data>
+  <data name="Viewer_CopyFilePathTip" xml:space="preserve"><value>ファイルパスをコピー (Ctrl+Shift+C)</value></data>
+  <data name="Viewer_Group_File" xml:space="preserve"><value>ファイル</value></data>
+  <data name="Viewer_Open" xml:space="preserve"><value>開く</value></data>
+  <data name="Viewer_OpenFolder" xml:space="preserve"><value>フォルダーを開く</value></data>
+  <data name="Viewer_CopyImageWithMarkupTip" xml:space="preserve"><value>マークアップ込みで画像をコピー</value></data>
+  <data name="Viewer_Group_View" xml:space="preserve"><value>表示</value></data>
+  <data name="Viewer_Previous" xml:space="preserve"><value>前へ</value></data>
+  <data name="Viewer_PreviousTip" xml:space="preserve"><value>前の画像</value></data>
+  <data name="Viewer_Next" xml:space="preserve"><value>次へ</value></data>
+  <data name="Viewer_NextTip" xml:space="preserve"><value>次の画像</value></data>
+  <data name="Viewer_Fit" xml:space="preserve"><value>合わせる</value></data>
+  <data name="Viewer_FitTip" xml:space="preserve"><value>ウィンドウに合わせる</value></data>
+  <data name="Viewer_Actual" xml:space="preserve"><value>原寸</value></data>
+  <data name="Viewer_ActualTip" xml:space="preserve"><value>原寸大</value></data>
+  <data name="Viewer_ZoomOut" xml:space="preserve"><value>縮小</value></data>
+  <data name="Viewer_ZoomPercent" xml:space="preserve"><value>ズーム率</value></data>
+  <data name="Viewer_ZoomPercentTip" xml:space="preserve"><value>ズーム率を直接入力 (10%~800%)</value></data>
+  <data name="Viewer_ZoomIn" xml:space="preserve"><value>拡大</value></data>
+  <data name="Viewer_Refresh" xml:space="preserve"><value>更新</value></data>
+  <data name="Viewer_RefreshTip" xml:space="preserve"><value>ファイル一覧を更新 (F5)</value></data>
+  <data name="Viewer_Group_Markup" xml:space="preserve"><value>マークアップ</value></data>
+  <data name="Viewer_Tool_Hand" xml:space="preserve"><value>手のひら</value></data>
+  <data name="Viewer_Tool_HandTip" xml:space="preserve"><value>手のひら (H) — ドラッグ: 画面を移動。他のツール中は Space を押しながらドラッグ</value></data>
+  <data name="Viewer_Tool_Select" xml:space="preserve"><value>オブジェクト選択</value></data>
+  <data name="Viewer_Tool_SelectTip" xml:space="preserve"><value>オブジェクト選択 (V, Esc) — クリック: 選択 / ドラッグ: 移動 / 枠のハンドル: サイズ変更 / テキストをダブルクリック: 編集 / Delete: 削除</value></data>
+  <data name="Viewer_Tool_Pen" xml:space="preserve"><value>ペン</value></data>
+  <data name="Viewer_Tool_PenTip" xml:space="preserve"><value>ペン (P) — ドラッグ: フリーハンド線</value></data>
+  <data name="Viewer_Tool_Arrow" xml:space="preserve"><value>矢印</value></data>
+  <data name="Viewer_Tool_ArrowTip" xml:space="preserve"><value>矢印 (A) — ドラッグ: 矢印</value></data>
+  <data name="Viewer_Tool_Rectangle" xml:space="preserve"><value>四角形</value></data>
+  <data name="Viewer_Tool_RectangleTip" xml:space="preserve"><value>四角形 (R) — ドラッグ: 四角形</value></data>
+  <data name="Viewer_Tool_Ellipse" xml:space="preserve"><value>楕円</value></data>
+  <data name="Viewer_Tool_EllipseTip" xml:space="preserve"><value>楕円 (E) — ドラッグ: 楕円</value></data>
+  <data name="Viewer_Tool_Text" xml:space="preserve"><value>テキスト</value></data>
+  <data name="Viewer_Tool_TextTip" xml:space="preserve"><value>テキスト (T) — クリック: 新しいテキストボックス。既存のテキストはボックスをクリックして直接編集</value></data>
+  <data name="Viewer_Tool_Mosaic" xml:space="preserve"><value>モザイク</value></data>
+  <data name="Viewer_Tool_MosaicTip" xml:space="preserve"><value>モザイク (B) — ドラッグ: 隠す範囲にモザイクを追加。作成後はオブジェクト選択で移動やサイズ・種類の変更ができます</value></data>
+  <data name="Viewer_Delete" xml:space="preserve"><value>削除</value></data>
+  <data name="Viewer_DeleteTip" xml:space="preserve"><value>選択項目を削除</value></data>
+  <data name="Viewer_Undo" xml:space="preserve"><value>元に戻す</value></data>
+  <data name="Viewer_Redo" xml:space="preserve"><value>やり直し</value></data>
+  <data name="Viewer_RedoTip" xml:space="preserve"><value>元に戻した操作をやり直す</value></data>
+  <data name="Viewer_RotateLeft" xml:space="preserve"><value>左回転</value></data>
+  <data name="Viewer_RotateLeftTip" xml:space="preserve"><value>左に回転</value></data>
+  <data name="Viewer_RotateRight" xml:space="preserve"><value>右回転</value></data>
+  <data name="Viewer_RotateRightTip" xml:space="preserve"><value>右に回転</value></data>
+  <data name="Viewer_Group_Region" xml:space="preserve"><value>範囲</value></data>
+  <data name="Viewer_Tool_PixelRegion" xml:space="preserve"><value>ピクセル範囲</value></data>
+  <data name="Viewer_Tool_PixelRegionTip" xml:space="preserve"><value>ピクセル範囲 (M) — ドラッグ: 範囲指定 / 範囲内をドラッグ: 移動 / コピー・切り取り・貼り付け / Esc: 解除</value></data>
+  <data name="Viewer_Copy" xml:space="preserve"><value>コピー</value></data>
+  <data name="Viewer_CopyRegionTip" xml:space="preserve"><value>ピクセル範囲をコピー (Ctrl+C)</value></data>
+  <data name="Viewer_Cut" xml:space="preserve"><value>切り取り</value></data>
+  <data name="Viewer_CutRegionTip" xml:space="preserve"><value>ピクセル範囲をクリップボードに切り取り (Ctrl+X)</value></data>
+  <data name="Viewer_Paste" xml:space="preserve"><value>貼り付け</value></data>
+  <data name="Viewer_PasteTip" xml:space="preserve"><value>ピクセル範囲の位置に貼り付け、範囲がなければ中央 (Ctrl+V)</value></data>
+  <data name="Viewer_Crop" xml:space="preserve"><value>トリミング</value></data>
+  <data name="Viewer_CropTip" xml:space="preserve"><value>画像の上下左右をトリミング</value></data>
+  <data name="Viewer_ToolSettings" xml:space="preserve"><value>ツール設定</value></data>
+  <data name="Viewer_Settings_Pen" xml:space="preserve"><value>ペン設定</value></data>
+  <data name="Viewer_Color" xml:space="preserve"><value>色</value></data>
+  <data name="Viewer_Color_Red" xml:space="preserve"><value>赤</value></data>
+  <data name="Viewer_Color_Yellow" xml:space="preserve"><value>黄</value></data>
+  <data name="Viewer_Color_Green" xml:space="preserve"><value>緑</value></data>
+  <data name="Viewer_Color_Blue" xml:space="preserve"><value>青</value></data>
+  <data name="Viewer_Color_White" xml:space="preserve"><value>白</value></data>
+  <data name="Viewer_Color_Black" xml:space="preserve"><value>黒</value></data>
+  <data name="Viewer_Thickness" xml:space="preserve"><value>太さ</value></data>
+  <data name="Viewer_DefaultText" xml:space="preserve"><value>新規テキストの既定文字列</value></data>
+  <data name="Viewer_DefaultTextTip" xml:space="preserve"><value>画像をクリックして新しいテキストボックスを作るときの最初の文字列です。作成後は画像上のボックスで直接編集します。</value></data>
+  <data name="Viewer_Size" xml:space="preserve"><value>サイズ</value></data>
+  <data name="Viewer_MosaicSize" xml:space="preserve"><value>モザイクサイズ</value></data>
+  <data name="Viewer_Type" xml:space="preserve"><value>種類</value></data>
+  <data name="Viewer_MosaicBlock" xml:space="preserve"><value>ブロックモザイク</value></data>
+  <data name="Viewer_Block" xml:space="preserve"><value>ブロック</value></data>
+  <data name="Viewer_MosaicBlockTip" xml:space="preserve"><value>四角ブロックモザイク</value></data>
+  <data name="Viewer_MosaicBlur" xml:space="preserve"><value>ぼかしモザイク</value></data>
+  <data name="Viewer_Blur" xml:space="preserve"><value>ぼかし</value></data>
+  <data name="Viewer_BlurTip" xml:space="preserve"><value>ガウスぼかし</value></data>
+  <data name="Viewer_RefreshFiles" xml:space="preserve"><value>ファイル一覧を更新</value></data>
+  <data name="Viewer_RefreshFilesTip" xml:space="preserve"><value>現在のフォルダーのファイル一覧を更新 (F5)</value></data>
+  <data name="Viewer_View_Details" xml:space="preserve"><value>詳細</value></data>
+  <data name="Viewer_View_Small" xml:space="preserve"><value>小</value></data>
+  <data name="Viewer_View_Medium" xml:space="preserve"><value>中</value></data>
+  <data name="Viewer_View_Large" xml:space="preserve"><value>大</value></data>
+  <data name="Viewer_CropSettings" xml:space="preserve"><value>トリミング設定</value></data>
+  <data name="Viewer_Side_Left" xml:space="preserve"><value>左</value></data>
+  <data name="Viewer_Side_Right" xml:space="preserve"><value>右</value></data>
+  <data name="Viewer_Side_Top" xml:space="preserve"><value>上</value></data>
+  <data name="Viewer_Side_Bottom" xml:space="preserve"><value>下</value></data>
+  <data name="Viewer_CropLeft" xml:space="preserve"><value>左をトリミング</value></data>
+  <data name="Viewer_CropLeftPixels" xml:space="preserve"><value>左のトリミング量 (px)</value></data>
+  <data name="Viewer_CropRight" xml:space="preserve"><value>右をトリミング</value></data>
+  <data name="Viewer_CropRightPixels" xml:space="preserve"><value>右のトリミング量 (px)</value></data>
+  <data name="Viewer_CropTop" xml:space="preserve"><value>上をトリミング</value></data>
+  <data name="Viewer_CropTopPixels" xml:space="preserve"><value>上のトリミング量 (px)</value></data>
+  <data name="Viewer_CropBottom" xml:space="preserve"><value>下をトリミング</value></data>
+  <data name="Viewer_CropBottomPixels" xml:space="preserve"><value>下のトリミング量 (px)</value></data>
+  <data name="Viewer_CropCancel" xml:space="preserve"><value>トリミングをキャンセル</value></data>
+  <data name="Viewer_CropApply" xml:space="preserve"><value>トリミングを適用</value></data>
+  <data name="Viewer_Apply" xml:space="preserve"><value>適用</value></data>
+  <data name="Viewer_NoImage" xml:space="preserve"><value>表示する画像がありません。</value></data>
+  <data name="Viewer_Idle" xml:space="preserve"><value>待機</value></data>
+  <data name="Viewer_Zoom" xml:space="preserve"><value>ズーム</value></data>
+  <data name="Viewer_Status_EditingText" xml:space="preserve"><value>テキスト編集中: 入力が終わったら Esc を押すか外側をクリックしてください。</value></data>
+  <data name="Viewer_Status_SelectionModified" xml:space="preserve"><value>選択項目を変更しました。</value></data>
+  <data name="Viewer_Status_SelectionDeleted" xml:space="preserve"><value>選択項目を削除しました。</value></data>
+  <data name="Viewer_Status_EllipseAdded" xml:space="preserve"><value>楕円を追加しました。</value></data>
+  <data name="Viewer_Status_RectangleAdded" xml:space="preserve"><value>四角形を追加しました。</value></data>
+  <data name="Viewer_Status_BlurMosaicAdded" xml:space="preserve"><value>ぼかしモザイクを追加しました。</value></data>
+  <data name="Viewer_Status_MosaicAdded" xml:space="preserve"><value>モザイクを追加しました。</value></data>
+  <data name="Viewer_Status_MosaicAddedHint" xml:space="preserve"><value> ハンドルでサイズを、上の設定バーでサイズ・種類を変更できます。移動にはオブジェクト選択 (V) を使ってください。</value></data>
+  <data name="Viewer_Status_TextBoxAdded" xml:space="preserve"><value>テキストボックスを追加しました。</value></data>
+  <data name="Viewer_Status_PenAdded" xml:space="preserve"><value>ペンの線を追加しました。</value></data>
+  <data name="Viewer_Status_ArrowAdded" xml:space="preserve"><value>矢印を追加しました。</value></data>
+  <data name="Viewer_Status_TextModified" xml:space="preserve"><value>テキストを変更しました。</value></data>
+  <data name="Viewer_ResizeHandleTip" xml:space="preserve"><value>ドラッグでサイズ変更</value></data>
+  <data name="Viewer_ResizeHandle" xml:space="preserve"><value>サイズ変更ハンドル</value></data>
+  <data name="Viewer_Status_RefreshingFolder" xml:space="preserve"><value>現在のフォルダーのファイル一覧を更新しています。</value></data>
+  <data name="Viewer_ExternalFolder" xml:space="preserve"><value>外部フォルダー</value></data>
+  <data name="Viewer_FileCountFiles" xml:space="preserve"><value>{0:0} 個のファイル</value></data>
+  <data name="Viewer_Status_DetailsOnly" xml:space="preserve"><value>{0}は詳細表示でのみ表示します。応答性のためアイコン表示は制限されます。</value></data>
+  <data name="Viewer_Status_NothingToSave" xml:space="preserve"><value>保存する画像がありません。</value></data>
+  <data name="Viewer_Status_NoSaveTarget" xml:space="preserve"><value>保存先のファイルを選択できません。</value></data>
+  <data name="Viewer_Status_Saved" xml:space="preserve"><value>保存しました: {0}</value></data>
+  <data name="Viewer_Status_SaveFailed" xml:space="preserve"><value>保存失敗: {0}</value></data>
+  <data name="Viewer_FileCount" xml:space="preserve"><value>{0:0}件</value></data>
+  <data name="Viewer_Status_NothingToOpen" xml:space="preserve"><value>開くファイルがありません。</value></data>
+  <data name="Viewer_Status_Opened" xml:space="preserve"><value>開く: {0}</value></data>
+  <data name="Viewer_Status_FolderOpened" xml:space="preserve"><value>フォルダーを開く: {0}</value></data>
+  <data name="Viewer_Status_NoPathToCopy" xml:space="preserve"><value>コピーするファイルパスがありません。</value></data>
+  <data name="Viewer_Status_ClipboardCopyFailed" xml:space="preserve"><value>クリップボードへのコピー失敗: {0}</value></data>
+  <data name="Viewer_Status_NoImageToCopy" xml:space="preserve"><value>コピーする画像がありません。</value></data>
+  <data name="Viewer_Status_Undone" xml:space="preserve"><value>元に戻しました。</value></data>
+  <data name="Viewer_Status_Redone" xml:space="preserve"><value>やり直しました。</value></data>
+  <data name="Viewer_Status_CommittedBeforeRotate" xml:space="preserve"><value>回転前に注釈を画像に適用しました。</value></data>
+  <data name="Viewer_Status_RotatedLeft" xml:space="preserve"><value>左に回転しました。</value></data>
+  <data name="Viewer_Status_RotatedRight" xml:space="preserve"><value>右に回転しました。</value></data>
+  <data name="Viewer_Status_CropValueInvalid" xml:space="preserve"><value>トリミング値は0以上の整数で入力してください。</value></data>
+  <data name="Viewer_Status_CropNoChange" xml:space="preserve"><value>トリミング値がないため元の画像を維持しました。</value></data>
+  <data name="Viewer_Status_CommittedBeforeCrop" xml:space="preserve"><value>トリミング前に注釈を画像に適用しました。</value></data>
+  <data name="Viewer_Status_Cropped" xml:space="preserve"><value>画像を {0} × {1}px にトリミングしました。</value></data>
+  <data name="Viewer_Status_MosaicSizeChanged" xml:space="preserve"><value>モザイクサイズを {0}px に変更しました。</value></data>
+  <data name="Viewer_Status_ChangedToBlur" xml:space="preserve"><value>ぼかしモザイクに変更しました。</value></data>
+  <data name="Viewer_Status_ChangedToBlock" xml:space="preserve"><value>ブロックモザイクに変更しました。</value></data>
+  <data name="Viewer_Hint_Move" xml:space="preserve"><value> 移動にはオブジェクト選択 (V) を使ってください。</value></data>
+  <data name="Viewer_ToolHint_Pan" xml:space="preserve"><value>手のひら (H): 画像をドラッグして画面を移動します。</value></data>
+  <data name="Viewer_ToolHint_Select" xml:space="preserve"><value>オブジェクト選択 (V): 図形・テキスト・モザイクをクリックして選択し、ドラッグで移動、枠のハンドルでサイズを変更します。テキストはダブルクリックで編集、Delete で削除します。</value></data>
+  <data name="Viewer_ToolHint_PixelSelect" xml:space="preserve"><value>ピクセル範囲 (M): ドラッグで範囲を指定し、範囲内をドラッグして移動します。コピー・切り取り・貼り付けに使います。Esc で解除します。</value></data>
+  <data name="Viewer_ToolHint_Rectangle" xml:space="preserve"><value>四角形 (R): ドラッグで新しい四角形を描きます。</value></data>
+  <data name="Viewer_ToolHint_Ellipse" xml:space="preserve"><value>楕円 (E): ドラッグで新しい楕円を描きます。</value></data>
+  <data name="Viewer_ToolHint_Mosaic" xml:space="preserve"><value>モザイク (B): 隠す範囲をドラッグするとモザイクができます。作成後もハンドルと上の設定バーでサイズ・種類を変更できます。</value></data>
+  <data name="Viewer_ToolHint_Pen" xml:space="preserve"><value>ペン (P): ドラッグでフリーハンド線を描きます。</value></data>
+  <data name="Viewer_ToolHint_Arrow" xml:space="preserve"><value>矢印 (A): ドラッグで方向を示します。</value></data>
+  <data name="Viewer_ToolHint_Text" xml:space="preserve"><value>テキスト (T): 画像をクリックすると新しいテキストボックスができ、すぐ入力できます。</value></data>
+  <data name="Viewer_Status_TextEditEnded" xml:space="preserve"><value>テキスト編集を終了しました。</value></data>
+  <data name="Viewer_Status_NothingToCrop" xml:space="preserve"><value>トリミングする画像がありません。</value></data>
+  <data name="Viewer_Status_CropCancelled" xml:space="preserve"><value>トリミングをキャンセルしました。</value></data>
+  <data name="Viewer_Status_CropStarted" xml:space="preserve"><value>トリミング: 左のパネルで値を調整してから適用してください。</value></data>
+  <data name="Viewer_Status_ColorSelected" xml:space="preserve"><value>色を選択しました。</value></data>
+  <data name="Viewer_Status_SelectionClearedDrawHint" xml:space="preserve"><value>選択を解除しました。ドラッグすると新しく描きます。</value></data>
+  <data name="Viewer_Status_SelectedDrawHint" xml:space="preserve"><value>選択しました。ハンドルでサイズを変更し、移動にはオブジェクト選択 (V) を使ってください。ドラッグすると新しく描きます。</value></data>
+  <data name="Viewer_Status_PixelRegion" xml:space="preserve"><value>ピクセル範囲: {0} × {1}px ({2}, {3})</value></data>
+  <data name="Viewer_Status_PixelRegionCleared" xml:space="preserve"><value>ピクセル範囲を解除しました。</value></data>
+  <data name="Viewer_Status_PixelRegionHint" xml:space="preserve"><value>ピクセル範囲: {0} × {1}px — 範囲内をドラッグで移動、Ctrl+C/X でコピー・切り取り、Esc で解除します。</value></data>
+  <data name="Viewer_Status_FileSort" xml:space="preserve"><value>ファイルの並べ替え: {0} {1}</value></data>
+  <data name="Viewer_Column_Name" xml:space="preserve"><value>名前</value></data>
+  <data name="Viewer_Column_ModifiedDate" xml:space="preserve"><value>更新日時</value></data>
+  <data name="Viewer_Column_Type" xml:space="preserve"><value>種類</value></data>
+  <data name="Viewer_Column_Size" xml:space="preserve"><value>サイズ</value></data>
+  <data name="Viewer_SortByFormat" xml:space="preserve"><value>{0}で並べ替え</value></data>
+  <data name="Viewer_SortAscending" xml:space="preserve"><value>昇順</value></data>
+  <data name="Viewer_SortDescending" xml:space="preserve"><value>降順</value></data>
+  <data name="Viewer_Status_ReadingLibrary" xml:space="preserve"><value>キャプチャライブラリを読み込んでいます。</value></data>
+  <data name="Viewer_Status_ReadingFolder" xml:space="preserve"><value>フォルダーを読み込んでいます。</value></data>
+  <data name="Viewer_Reading" xml:space="preserve"><value>読み込み中...</value></data>
+  <data name="Viewer_FullPath" xml:space="preserve"><value>フルパス</value></data>
+  <data name="Viewer_Status_NoImagesInFolder" xml:space="preserve"><value>選択したフォルダーに画像がありません。</value></data>
+  <data name="Viewer_ExternalFolderDetailsSuffix" xml:space="preserve"><value> · 応答性のため外部フォルダーは詳細表示で表示します。</value></data>
+  <data name="Viewer_LargeFolderDetailsSuffix" xml:space="preserve"><value> · 大容量フォルダーは詳細表示で表示します。</value></data>
+  <data name="Viewer_Status_FolderLoaded" xml:space="preserve"><value>フォルダー読み込み完了: {0:0}件、{1:0}ms{2}</value></data>
+  <data name="Viewer_FilePosition" xml:space="preserve"><value>{0:0}/{1:0}件</value></data>
+  <data name="Viewer_Status_ReadingExternalFolder" xml:space="preserve"><value>外部画像フォルダーを読み込んでいます。</value></data>
+  <data name="Viewer_Status_DrawingCancelled" xml:space="preserve"><value>描画をキャンセルしました。</value></data>
+  <data name="Viewer_Status_SelectionCleared" xml:space="preserve"><value>選択を解除しました。</value></data>
+  <data name="Viewer_Status_SelectRegionToCopy" xml:space="preserve"><value>先にコピーする範囲を選択してください。</value></data>
+  <data name="Viewer_Status_RegionCopied" xml:space="preserve"><value>選択範囲をクリップボードにコピーしました: {0} × {1}px</value></data>
+  <data name="Viewer_Status_RegionCopyFailed" xml:space="preserve"><value>選択範囲のコピーに失敗: {0}</value></data>
+  <data name="Viewer_Status_SelectRegionToCut" xml:space="preserve"><value>先に切り取る範囲を選択してください。</value></data>
+  <data name="Viewer_Status_CommittedBeforeCut" xml:space="preserve"><value>切り取り前に注釈を画像に適用しました。</value></data>
+  <data name="Viewer_Status_RegionCut" xml:space="preserve"><value>選択範囲を切り取りました。</value></data>
+  <data name="Viewer_Status_NothingToPasteInto" xml:space="preserve"><value>貼り付け先の画像がありません。</value></data>
+  <data name="Viewer_Status_ClipboardUnreadable" xml:space="preserve"><value>クリップボードを読み取れません: {0}</value></data>
+  <data name="Viewer_Status_ClipboardNoImage" xml:space="preserve"><value>クリップボードに貼り付ける画像がありません。</value></data>
+  <data name="Viewer_Status_NoPasteArea" xml:space="preserve"><value>貼り付けできる画像範囲がありません。</value></data>
+  <data name="Viewer_Status_CommittedBeforePaste" xml:space="preserve"><value>貼り付け前に注釈を画像に適用しました。</value></data>
+  <data name="Viewer_Status_Pasted" xml:space="preserve"><value>選択範囲の位置に画像を貼り付けました。</value></data>
+  <data name="Viewer_Modified" xml:space="preserve"><value>変更あり</value></data>
+  <data name="Viewer_Settings_SelectedMosaic" xml:space="preserve"><value>選択したモザイク</value></data>
+  <data name="Viewer_Settings_Arrow" xml:space="preserve"><value>矢印設定</value></data>
+  <data name="Viewer_Settings_Rectangle" xml:space="preserve"><value>四角形設定</value></data>
+  <data name="Viewer_Settings_Ellipse" xml:space="preserve"><value>楕円設定</value></data>
+  <data name="Viewer_Settings_Text" xml:space="preserve"><value>テキスト設定</value></data>
+  <data name="Viewer_Settings_Mosaic" xml:space="preserve"><value>モザイク設定</value></data>
+  <data name="Viewer_ReadFailed" xml:space="preserve"><value>読み込み失敗</value></data>
+  <data name="Viewer_Status_FolderUnreadable" xml:space="preserve"><value>フォルダーを読み取れません: {0}</value></data>
+  <data name="Viewer_Status_LoadingImage" xml:space="preserve"><value>画像を読み込んでいます。</value></data>
+  <data name="Viewer_Status_ImageOpenFailed" xml:space="preserve"><value>画像を開けません: {0}</value></data>
+  <data name="Viewer_Status_ZoomInvalid" xml:space="preserve"><value>ズーム値は10%~800%の数値で入力してください。</value></data>
 </root>

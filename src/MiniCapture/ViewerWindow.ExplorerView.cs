@@ -25,6 +25,7 @@ using WpfPath = System.Windows.Shapes.Path;
 using WpfPen = System.Windows.Media.Pen;
 using WpfRectangle = System.Windows.Shapes.Rectangle;
 using WpfShape = System.Windows.Shapes.Shape;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -81,7 +82,7 @@ public partial class ViewerWindow
         }
 
         ApplyFileSort();
-        SetViewerStatus($"파일 정렬: {GetSortColumnLabel(_fileSortColumn)} {GetSortDirectionLabel(_fileSortDirection)}");
+        SetViewerStatus(string.Format(Strings.Viewer_Status_FileSort, GetSortColumnLabel(_fileSortColumn), GetSortDirectionLabel(_fileSortDirection)));
     }
 
     internal static bool RequiresDetailsView(int fileCount) =>
@@ -302,25 +303,25 @@ public partial class ViewerWindow
             {
                 new GridViewColumn
                 {
-                    Header = CreateSortableColumnHeader("이름", ViewerFileSortColumn.Name),
+                    Header = CreateSortableColumnHeader(Strings.Viewer_Column_Name, ViewerFileSortColumn.Name),
                     Width = 180,
                     DisplayMemberBinding = new WpfBinding(nameof(CaptureImageFile.FileName))
                 },
                 new GridViewColumn
                 {
-                    Header = CreateSortableColumnHeader("수정한 날짜", ViewerFileSortColumn.ModifiedDate),
+                    Header = CreateSortableColumnHeader(Strings.Viewer_Column_ModifiedDate, ViewerFileSortColumn.ModifiedDate),
                     Width = 116,
                     DisplayMemberBinding = new WpfBinding(nameof(CaptureImageFile.ModifiedText))
                 },
                 new GridViewColumn
                 {
-                    Header = CreateSortableColumnHeader("유형", ViewerFileSortColumn.Type),
+                    Header = CreateSortableColumnHeader(Strings.Viewer_Column_Type, ViewerFileSortColumn.Type),
                     Width = 48,
                     DisplayMemberBinding = new WpfBinding(nameof(CaptureImageFile.Extension))
                 },
                 new GridViewColumn
                 {
-                    Header = CreateSortableColumnHeader("크기", ViewerFileSortColumn.Size),
+                    Header = CreateSortableColumnHeader(Strings.Viewer_Column_Size, ViewerFileSortColumn.Size),
                     Width = 70,
                     DisplayMemberBinding = new WpfBinding(nameof(CaptureImageFile.SizeText))
                 }
@@ -335,7 +336,7 @@ public partial class ViewerWindow
             Tag = sortColumn,
             Content = GetSortHeaderText(label, sortColumn)
         };
-        AutomationProperties.SetName(header, $"{label} 기준 정렬");
+        AutomationProperties.SetName(header, string.Format(Strings.Viewer_SortByFormat, label));
         header.Click += OnFileColumnHeaderClick;
         return header;
     }
@@ -369,13 +370,13 @@ public partial class ViewerWindow
 
     private static string GetSortColumnLabel(ViewerFileSortColumn sortColumn) => sortColumn switch
     {
-        ViewerFileSortColumn.Name => "이름",
-        ViewerFileSortColumn.ModifiedDate => "수정한 날짜",
-        ViewerFileSortColumn.Type => "유형",
-        ViewerFileSortColumn.Size => "크기",
-        _ => "이름"
+        ViewerFileSortColumn.Name => Strings.Viewer_Column_Name,
+        ViewerFileSortColumn.ModifiedDate => Strings.Viewer_Column_ModifiedDate,
+        ViewerFileSortColumn.Type => Strings.Viewer_Column_Type,
+        ViewerFileSortColumn.Size => Strings.Viewer_Column_Size,
+        _ => Strings.Viewer_Column_Name
     };
 
     private static string GetSortDirectionLabel(ListSortDirection sortDirection) =>
-        sortDirection == ListSortDirection.Ascending ? "오름차순" : "내림차순";
+        sortDirection == ListSortDirection.Ascending ? Strings.Viewer_SortAscending : Strings.Viewer_SortDescending;
 }

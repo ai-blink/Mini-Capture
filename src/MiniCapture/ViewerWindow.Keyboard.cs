@@ -25,6 +25,7 @@ using WpfPath = System.Windows.Shapes.Path;
 using WpfPen = System.Windows.Media.Pen;
 using WpfRectangle = System.Windows.Shapes.Rectangle;
 using WpfShape = System.Windows.Shapes.Shape;
+using MiniCapture.Resources;
 
 namespace MiniCapture;
 
@@ -197,7 +198,7 @@ public partial class ViewerWindow
         if (_isCropMode)
         {
             CloseCropMode();
-            SetViewerStatus("자르기를 취소했습니다.");
+            SetViewerStatus(Strings.Viewer_Status_CropCancelled);
             return;
         }
 
@@ -207,7 +208,7 @@ public partial class ViewerWindow
             _penPoints.Clear();
             RemovePreviewShape();
             AnnotationOverlay.ReleaseMouseCapture();
-            SetViewerStatus("그리기를 취소했습니다.");
+            SetViewerStatus(Strings.Viewer_Status_DrawingCancelled);
             return;
         }
 
@@ -216,7 +217,7 @@ public partial class ViewerWindow
             SelectAnnotation(null);
             ClearPixelSelection();
             UpdateToolContext();
-            SetViewerStatus("선택을 해제했습니다.");
+            SetViewerStatus(Strings.Viewer_Status_SelectionCleared);
             return;
         }
 

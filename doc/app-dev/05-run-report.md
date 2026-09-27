@@ -1760,3 +1760,9 @@ Allow users to exclude a window-selection target by choosing a running process o
 - `CaptureHotkeyManager.Register`가 `HotkeyRegistrationResult(Succeeded, Message)`를 반환 — `MainWindow`의 한국어 접두어 판정 `StartsWith("등록 실패")` 제거(번역 후에도 실패 판정 유지).
 - 검증: 빌드 경고 0·오류 0, 테스트 33/33, 리플렉션 19/19 키가 4개 문화권에서 번역값. 뷰어 밖 한국어 리터럴은 `AppLanguage`의 자국어 이름 `한국어`(의도)만 남음.
 - NEEDS_USER_UI_CHECK: 비한국어로 키 감지 대화상자와 뷰어 폴더 트리 루트 이름 확인.
+
+## i18n 4차 — ViewerWindow
+
+- `ViewerWindow.xaml` 한국어 속성 139개를 한국어 값 기준으로 키에 자동 매핑해 `{x:Static res:Strings.*}`로 교체, 부분 클래스 13개 파일의 리터럴 약 115개를 `Strings.*`/`string.Format`으로 교체(+214 `Viewer_*` 키, 기존 `Main_Status_*`·`Main_Result_Saved`·`Folder_CaptureRoot`·`Common_Cancel` 재사용). 툴바 라벨은 `AutomationProperties.Name`에서 오므로 함께 번역된다.
+- 검증: 빌드 경고 0·오류 0, 테스트 33/33, 리플렉션 214/214 키가 4개 문화권에서 번역값, Debug 빌드를 이미지 인자로 실행해 뷰어 창 로드와 새 키로 만든 UIA 이름 107개 확인(기본 한국어) 후 배포본 재실행. 주석과 자국어 이름 `한국어` 외 한국어 UI 리터럴 0건.
+- NEEDS_USER_UI_CHECK: 영어·중국어·일본어에서 보통 창 폭의 툴바 라벨(영어·일본어가 길어 줄바꿈·버튼 폭 변화 가능), 툴팁, 왼쪽 설정 패널, 자르기 패널, 세부 정보 열 머리글·정렬 상태, 상태줄 문구.
