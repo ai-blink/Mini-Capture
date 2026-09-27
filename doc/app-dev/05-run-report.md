@@ -1766,3 +1766,8 @@ Allow users to exclude a window-selection target by choosing a running process o
 - `ViewerWindow.xaml` 한국어 속성 139개를 한국어 값 기준으로 키에 자동 매핑해 `{x:Static res:Strings.*}`로 교체, 부분 클래스 13개 파일의 리터럴 약 115개를 `Strings.*`/`string.Format`으로 교체(+214 `Viewer_*` 키, 기존 `Main_Status_*`·`Main_Result_Saved`·`Folder_CaptureRoot`·`Common_Cancel` 재사용). 툴바 라벨은 `AutomationProperties.Name`에서 오므로 함께 번역된다.
 - 검증: 빌드 경고 0·오류 0, 테스트 33/33, 리플렉션 214/214 키가 4개 문화권에서 번역값, Debug 빌드를 이미지 인자로 실행해 뷰어 창 로드와 새 키로 만든 UIA 이름 107개 확인(기본 한국어) 후 배포본 재실행. 주석과 자국어 이름 `한국어` 외 한국어 UI 리터럴 0건.
 - NEEDS_USER_UI_CHECK: 영어·중국어·일본어에서 보통 창 폭의 툴바 라벨(영어·일본어가 길어 줄바꿈·버튼 폭 변화 가능), 툴팁, 왼쪽 설정 패널, 자르기 패널, 세부 정보 열 머리글·정렬 상태, 상태줄 문구.
+
+## 배포본 교체 (2026-09-28)
+
+- 사용자 보고 "언어 설정 사라짐": 시작 메뉴 바로가기 대상 `C:\app\MiniCapture.exe`가 2026-09-12 빌드라 언어 설정(`222a279`, 09-27) 이전 버전이었다. 기능 회귀가 아니라 오래된 배포본.
+- `8dbd782` 기준 단일 파일 Release 게시(`--self-contained true -p:PublishSingleFile=true ...`, `artifacts/publish/MiniCapture-win-x64-portable-20260928`) → en/zh-CN/ja 위성 리소스 번들 포함 확인 → 옛 exe를 세션 scratchpad에 복구용 복사 → 교체·SHA-256 일치·재실행.
