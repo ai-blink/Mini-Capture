@@ -9,8 +9,9 @@
 
 ## Immediate Next Step
 
-- v0.2.0 is built, packaged (rtifacts/MiniCapture-v0.2.0-win-x64-portable.zip), deployed to C:\app, committed and tagged locally. Push + GitHub release are blocked on GitHub auth: ask the user to run `! gh auth login` and `! gh auth setup-git`, then git push origin main --follow-tags and gh release create v0.2.0 <zip> with the notes in doc/app-dev/05-run-report.md (v0.2.0 section).
-- User UI checks: the single ordered list in ules/dev-progress.md Next Actions.
+- v0.2.0 is built, packaged (`artifacts/MiniCapture-v0.2.0-win-x64-portable.zip`), deployed to `C:\app`, committed and tagged locally. Push + GitHub release are blocked on GitHub auth: ask the user to run `! gh auth login` and `! gh auth setup-git`, then `git push origin main --follow-tags` and `gh release create v0.2.0 <zip>` with the notes in `doc/app-dev/05-run-report.md` (v0.2.0 section).
+- User UI checks: the single ordered list in `rules/dev-progress.md` Next Actions.
+ules/dev-progress.md Next Actions.
 - Screen verification recipe (works here): launch the Debug exe, find windows with Win32 `EnumWindows` by title (UIA top-level search misses owned windows), capture with `PrintWindow`; change `%LOCALAPPDATA%\MiniCapture\settings.json` Language/Theme temporarily and restore it.
 
 ## Constraints
