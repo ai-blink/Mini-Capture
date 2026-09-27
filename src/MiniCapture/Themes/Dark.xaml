@@ -29,6 +29,8 @@
     <SolidColorBrush x:Key="SettingsTextBrush" Color="#E6E8EA" />
     <SolidColorBrush x:Key="SettingsMutedTextBrush" Color="#A8B0B8" />
     <SolidColorBrush x:Key="SettingsHighlightTextBrush" Color="#5EEAD4" />
+    <SolidColorBrush x:Key="SettingsSuccessTextBrush" Color="#90EE90" />
+    <SolidColorBrush x:Key="SettingsInfoTextBrush" Color="#B0C4DE" />
     <SolidColorBrush x:Key="SettingsButtonBrush" Color="#25303A" />
     <SolidColorBrush x:Key="SettingsButtonBorderBrush" Color="#425160" />
     <SolidColorBrush x:Key="SettingsInputBrush" Color="#F4F7FA" />

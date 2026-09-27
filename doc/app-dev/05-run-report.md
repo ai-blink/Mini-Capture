@@ -1779,3 +1779,10 @@ Allow users to exclude a window-selection target by choosing a running process o
 - 발견·수정: 다크에서 비활성 툴바 버튼에 Aero 기본 템플릿의 밝은 회색 배경 → 툴바 버튼 전용 템플릿(주 버튼은 hover에도 강조색 유지).
 - 검증: 빌드 0/0, 테스트 36/36(테마 해석, Light·Dark 키 동일, 세 창의 테마 키 참조 205개 모두 정의됨). Debug 빌드로 뷰어를 라이트·다크 각각 `PrintWindow` 캡처해 배경·패널·글자 전환 확인(설정값은 임시 변경 후 원복, 해시 일치). 설정 창은 자동으로 열지 못함(`--settings` 시작 인자는 테마 이전 빌드에서도 창을 열지 않음 → FOLLOW_UP, 우클릭 메뉴 자동화는 불안정해 중단). `C:\app` 배포본 교체(해시 일치).
 - NEEDS_USER_UI_CHECK: 다크·시스템 테마에서 설정 창, 키 감지 대화상자, 뷰어, 다크 제목 표시줄.
+
+### 테마 후속 검증 (2026-09-28)
+
+- 정정: "`--settings`로 설정 창이 안 열림"은 버그가 아니었다. 설정 창은 MainWindow 소유 창이라 UIA 최상위 검색에 안 잡혔을 뿐, Win32 `EnumWindows`로는 `Mini Capture 설정`이 보인다.
+- 설정 창을 라이트·다크 각각 `PrintWindow` 캡처: 배경·패널·버튼·입력·글자 전환, 다크 제목 표시줄 적용 확인.
+- 발견·수정: 확장자 연결 "현재 기본 앱" 열이 고정색 `LightGreen`/`LightSteelBlue`라 라이트에서 거의 안 보임 → 테마 키 `SettingsSuccessTextBrush`(#15803D/#90EE90)·`SettingsInfoTextBrush`(#3B6A96/#B0C4DE).
+- 빌드 0/0, 테스트 36/36, `C:\app` 교체(해시 일치). 남은 사용자 확인: 키 감지 대화상자.

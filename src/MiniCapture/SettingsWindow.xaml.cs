@@ -1117,7 +1117,7 @@ public sealed class ExtensionAssociationItem(
     private bool _isAssociated;
     private string _statusText = Strings.Settings_Extension_StatusPending;
     private string _statusDetail = string.Empty;
-    private WpfBrush _statusBrush = WpfBrushes.LightGray;
+    private WpfBrush _statusBrush = ThemeBrush("SettingsMutedTextBrush");
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -1156,10 +1156,12 @@ public sealed class ExtensionAssociationItem(
         IsAssociated = state.IsAssociated;
         StatusText = state.StatusText;
         StatusDetail = state.Detail;
-        StatusBrush = state.IsAssociated
-            ? WpfBrushes.LightGreen
-            : WpfBrushes.LightSteelBlue;
+        StatusBrush = ThemeBrush(state.IsAssociated ? "SettingsSuccessTextBrush" : "SettingsInfoTextBrush");
     }
+
+    // 현재 테마(Themes/*.xaml)의 색. 앱 리소스가 없으면(테스트 등) 회색으로 둔다.
+    private static WpfBrush ThemeBrush(string key) =>
+        System.Windows.Application.Current?.TryFindResource(key) as WpfBrush ?? WpfBrushes.Gray;
 
     private void SetField<T>(ref T field, T value, string propertyName)
     {
