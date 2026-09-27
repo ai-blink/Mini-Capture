@@ -37,14 +37,39 @@ public partial class ViewerWindow
             return;
         }
 
-        SelectAnnotation(annotation);
-        // 도형 도구 중에도 기존 도형을 끌면 새로 그리지 않고 옮긴다. 텍스트 도구는 클릭 편집을 위해 제외.
-        // 영역 선택 도구에서는 모자이크 객체만 옮기고, 그 밖의 곳은 새 영역 선택으로 넘긴다.
-        var canMove = _editTool is ViewerEditTool.Select or ViewerEditTool.Rectangle or ViewerEditTool.Ellipse or
-                ViewerEditTool.Arrow or ViewerEditTool.Pen ||
-            (_editTool == ViewerEditTool.PixelSelect && annotation.Kind == ViewerAnnotationKind.Mosaic);
-        if (!canMove || Keyboard.FocusedElement is System.Windows.Controls.TextBox)
+        // 본문 드래그 이동은 객체 선택 도구에서만 한다. 그리기 도구에서는 누른 객체만 기억하고 캔버스로 넘겨,
+        // 놓을 때 클릭이면 선택, 끌었으면 새로 그린다(텍스트 상자 자체 클릭은 상자가 처리).
+        if (_editTool != ViewerEditTool.Select)
         {
+            if (_editTool == ViewerEditTool.Text && annotation.Element is not System.Windows.Controls.TextBox)
+            {
+                // 텍스트 도구는 누르는 순간 상자를 만들므로, 기존 객체 위 클릭은 새 상자 대신 선택으로 처리한다.
+                SelectByClick(annotation);
+                e.Handled = true;
+            }
+            else if (_editTool is not (ViewerEditTool.Pan or ViewerEditTool.PixelSelect))
+            {
+                _pressedAnnotation = annotation;
+            }
+
+            return;
+        }
+
+        SelectAnnotation(annotation);
+        if (Keyboard.FocusedElement is System.Windows.Controls.TextBox)
+        {
+            return;
+        }
+
+        // 텍스트는 더블클릭하면 편집으로 들어간다(Greenshot·Flameshot·ksnip 관례). 한 번 클릭·드래그는 이동.
+        if (e.ClickCount >= 2 && annotation.Element is System.Windows.Controls.TextBox textBox)
+        {
+            _isMovingAnnotation = false;
+            AnnotationOverlay.ReleaseMouseCapture();
+            textBox.Focus();
+            textBox.CaretIndex = textBox.Text.Length;
+            SetViewerStatus("텍스트 편집 중: 입력을 마치면 Esc를 누르거나 바깥을 클릭하세요.");
+            e.Handled = true;
             return;
         }
 
@@ -74,20 +99,30 @@ public partial class ViewerWindow
             return;
         }
 
+        EndAnnotationDrag();
+        e.Handled = true;
+    }
+
+    private void EndAnnotationDrag()
+    {
         _isMovingAnnotation = false;
         _isResizingAnnotation = false;
         AnnotationOverlay.ReleaseMouseCapture();
-        MarkAnnotationChanged("선택 항목을 수정했습니다.");
-        e.Handled = true;
+        // 클릭만 하고 움직이지 않았으면 수정으로 치지 않는다(더블클릭 편집 진입 전 첫 클릭 포함).
+        if (_selectedAnnotation is not null && GetAnnotationBounds(_selectedAnnotation) != _annotationStartBounds)
+        {
+            MarkAnnotationChanged("선택 항목을 수정했습니다.");
+        }
     }
 
     private void OnResizeHandleMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (_selectedAnnotation is null)
+        if (_selectedAnnotation is null || sender is not FrameworkElement { Tag: ResizeEdges edges })
         {
             return;
         }
 
+        _activeResizeEdges = edges;
         _isResizingAnnotation = true;
         _annotationDragStartPoint = ClampToSurface(e.GetPosition(AnnotationOverlay));
         _annotationStartBounds = GetAnnotationBounds(_selectedAnnotation);
@@ -109,10 +144,9 @@ public partial class ViewerWindow
 
         if (_isResizingAnnotation)
         {
-            var newWidth = Math.Max(8, _annotationStartBounds.Width + delta.X);
-            var newHeight = Math.Max(8, _annotationStartBounds.Height + delta.Y);
-            _selectedAnnotation.PixelBounds = ClampPixelRect(new WpfRect(_annotationStartBounds.X, _annotationStartBounds.Y, newWidth, newHeight));
-            ResizeAnnotationPoints(_selectedAnnotation, newWidth, newHeight);
+            var resized = ClampPixelRect(ResizeBounds(_annotationStartBounds, _activeResizeEdges, delta, 8));
+            _selectedAnnotation.PixelBounds = resized;
+            ResizeAnnotationPoints(_selectedAnnotation, resized);
         }
         else if (_isMovingAnnotation)
         {
@@ -143,21 +177,50 @@ public partial class ViewerWindow
         }
     }
 
-    private void ResizeAnnotationPoints(EditableAnnotation annotation, double newWidth, double newHeight)
+    // 잡은 핸들의 변만 움직이고 반대편 변은 고정한다. 최소 크기에서 멈추며 뒤집히지 않는다.
+    internal static WpfRect ResizeBounds(WpfRect start, ResizeEdges edges, Vector delta, double minSize)
+    {
+        var left = start.Left;
+        var top = start.Top;
+        var right = start.Right;
+        var bottom = start.Bottom;
+
+        if (edges.Horizontal < 0)
+        {
+            left = Math.Min(start.Left + delta.X, start.Right - minSize);
+        }
+        else if (edges.Horizontal > 0)
+        {
+            right = Math.Max(start.Right + delta.X, start.Left + minSize);
+        }
+
+        if (edges.Vertical < 0)
+        {
+            top = Math.Min(start.Top + delta.Y, start.Bottom - minSize);
+        }
+        else if (edges.Vertical > 0)
+        {
+            bottom = Math.Max(start.Bottom + delta.Y, start.Top + minSize);
+        }
+
+        return new WpfRect(left, top, right - left, bottom - top);
+    }
+
+    private void ResizeAnnotationPoints(EditableAnnotation annotation, WpfRect newBounds)
     {
         if (annotation.Kind is not (ViewerAnnotationKind.Pen or ViewerAnnotationKind.Arrow) || _annotationStartPoints.Count == 0)
         {
             return;
         }
 
-        var scaleX = newWidth / Math.Max(1, _annotationStartBounds.Width);
-        var scaleY = newHeight / Math.Max(1, _annotationStartBounds.Height);
+        var scaleX = newBounds.Width / Math.Max(1, _annotationStartBounds.Width);
+        var scaleY = newBounds.Height / Math.Max(1, _annotationStartBounds.Height);
         annotation.PixelPoints.Clear();
         foreach (var point in _annotationStartPoints)
         {
             annotation.PixelPoints.Add(new WpfPoint(
-                _annotationStartBounds.X + ((point.X - _annotationStartBounds.X) * scaleX),
-                _annotationStartBounds.Y + ((point.Y - _annotationStartBounds.Y) * scaleY)));
+                newBounds.X + ((point.X - _annotationStartBounds.X) * scaleX),
+                newBounds.Y + ((point.Y - _annotationStartBounds.Y) * scaleY)));
         }
 
         annotation.PixelBounds = GetPixelPointsBounds(annotation.PixelPoints);

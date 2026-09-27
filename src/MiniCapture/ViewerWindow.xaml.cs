@@ -35,10 +35,14 @@ internal enum ViewerEditTool
     PixelSelect,
     Rectangle,
     Ellipse,
+    Mosaic,
     Text,
     Pen,
     Arrow
 }
+
+// 크기 조절 핸들이 움직이는 변. -1 = 왼쪽/위, 0 = 고정, 1 = 오른쪽/아래.
+internal readonly record struct ResizeEdges(int Horizontal, int Vertical);
 
 internal enum ViewerMosaicType
 {
@@ -123,9 +127,12 @@ public partial class ViewerWindow : Window
     private WpfPath? _cropPreviewMask;
     private WpfRectangle? _cropPreviewFrame;
     private WpfRectangle? _pixelSelectionFrame;
-    private WpfRectangle? _resizeHandle;
+    private readonly List<WpfRectangle> _resizeHandles = new();
+    private ResizeEdges _activeResizeEdges;
     private WpfRectangle? _selectionFrame;
     private EditableAnnotation? _selectedAnnotation;
+    // 그리기 도구에서 누른 객체. 놓을 때 클릭(거의 안 움직임)이면 이 객체를 선택한다.
+    private EditableAnnotation? _pressedAnnotation;
     private string? _pendingPath;
     private string? _currentFolderPath;
     private string? _lastSavedPath;

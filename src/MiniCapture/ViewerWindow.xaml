@@ -137,24 +137,42 @@
             <Setter Property="Foreground" Value="#FFFFFF" />
         </Style>
 
+        <!-- 아이콘 버튼 아래 작은 글자 라벨. 라벨 문구는 버튼의 AutomationProperties.Name 하나로 관리한다. -->
+        <Style x:Key="ToolButtonLabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,1,0,0" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="Normal" />
+        </Style>
+
         <Style x:Key="ToolbarIconButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
-            <Setter Property="Width" Value="36" />
-            <Setter Property="MinWidth" Value="36" />
-            <Setter Property="Height" Value="38" />
-            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Width" Value="Auto" />
+            <Setter Property="MinWidth" Value="38" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="MinHeight" Value="48" />
             <Setter Property="Margin" Value="0,0,2,0" />
-            <Setter Property="Padding" Value="2" />
+            <Setter Property="Padding" Value="4,2" />
             <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
             <Setter Property="FontSize" Value="14" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <!-- 문자·이미지 콘텐츠 모두에 적용된다(명시한 ContentTemplate은 UIElement 콘텐츠에도 쓰인다). 라벨을 콘텐츠에 따로 넣지 말 것. -->
+            <Setter Property="ContentTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <StackPanel HorizontalAlignment="Center">
+                            <ContentPresenter HorizontalAlignment="Center" Content="{Binding}" />
+                            <TextBlock Style="{StaticResource ToolButtonLabelStyle}"
+                                       Text="{Binding (AutomationProperties.Name), RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="ZoomIconButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarIconButtonStyle}">
-            <Setter Property="Width" Value="34" />
             <Setter Property="MinWidth" Value="34" />
-            <Setter Property="Height" Value="38" />
-            <Setter Property="MinHeight" Value="38" />
             <Setter Property="Margin" Value="0,0,3,0" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
@@ -162,10 +180,6 @@
         </Style>
 
         <Style x:Key="ToolGlyphButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarIconButtonStyle}">
-            <Setter Property="Width" Value="38" />
-            <Setter Property="MinWidth" Value="38" />
-            <Setter Property="Height" Value="38" />
-            <Setter Property="MinHeight" Value="38" />
             <Setter Property="FontFamily" Value="Segoe UI Symbol" />
             <Setter Property="FontSize" Value="17" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -579,7 +593,7 @@
                                     AutomationProperties.AutomationId="ViewerPanToolButton"
                                     AutomationProperties.Name="핸드"
                                     Click="OnToolButtonClick"
-                                    ToolTip="핸드툴"
+                                    ToolTip="핸드툴 (H) — 드래그: 화면 이동. 다른 도구 중에는 Space를 누른 채 드래그"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
                                     Tag="Pan">
                                 <Image Width="22"
@@ -590,23 +604,26 @@
                             </Button>
                             <Button x:Name="SelectToolButton"
                                     AutomationProperties.AutomationId="ViewerSelectToolButton"
-                                    AutomationProperties.Name="선택"
+                                    AutomationProperties.Name="객체 선택"
                                     Click="OnToolButtonClick"
-                                    ToolTip="선택"
+                                    ToolTip="객체 선택 (V, Esc) — 클릭: 선택 / 드래그: 이동 / 테두리 핸들: 크기 변경 / 텍스트 더블클릭: 편집 / Delete: 삭제"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
                                     Tag="Select">
-                                <Image Width="22"
-                                       Height="22"
-                                       RenderOptions.BitmapScalingMode="HighQuality"
-                                       Source="pack://application:,,,/Assets/Toolbar/select-tool.png"
-                                       Stretch="Uniform" />
+                                <!-- 점선 없는 일반 마우스 화살표: 픽셀 영역(▧)과 구분되는 객체 선택·이동 도구 표시. -->
+                                <Viewbox Width="22" Height="22">
+                                    <Path Data="M 1,0 L 1,17 L 5.5,12.8 L 8.6,20 L 11.4,18.8 L 8.4,11.8 L 14.5,11.8 Z"
+                                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                          Stroke="#FFFFFF"
+                                          StrokeLineJoin="Round"
+                                          StrokeThickness="1" />
+                                </Viewbox>
                             </Button>
                             <Button x:Name="PenToolButton"
                                     AutomationProperties.AutomationId="ViewerPenToolButton"
                                     AutomationProperties.Name="펜"
                                     Click="OnToolButtonClick"
                                     Content="✎"
-                                    ToolTip="펜"
+                                    ToolTip="펜 (P) — 드래그: 자유선"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
                                     Tag="Pen" />
                             <Button x:Name="ArrowToolButton"
@@ -614,7 +631,7 @@
                                     AutomationProperties.Name="화살표"
                                     Click="OnToolButtonClick"
                                     Content="↗"
-                                    ToolTip="화살표"
+                                    ToolTip="화살표 (A) — 드래그: 화살표"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
                                     Tag="Arrow" />
                             <Button x:Name="RectangleToolButton"
@@ -622,7 +639,7 @@
                                     AutomationProperties.Name="네모"
                                     Click="OnToolButtonClick"
                                     Content="□"
-                                    ToolTip="네모 그리기"
+                                    ToolTip="네모 (R) — 드래그: 네모"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
                                     Tag="Rectangle" />
                             <Button x:Name="EllipseToolButton"
@@ -630,7 +647,7 @@
                                     AutomationProperties.Name="원"
                                     Click="OnToolButtonClick"
                                     Content="○"
-                                    ToolTip="동그라미 그리기"
+                                    ToolTip="동그라미 (E) — 드래그: 동그라미"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
                                     Tag="Ellipse" />
                             <Button x:Name="TextToolButton"
@@ -638,9 +655,17 @@
                                     AutomationProperties.Name="텍스트"
                                     Click="OnToolButtonClick"
                                     Content="A"
-                                    ToolTip="텍스트"
+                                    ToolTip="텍스트 (T) — 클릭: 새 텍스트 상자. 기존 텍스트는 상자를 클릭해 바로 수정"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
                                     Tag="Text" />
+                            <Button x:Name="MosaicToolButton"
+                                    AutomationProperties.AutomationId="ViewerMosaicToolButton"
+                                    AutomationProperties.Name="모자이크"
+                                    Click="OnToolButtonClick"
+                                    Content="▦"
+                                    ToolTip="모자이크 (B) — 드래그: 가릴 영역에 모자이크 추가. 만든 뒤 객체 선택으로 옮기거나 크기·종류를 바꿀 수 있습니다"
+                                    Style="{StaticResource ToolGlyphButtonStyle}"
+                                    Tag="Mosaic" />
                             <Button x:Name="DeleteAnnotationButton"
                                     AutomationProperties.AutomationId="ViewerDeleteAnnotationButton"
                                     AutomationProperties.Name="삭제"
@@ -684,33 +709,33 @@
                                        Text="영역" />
                             <Button x:Name="PixelSelectToolButton"
                                     AutomationProperties.AutomationId="ViewerPixelSelectToolButton"
-                                    AutomationProperties.Name="영역 선택"
+                                    AutomationProperties.Name="픽셀 영역"
                                     Click="OnToolButtonClick"
                                     Content="▧"
-                                    ToolTip="영역 선택"
+                                    ToolTip="픽셀 영역 (M) — 드래그: 영역 지정 / 영역 안 드래그: 이동 / 복사·잘라내기·붙여넣기 / Esc: 해제"
                                     Style="{StaticResource ToolGlyphButtonStyle}"
                                     Tag="PixelSelect" />
                             <Button AutomationProperties.AutomationId="ViewerCopySelectionButton"
-                                    AutomationProperties.Name="선택 영역 복사"
+                                    AutomationProperties.Name="복사"
                                     Click="OnCopySelectionClick"
-                                    Content="복사"
-                                    ToolTip="선택 영역 복사 (Ctrl+C)"
-                                    Style="{StaticResource RibbonTextButtonStyle}" />
+                                    Content="&#xE8C8;"
+                                    ToolTip="픽셀 영역 복사 (Ctrl+C)"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
                             <Button AutomationProperties.AutomationId="ViewerCutSelectionButton"
-                                    AutomationProperties.Name="선택 영역 잘라내기"
+                                    AutomationProperties.Name="잘라내기"
                                     Click="OnCutSelectionClick"
-                                    Content="영역 잘라내기"
-                                    ToolTip="선택 영역을 클립보드로 잘라내기 (Ctrl+X)"
-                                    Style="{StaticResource RibbonTextButtonStyle}" />
+                                    Content="&#xE8C6;"
+                                    ToolTip="픽셀 영역을 클립보드로 잘라내기 (Ctrl+X)"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
                             <Button AutomationProperties.AutomationId="ViewerPasteSelectionButton"
-                                    AutomationProperties.Name="선택 영역 붙여넣기"
+                                    AutomationProperties.Name="붙여넣기"
                                     Click="OnPasteSelectionClick"
-                                    Content="붙여넣기"
-                                    ToolTip="선택 영역 위치에 붙여넣기 (Ctrl+V)"
-                                    Style="{StaticResource RibbonTextButtonStyle}" />
+                                    Content="&#xE77F;"
+                                    ToolTip="픽셀 영역 위치에 붙여넣기, 영역이 없으면 가운데 (Ctrl+V)"
+                                    Style="{StaticResource ToolbarIconButtonStyle}" />
                             <Button x:Name="CropToolButton"
                                     AutomationProperties.AutomationId="ViewerCropToolButton"
-                                    AutomationProperties.Name="이미지 자르기"
+                                    AutomationProperties.Name="자르기"
                                     Click="OnCropToolClick"
                                     Content="&#xE7A8;"
                                     ToolTip="이미지 위·아래·양옆 자르기"
@@ -843,14 +868,15 @@
                                         Visibility="Collapsed">
                             <TextBlock Style="{StaticResource ToolbarPropertyLabelStyle}"
                                        Margin="8,0,6,0"
-                                       Text="텍스트" />
+                                       Text="새 텍스트 기본 문구" />
                             <TextBox x:Name="AnnotationTextBox"
                                      Width="152"
                                      Height="30"
                                      Margin="0"
                                      Padding="8,0"
                                      AutomationProperties.AutomationId="ViewerTextInput"
-                                     AutomationProperties.Name="텍스트"
+                                     AutomationProperties.Name="새 텍스트 기본 문구"
+                                     ToolTip="이미지를 클릭해 새 텍스트 상자를 만들 때 처음 들어갈 문구입니다. 만든 뒤에는 이미지 위 상자에서 직접 고칩니다."
                                      Background="#F1F4F4"
                                      BorderBrush="{StaticResource ViewerMutedBorderBrush}"
                                      Foreground="{StaticResource ViewerTextBrush}"
@@ -901,14 +927,6 @@
                                     ToolTip="가우시안 흐림"
                                     Style="{StaticResource RibbonTextButtonStyle}"
                                     Tag="Blur" />
-                            <Button x:Name="ApplySelectionMosaicButton"
-                                    Margin="8,0,0,0"
-                                    AutomationProperties.AutomationId="ViewerApplySelectionMosaicButton"
-                                    AutomationProperties.Name="선택 영역에 모자이크 적용"
-                                    Click="OnApplySelectionMosaicClick"
-                                    Content="모자이크 적용"
-                                    ToolTip="선택 영역에 현재 크기·종류로 모자이크 적용"
-                                    Style="{StaticResource RibbonTextButtonStyle}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>

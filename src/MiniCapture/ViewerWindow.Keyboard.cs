@@ -38,6 +38,13 @@ public partial class ViewerWindow
 
         if (IsTextInputFocused())
         {
+            if (key == Key.Escape && IsEditingAnnotationText())
+            {
+                EndAnnotationTextEditing();
+                e.Handled = true;
+                return;
+            }
+
             if (control && key == Key.S)
             {
                 OnSaveClick(sender, new RoutedEventArgs());
@@ -98,8 +105,19 @@ public partial class ViewerWindow
             }
         }
 
+        if (Keyboard.Modifiers == ModifierKeys.None && TryGetToolShortcut(key, out var shortcutTool))
+        {
+            SetEditTool(shortcutTool);
+            e.Handled = true;
+            return;
+        }
+
         switch (key)
         {
+            case Key.Escape:
+                HandleEscape();
+                e.Handled = true;
+                break;
             case Key.F5:
                 _ = RefreshCurrentFolderAsync();
                 e.Handled = true;
@@ -151,6 +169,60 @@ public partial class ViewerWindow
             _spacePanActive = false;
             UpdateToolButtons();
             e.Handled = true;
+        }
+    }
+
+    // 도구 단축키. Greenshot·ShareX·Flameshot에서 겹치는 글자를 우선했다(R/E/A/T, 모자이크 B는 Flameshot).
+    internal static bool TryGetToolShortcut(Key key, out ViewerEditTool tool)
+    {
+        tool = key switch
+        {
+            Key.V => ViewerEditTool.Select,
+            Key.M => ViewerEditTool.PixelSelect,
+            Key.R => ViewerEditTool.Rectangle,
+            Key.E => ViewerEditTool.Ellipse,
+            Key.A => ViewerEditTool.Arrow,
+            Key.T => ViewerEditTool.Text,
+            Key.P => ViewerEditTool.Pen,
+            Key.B => ViewerEditTool.Mosaic,
+            Key.H => ViewerEditTool.Pan,
+            _ => (ViewerEditTool)(-1)
+        };
+        return Enum.IsDefined(tool);
+    }
+
+    // Esc 단계: 자르기 취소 → 그리던 것 취소 → 객체·픽셀 영역 선택 해제 → 객체 선택 도구로 전환 (ShareX 방식).
+    private void HandleEscape()
+    {
+        if (_isCropMode)
+        {
+            CloseCropMode();
+            SetViewerStatus("자르기를 취소했습니다.");
+            return;
+        }
+
+        if (_isDrawing)
+        {
+            _isDrawing = false;
+            _penPoints.Clear();
+            RemovePreviewShape();
+            AnnotationOverlay.ReleaseMouseCapture();
+            SetViewerStatus("그리기를 취소했습니다.");
+            return;
+        }
+
+        if (_selectedAnnotation is not null || _pixelSelection is not null)
+        {
+            SelectAnnotation(null);
+            ClearPixelSelection();
+            UpdateToolContext();
+            SetViewerStatus("선택을 해제했습니다.");
+            return;
+        }
+
+        if (_editTool != ViewerEditTool.Select)
+        {
+            SetEditTool(ViewerEditTool.Select);
         }
     }
 

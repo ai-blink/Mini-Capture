@@ -43,6 +43,22 @@ public partial class ViewerWindow
         AddAnnotation(annotation, ellipse ? "동그라미를 추가했습니다." : "네모를 추가했습니다.");
     }
 
+    private void AddMosaicAnnotation(Int32Rect pixelRect)
+    {
+        var annotation = new EditableAnnotation
+        {
+            Kind = ViewerAnnotationKind.Mosaic,
+            Color = _selectedColor,
+            StrokeThickness = 1,
+            PixelBounds = new WpfRect(pixelRect.X, pixelRect.Y, pixelRect.Width, pixelRect.Height),
+            MosaicType = _mosaicType,
+            MosaicBlockSize = _mosaicBlockSize
+        };
+
+        AddAnnotation(annotation, (_mosaicType == ViewerMosaicType.Blur ? "흐림 모자이크를 추가했습니다." : "모자이크를 추가했습니다.") +
+            " 핸들로 크기를, 위 설정 줄로 크기·종류를 바로 바꿀 수 있습니다. 옮기려면 객체 선택(V)을 쓰세요.");
+    }
+
     private void AddTextAnnotation(WpfPoint displayPoint)
     {
         if (_editableImage is null)
@@ -115,6 +131,8 @@ public partial class ViewerWindow
     {
         _annotations.Add(annotation);
         RenderAnnotation(annotation);
+        // 캡처 편집기 관례(Greenshot·ShareX): 방금 그린 객체는 도구를 바꾸지 않고 선택 상태로 두어
+        // 핸들·설정 줄로 바로 고칠 수 있게 한다. 본문 드래그 이동은 객체 선택 도구에서만.
         SelectAnnotation(annotation);
         MarkAnnotationChanged(status);
     }
@@ -199,6 +217,7 @@ public partial class ViewerWindow
         element.PreviewMouseLeftButtonDown += OnAnnotationElementMouseLeftButtonDown;
         element.PreviewMouseMove += OnAnnotationElementMouseMove;
         element.PreviewMouseLeftButtonUp += OnAnnotationElementMouseLeftButtonUp;
+        element.Cursor = GetAnnotationCursor(element);
         AnnotationOverlay.Children.Add(element);
         PositionAnnotationElement(annotation);
     }
@@ -277,7 +296,12 @@ public partial class ViewerWindow
             annotation.Text = textBox.Text;
             MarkAnnotationChanged("텍스트를 수정했습니다.");
         };
-        textBox.GotKeyboardFocus += (_, _) => SelectAnnotation(annotation);
+        textBox.GotKeyboardFocus += (_, _) =>
+        {
+            textBox.Cursor = null;
+            SelectAnnotation(annotation);
+        };
+        textBox.LostKeyboardFocus += (_, _) => textBox.Cursor = GetAnnotationCursor(textBox);
         return textBox;
     }
 
@@ -327,12 +351,12 @@ public partial class ViewerWindow
             _selectionFrame = null;
         }
 
-        if (_resizeHandle is not null)
+        foreach (var handle in _resizeHandles)
         {
-            AnnotationOverlay.Children.Remove(_resizeHandle);
-            _resizeHandle = null;
+            AnnotationOverlay.Children.Remove(handle);
         }
 
+        _resizeHandles.Clear();
         if (_selectedAnnotation is null)
         {
             return;
@@ -353,19 +377,44 @@ public partial class ViewerWindow
         Canvas.SetTop(_selectionFrame, rect.Top);
         AnnotationOverlay.Children.Add(_selectionFrame);
 
-        _resizeHandle = new WpfRectangle
+        // 네 모서리 + 네 변 중앙, 8개 핸들(Greenshot·Flameshot 관례). 어느 도구에서든 선택된 객체의 크기를 바꾼다.
+        foreach (var edges in ResizeHandleEdges)
         {
-            Width = 12,
-            Height = 12,
-            Fill = new SolidColorBrush(WpfColor.FromRgb(0, 120, 212)),
-            Stroke = WpfBrushes.White,
-            StrokeThickness = 1,
-            Cursor = WpfCursors.SizeNWSE
-        };
-        _resizeHandle.PreviewMouseLeftButtonDown += OnResizeHandleMouseLeftButtonDown;
-        Canvas.SetLeft(_resizeHandle, rect.Right - 6);
-        Canvas.SetTop(_resizeHandle, rect.Bottom - 6);
-        AnnotationOverlay.Children.Add(_resizeHandle);
+            var handle = new WpfRectangle
+            {
+                Width = 10,
+                Height = 10,
+                Fill = new SolidColorBrush(WpfColor.FromRgb(0, 120, 212)),
+                Stroke = WpfBrushes.White,
+                StrokeThickness = 1,
+                Cursor = GetResizeCursor(edges),
+                ToolTip = "끌어서 크기 변경",
+                Tag = edges
+            };
+            AutomationProperties.SetName(handle, "크기 변경 핸들");
+            handle.PreviewMouseLeftButtonDown += OnResizeHandleMouseLeftButtonDown;
+            var x = edges.Horizontal switch { < 0 => rect.Left, 0 => rect.Left + rect.Width / 2, _ => rect.Right };
+            var y = edges.Vertical switch { < 0 => rect.Top, 0 => rect.Top + rect.Height / 2, _ => rect.Bottom };
+            Canvas.SetLeft(handle, x - 5);
+            Canvas.SetTop(handle, y - 5);
+            AnnotationOverlay.Children.Add(handle);
+            _resizeHandles.Add(handle);
+        }
     }
+
+    private static readonly ResizeEdges[] ResizeHandleEdges =
+    [
+        new(-1, -1), new(0, -1), new(1, -1),
+        new(1, 0), new(1, 1), new(0, 1),
+        new(-1, 1), new(-1, 0)
+    ];
+
+    private static System.Windows.Input.Cursor GetResizeCursor(ResizeEdges edges) => edges switch
+    {
+        { Horizontal: 0 } => WpfCursors.SizeNS,
+        { Vertical: 0 } => WpfCursors.SizeWE,
+        _ when edges.Horizontal == edges.Vertical => WpfCursors.SizeNWSE,
+        _ => WpfCursors.SizeNESW
+    };
 
 }

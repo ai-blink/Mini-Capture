@@ -114,17 +114,45 @@ public partial class ViewerWindow
         SetViewButtonState(RectangleToolButton, _editTool == ViewerEditTool.Rectangle);
         SetViewButtonState(EllipseToolButton, _editTool == ViewerEditTool.Ellipse);
         SetViewButtonState(TextToolButton, _editTool == ViewerEditTool.Text);
+        SetViewButtonState(MosaicToolButton, _editTool == ViewerEditTool.Mosaic);
         SetViewButtonState(PenToolButton, _editTool == ViewerEditTool.Pen);
         SetViewButtonState(ArrowToolButton, _editTool == ViewerEditTool.Arrow);
         SetViewButtonState(CropToolButton, _isCropMode);
         UpdateToolContext();
-        AnnotationOverlay.Cursor = _editTool switch
+        AnnotationOverlay.Cursor = GetToolCursor();
+        UpdateAnnotationCursors();
+        RenderSelectionFrame();
+    }
+
+    private System.Windows.Input.Cursor GetToolCursor() => _editTool switch
+    {
+        ViewerEditTool.Pan => WpfCursors.SizeAll,
+        _ when _spacePanActive => WpfCursors.SizeAll,
+        ViewerEditTool.Select => WpfCursors.Arrow,
+        _ => WpfCursors.Cross
+    };
+
+    // 객체 선택 도구에서만 객체 위 이동 커서를 보인다. 그 밖의 도구에서는 오버레이 커서를 따른다.
+    // 편집 중인 텍스트 상자는 입력 커서(I-beam)를 유지한다.
+    private void UpdateAnnotationCursors()
+    {
+        foreach (var annotation in _annotations)
         {
-            ViewerEditTool.Pan => WpfCursors.SizeAll,
-            ViewerEditTool.Select when !_spacePanActive => WpfCursors.Arrow,
-            _ when _spacePanActive => WpfCursors.SizeAll,
-            _ => WpfCursors.Cross
-        };
+            if (annotation.Element is not null)
+            {
+                annotation.Element.Cursor = GetAnnotationCursor(annotation.Element);
+            }
+        }
+    }
+
+    private System.Windows.Input.Cursor? GetAnnotationCursor(FrameworkElement element)
+    {
+        if (element is System.Windows.Controls.TextBox { IsKeyboardFocused: true })
+        {
+            return null;
+        }
+
+        return _editTool == ViewerEditTool.Select && !_spacePanActive ? WpfCursors.SizeAll : null;
     }
 
     private void UpdateToolContext()
@@ -135,7 +163,7 @@ public partial class ViewerWindow
             ViewerEditTool.Ellipse;
         var showsText = _editTool == ViewerEditTool.Text;
         var editsMosaic = _selectedAnnotation?.Kind == ViewerAnnotationKind.Mosaic;
-        var showsMosaic = _editTool == ViewerEditTool.PixelSelect || editsMosaic;
+        var showsMosaic = _editTool == ViewerEditTool.Mosaic || editsMosaic;
 
         ContextToolbar.Visibility = showsStroke || showsText || showsMosaic
             ? Visibility.Visible
@@ -152,23 +180,20 @@ public partial class ViewerWindow
         MosaicContextGroup.Visibility = showsMosaic
             ? Visibility.Visible
             : Visibility.Collapsed;
-        ApplySelectionMosaicButton.Visibility = _editTool == ViewerEditTool.PixelSelect
-            ? Visibility.Visible
-            : Visibility.Collapsed;
         if (showsMosaic)
         {
             SetViewButtonState(MosaicTypeBlockButton, _mosaicType == ViewerMosaicType.Block);
             SetViewButtonState(MosaicTypeBlurButton, _mosaicType == ViewerMosaicType.Blur);
         }
 
-        ContextToolName.Text = editsMosaic ? "모자이크 편집" : _editTool switch
+        ContextToolName.Text = editsMosaic ? "선택한 모자이크" : _editTool switch
         {
             ViewerEditTool.Pen => "펜 설정",
             ViewerEditTool.Arrow => "화살표 설정",
             ViewerEditTool.Rectangle => "네모 설정",
             ViewerEditTool.Ellipse => "원 설정",
             ViewerEditTool.Text => "텍스트 설정",
-            ViewerEditTool.PixelSelect => "선택 영역 모자이크",
+            ViewerEditTool.Mosaic => "모자이크 설정",
             _ => string.Empty
         };
     }

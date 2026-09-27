@@ -45,32 +45,14 @@ public partial class ViewerWindow
         PasteIntoPixelSelection();
     }
 
-    private void OnApplySelectionMosaicClick(object sender, RoutedEventArgs e)
+    private void ClearPixelSelection()
     {
-        if (!TryGetPixelSelection(out var selection))
-        {
-            SetViewerStatus("먼저 모자이크할 영역을 선택하세요.");
-            return;
-        }
-
-        // 선택 영역은 모자이크 객체로 넘기고 해제한다. 이후 객체를 다시 선택해 이동·크기·종류를 고친다.
         _pixelSelection = null;
         if (_pixelSelectionFrame is not null)
         {
             AnnotationOverlay.Children.Remove(_pixelSelectionFrame);
             _pixelSelectionFrame = null;
         }
-
-        var annotation = new EditableAnnotation
-        {
-            Kind = ViewerAnnotationKind.Mosaic,
-            Color = _selectedColor,
-            StrokeThickness = 1,
-            PixelBounds = new WpfRect(selection.X, selection.Y, selection.Width, selection.Height),
-            MosaicType = _mosaicType,
-            MosaicBlockSize = _mosaicBlockSize
-        };
-        AddAnnotation(annotation, _mosaicType == ViewerMosaicType.Blur ? "흐림 모자이크를 추가했습니다." : "모자이크를 추가했습니다.");
     }
 
     private void CopyPixelSelection()

@@ -109,29 +109,50 @@ public partial class ViewerWindow
             return;
         }
 
+        SetEditTool(tool);
+    }
+
+    // 그리기 도구의 드래그는 항상 새 객체를 만들고, 본문 드래그 이동은 객체 선택 도구에서만 한다.
+    // 도구를 바꾸면(객체 선택으로 가는 경우 제외) 객체 선택을 푼다. 버튼·단축키가 모두 이 경로를 쓴다.
+    private void SetEditTool(ViewerEditTool tool)
+    {
         if (_isCropMode)
         {
             CloseCropMode();
         }
 
         _editTool = tool;
-        if (tool == ViewerEditTool.PixelSelect)
+        if (tool != ViewerEditTool.Select)
         {
             SelectAnnotation(null);
         }
 
         UpdateToolButtons();
+        const string moveHint = " 옮기려면 객체 선택(V)을 쓰세요.";
         SetViewerStatus(tool switch
         {
-            ViewerEditTool.Pan => "핸드툴: 이미지를 끌어 이동합니다.",
-            ViewerEditTool.Select => "선택: 보기 상태를 유지하고 편집하지 않습니다.",
-            ViewerEditTool.PixelSelect => "영역 선택: 드래그한 영역을 복사, 잘라내기, 붙여넣기하거나 모자이크할 수 있습니다.",
-            ViewerEditTool.Rectangle => "네모: 이미지 위에서 드래그해 그립니다.",
-            ViewerEditTool.Ellipse => "동그라미: 이미지 위에서 드래그해 그립니다.",
-            ViewerEditTool.Pen => "펜: 이미지 위에 자유선을 그립니다.",
-            ViewerEditTool.Arrow => "화살표: 드래그해서 방향을 표시합니다.",
-            _ => "텍스트: 이미지 위를 클릭해 입력합니다."
+            ViewerEditTool.Pan => "핸드툴(H): 이미지를 끌어 화면을 이동합니다.",
+            ViewerEditTool.Select => "객체 선택(V): 도형·텍스트·모자이크를 클릭해 선택하고, 끌어서 옮기고, 테두리 핸들로 크기를 바꿉니다. 텍스트는 더블클릭해 고치고, Delete로 삭제합니다.",
+            ViewerEditTool.PixelSelect => "픽셀 영역(M): 드래그해 영역을 잡고, 영역 안을 끌어 옮깁니다. 복사·잘라내기·붙여넣기에 씁니다. Esc로 해제합니다.",
+            ViewerEditTool.Rectangle => "네모(R): 드래그해 새 네모를 그립니다." + moveHint,
+            ViewerEditTool.Ellipse => "동그라미(E): 드래그해 새 동그라미를 그립니다." + moveHint,
+            ViewerEditTool.Mosaic => "모자이크(B): 가릴 영역을 드래그하면 모자이크가 생깁니다. 만든 뒤에도 핸들과 위 설정 줄로 크기·종류를 바꿀 수 있습니다." + moveHint,
+            ViewerEditTool.Pen => "펜(P): 드래그해 자유선을 그립니다." + moveHint,
+            ViewerEditTool.Arrow => "화살표(A): 드래그해 방향을 표시합니다." + moveHint,
+            _ => "텍스트(T): 이미지를 클릭하면 새 텍스트 상자가 생기고 바로 입력합니다." + moveHint
         });
+    }
+
+    private bool IsEditingAnnotationText() =>
+        Keyboard.FocusedElement is System.Windows.Controls.TextBox { Tag: EditableAnnotation };
+
+    private void EndAnnotationTextEditing()
+    {
+        if (IsEditingAnnotationText())
+        {
+            Focus();
+            SetViewerStatus("텍스트 편집을 마쳤습니다.");
+        }
     }
 
     private void OnCropToolClick(object sender, RoutedEventArgs e)
@@ -219,6 +240,10 @@ public partial class ViewerWindow
             return;
         }
 
+        // 텍스트 상자 바깥을 누르면 편집을 끝낸다(상자 안 클릭은 TextBox가 처리해 여기로 오지 않는다).
+        // 텍스트 도구에서는 이 클릭이 편집 종료만 하고 새 상자를 만들지 않는다.
+        var endedTextEditing = IsEditingAnnotationText();
+        EndAnnotationTextEditing();
         var position = ClampToSurface(e.GetPosition(AnnotationOverlay));
         if (_editTool == ViewerEditTool.Pan || _spacePanActive)
         {
@@ -276,7 +301,11 @@ public partial class ViewerWindow
 
         if (_editTool == ViewerEditTool.Text)
         {
-            AddTextAnnotation(position);
+            if (!endedTextEditing)
+            {
+                AddTextAnnotation(position);
+            }
+
             e.Handled = true;
             return;
         }
@@ -317,6 +346,7 @@ public partial class ViewerWindow
 
         if (!_isDrawing)
         {
+            UpdateHoverCursor(ClampToSurface(e.GetPosition(AnnotationOverlay)));
             return;
         }
 
@@ -334,13 +364,43 @@ public partial class ViewerWindow
         e.Handled = true;
     }
 
+    // 화면 기준 이 크기보다 작게 움직였으면 드래그가 아니라 클릭으로 본다(손떨림으로 작은 객체가 생기는 것 방지).
+    private const double ClickGestureDisplayPixels = 4;
+
+    internal static bool IsClickGesture(WpfRect displayExtent) =>
+        displayExtent.Width < ClickGestureDisplayPixels && displayExtent.Height < ClickGestureDisplayPixels;
+
+    private void SelectByClick(EditableAnnotation? annotation)
+    {
+        SelectAnnotation(annotation);
+        SetViewerStatus(annotation is null
+            ? "선택을 해제했습니다. 끌면 새로 그립니다."
+            : "선택했습니다. 핸들로 크기를 바꾸고, 옮기려면 객체 선택(V)을 쓰세요. 끌면 새로 그립니다.");
+    }
+
+    // 픽셀 영역 도구에서 영역 안에 올리면 이동 커서를 보여 준다. 객체 위 이동 커서는 요소 Cursor가 맡는다.
+    private void UpdateHoverCursor(WpfPoint displayPoint)
+    {
+        if (_editTool != ViewerEditTool.PixelSelect || _spacePanActive)
+        {
+            return;
+        }
+
+        AnnotationOverlay.Cursor = _pixelSelection is { } selection && ContainsPixel(selection, DisplayToPixel(displayPoint))
+            ? WpfCursors.SizeAll
+            : WpfCursors.Cross;
+    }
+
     private void OnImageMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
+        // 누른 객체 기억은 이번 누름 한 번에만 유효하다(팬·이동 등 다른 경로로 끝나도 비운다).
+        var pressedAnnotation = _pressedAnnotation;
+        _pressedAnnotation = null;
         if (_isPanning)
         {
             _isPanning = false;
             AnnotationOverlay.ReleaseMouseCapture();
-            AnnotationOverlay.Cursor = _editTool == ViewerEditTool.Pan ? WpfCursors.SizeAll : WpfCursors.Cross;
+            AnnotationOverlay.Cursor = GetToolCursor();
             ScheduleCurrentImageViewStateSave();
             e.Handled = true;
             return;
@@ -348,10 +408,7 @@ public partial class ViewerWindow
 
         if (_isMovingAnnotation || _isResizingAnnotation)
         {
-            _isMovingAnnotation = false;
-            _isResizingAnnotation = false;
-            AnnotationOverlay.ReleaseMouseCapture();
-            MarkAnnotationChanged("선택 항목을 수정했습니다.");
+            EndAnnotationDrag();
             e.Handled = true;
             return;
         }
@@ -360,10 +417,10 @@ public partial class ViewerWindow
         {
             _isMovingPixelSelection = false;
             AnnotationOverlay.ReleaseMouseCapture();
-            AnnotationOverlay.Cursor = WpfCursors.Cross;
+            UpdateHoverCursor(ClampToSurface(e.GetPosition(AnnotationOverlay)));
             if (_pixelSelection is { } moved)
             {
-                SetViewerStatus($"영역 선택: {moved.Width} × {moved.Height}px ({moved.X}, {moved.Y})");
+                SetViewerStatus($"픽셀 영역: {moved.Width} × {moved.Height}px ({moved.X}, {moved.Y})");
             }
 
             e.Handled = true;
@@ -380,7 +437,15 @@ public partial class ViewerWindow
         {
             _penPoints.Add(endPoint);
             RemovePreviewShape();
-            AddPenAnnotation(_penPoints);
+            if (IsClickGesture(GetPixelPointsBounds(_penPoints)))
+            {
+                SelectByClick(pressedAnnotation);
+            }
+            else
+            {
+                AddPenAnnotation(_penPoints);
+            }
+
             _penPoints.Clear();
             _isDrawing = false;
             AnnotationOverlay.ReleaseMouseCapture();
@@ -391,22 +456,37 @@ public partial class ViewerWindow
         var rect = GetPixelRect(_drawStartPoint, endPoint);
         RemovePreviewShape();
 
+        // 그리기 도구에서 짧은 클릭은 새로 만들지 않고, 누른 객체를 선택(빈 곳이면 해제)한다. 끌어야 새로 그린다.
+        if (_editTool != ViewerEditTool.PixelSelect && IsClickGesture(new WpfRect(_drawStartPoint, endPoint)))
+        {
+            SelectByClick(pressedAnnotation);
+            _isDrawing = false;
+            AnnotationOverlay.ReleaseMouseCapture();
+            e.Handled = true;
+            return;
+        }
+
         if (_editTool == ViewerEditTool.PixelSelect)
         {
             _pixelSelection = rect.Width >= 2 && rect.Height >= 2 ? rect : null;
             _isDrawing = false;
             AnnotationOverlay.ReleaseMouseCapture();
             RenderAnnotations();
+            UpdateToolContext();
             SetViewerStatus(_pixelSelection is null
-                ? "영역 선택을 해제했습니다."
-                : $"영역 선택: {rect.Width} × {rect.Height}px");
+                ? "픽셀 영역을 해제했습니다."
+                : $"픽셀 영역: {rect.Width} × {rect.Height}px — 영역 안을 끌어 옮기고, Ctrl+C/X로 복사·잘라내기, Esc로 해제합니다.");
             e.Handled = true;
             return;
         }
 
         if (rect.Width >= 2 && rect.Height >= 2)
         {
-            if (_editTool == ViewerEditTool.Arrow)
+            if (_editTool == ViewerEditTool.Mosaic)
+            {
+                AddMosaicAnnotation(rect);
+            }
+            else if (_editTool == ViewerEditTool.Arrow)
             {
                 AddArrowAnnotation(_drawStartPoint, endPoint);
             }

@@ -24,6 +24,9 @@ var tests = new (string Name, Action Run)[]
     ("ClampWindowBounds_PullsOffscreenViewerIntoArea", ClampWindowBounds_PullsOffscreenViewerIntoArea),
     ("MovePixelRect_KeepsSelectionInsideImage", MovePixelRect_KeepsSelectionInsideImage),
     ("CreateMosaicPatch_AveragesBlocksInsideRegionOnly", CreateMosaicPatch_AveragesBlocksInsideRegionOnly),
+    ("ResizeBounds_MovesOnlyGrabbedEdgesAndKeepsMinimum", ResizeBounds_MovesOnlyGrabbedEdgesAndKeepsMinimum),
+    ("ToolShortcuts_MapConventionalKeys", ToolShortcuts_MapConventionalKeys),
+    ("IsClickGesture_SeparatesClickFromDrag", IsClickGesture_SeparatesClickFromDrag),
     ("BuildGaussianKernel_NormalizesAndIsSymmetric", BuildGaussianKernel_NormalizesAndIsSymmetric),
     ("ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge", ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge),
     ("DecodeImageFile_AllowsBackgroundDecode", DecodeImageFile_AllowsBackgroundDecode),
@@ -474,6 +477,39 @@ static void CreateMosaicPatch_AveragesBlocksInsideRegionOnly()
     AssertIntEqual(150, patchPixels[4], "first block is uniform");
     AssertIntEqual(50, patchPixels[8], "second block average");
     AssertIntEqual(50, patchPixels[(4 + 3) * 4], "second block covers bottom row");
+}
+
+static void ResizeBounds_MovesOnlyGrabbedEdgesAndKeepsMinimum()
+{
+    var start = new System.Windows.Rect(100, 100, 50, 40);
+
+    var topLeft = ViewerWindow.ResizeBounds(start, new ResizeEdges(-1, -1), new System.Windows.Vector(-10, -20), 8);
+    AssertTrue(topLeft == new System.Windows.Rect(90, 80, 60, 60), $"top-left handle should grow up-left with bottom-right fixed, got {topLeft}");
+
+    var right = ViewerWindow.ResizeBounds(start, new ResizeEdges(1, 0), new System.Windows.Vector(15, 99), 8);
+    AssertTrue(right == new System.Windows.Rect(100, 100, 65, 40), $"right handle should ignore vertical drag, got {right}");
+
+    var bottom = ViewerWindow.ResizeBounds(start, new ResizeEdges(0, 1), new System.Windows.Vector(99, -100), 8);
+    AssertTrue(bottom == new System.Windows.Rect(100, 100, 50, 8), $"bottom handle should stop at minimum height, got {bottom}");
+
+    var left = ViewerWindow.ResizeBounds(start, new ResizeEdges(-1, 0), new System.Windows.Vector(200, 0), 8);
+    AssertTrue(left == new System.Windows.Rect(142, 100, 8, 40), $"left handle should not flip past the right edge, got {left}");
+}
+
+static void ToolShortcuts_MapConventionalKeys()
+{
+    AssertTrue(ViewerWindow.TryGetToolShortcut(System.Windows.Input.Key.V, out var select) && select == ViewerEditTool.Select, "V selects objects");
+    AssertTrue(ViewerWindow.TryGetToolShortcut(System.Windows.Input.Key.B, out var mosaic) && mosaic == ViewerEditTool.Mosaic, "B is mosaic");
+    AssertTrue(ViewerWindow.TryGetToolShortcut(System.Windows.Input.Key.T, out var text) && text == ViewerEditTool.Text, "T is text");
+    AssertTrue(!ViewerWindow.TryGetToolShortcut(System.Windows.Input.Key.F, out _), "F stays fit-to-window");
+}
+
+static void IsClickGesture_SeparatesClickFromDrag()
+{
+    AssertTrue(ViewerWindow.IsClickGesture(new System.Windows.Rect(10, 10, 0, 0)), "no movement is a click");
+    AssertTrue(ViewerWindow.IsClickGesture(new System.Windows.Rect(10, 10, 3, 2)), "hand jitter under 4px is a click");
+    AssertTrue(!ViewerWindow.IsClickGesture(new System.Windows.Rect(10, 10, 4, 1)), "4px horizontal drag draws");
+    AssertTrue(!ViewerWindow.IsClickGesture(new System.Windows.Rect(10, 10, 1, 30)), "a thin vertical drag still draws");
 }
 
 static void BuildGaussianKernel_NormalizesAndIsSymmetric()
