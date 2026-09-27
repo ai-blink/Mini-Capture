@@ -92,13 +92,13 @@ public partial class ViewerWindow
             return;
         }
 
-        CommitAnnotationsToBitmap("잘라내기 전 주석을 이미지에 적용했습니다.", pushUndo: true);
         if (_editableImage is null)
         {
             return;
         }
 
         PushUndoSnapshot();
+        CommitAnnotationsToBitmap("잘라내기 전 주석을 이미지에 적용했습니다.");
         SetEditableImage(ClearPixelRectangle(_editableImage, selection), "선택 영역을 잘라냈습니다.");
     }
 
@@ -134,13 +134,8 @@ public partial class ViewerWindow
             return;
         }
 
-        CommitAnnotationsToBitmap("붙여넣기 전 주석을 이미지에 적용했습니다.", pushUndo: true);
-        if (_editableImage is null)
-        {
-            return;
-        }
-
         PushUndoSnapshot();
+        CommitAnnotationsToBitmap("붙여넣기 전 주석을 이미지에 적용했습니다.");
         _pixelSelection = target;
         SetEditableImage(PasteBitmap(_editableImage, clipboardImage, target), "선택 영역 위치에 이미지를 붙여넣었습니다.");
     }

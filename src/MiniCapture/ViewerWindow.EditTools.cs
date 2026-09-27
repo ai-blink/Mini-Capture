@@ -75,6 +75,8 @@ public partial class ViewerWindow
         if (_selectedAnnotation is { Kind: ViewerAnnotationKind.Mosaic } mosaic &&
             mosaic.MosaicBlockSize != _mosaicBlockSize)
         {
+            // 슬라이더를 끄는 동안 쏟아지는 값 변경은 한 동작으로 묶는다.
+            PushUndoSnapshot((mosaic, nameof(EditableAnnotation.MosaicBlockSize)));
             mosaic.MosaicBlockSize = _mosaicBlockSize;
             RefreshAnnotationVisual(mosaic);
             MarkAnnotationChanged($"모자이크 크기를 {_mosaicBlockSize}px로 바꿨습니다.");
@@ -93,6 +95,7 @@ public partial class ViewerWindow
         if (_selectedAnnotation is { Kind: ViewerAnnotationKind.Mosaic } mosaic &&
             mosaic.MosaicType != _mosaicType)
         {
+            PushUndoSnapshot();
             mosaic.MosaicType = _mosaicType;
             RefreshAnnotationVisual(mosaic);
             MarkAnnotationChanged(_mosaicType == ViewerMosaicType.Blur ? "흐림 모자이크로 바꿨습니다." : "블록 모자이크로 바꿨습니다.");

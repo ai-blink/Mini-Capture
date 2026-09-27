@@ -84,6 +84,8 @@ public partial class ViewerWindow
         };
 
         AddAnnotation(annotation, "텍스트 상자를 추가했습니다.");
+        // 만든 직후 이어서 입력한 글자는 "텍스트 상자 추가"와 한 동작으로 되돌린다.
+        _undoCoalesceKey = TextUndoKey(annotation);
         if (annotation.Element is System.Windows.Controls.TextBox textBox)
         {
             textBox.Focus();
@@ -129,6 +131,7 @@ public partial class ViewerWindow
 
     private void AddAnnotation(EditableAnnotation annotation, string status)
     {
+        PushUndoSnapshot();
         _annotations.Add(annotation);
         RenderAnnotation(annotation);
         // 캡처 편집기 관례(Greenshot·ShareX): 방금 그린 객체는 도구를 바꾸지 않고 선택 상태로 두어
@@ -293,6 +296,7 @@ public partial class ViewerWindow
         AutomationProperties.SetAutomationId(textBox, "ViewerEditableTextBox");
         textBox.TextChanged += (_, _) =>
         {
+            PushUndoSnapshot(TextUndoKey(annotation));
             annotation.Text = textBox.Text;
             MarkAnnotationChanged("텍스트를 수정했습니다.");
         };
@@ -328,8 +332,16 @@ public partial class ViewerWindow
         annotation.Element.Height = Math.Max(1, rect.Height);
     }
 
+    private static object TextUndoKey(EditableAnnotation annotation) => (annotation, nameof(EditableAnnotation.Text));
+
     private void SelectAnnotation(EditableAnnotation? annotation)
     {
+        if (!ReferenceEquals(annotation, _selectedAnnotation))
+        {
+            // 다른 객체로 옮겨 가면 연속 입력 묶음을 끊는다.
+            _undoCoalesceKey = null;
+        }
+
         _selectedAnnotation = annotation;
         if (annotation is { Kind: ViewerAnnotationKind.Mosaic })
         {

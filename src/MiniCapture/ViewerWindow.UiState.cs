@@ -84,12 +84,12 @@ public partial class ViewerWindow
     {
         if (UndoButton is not null)
         {
-            UndoButton.IsEnabled = _undoImages.Count > 0;
+            UndoButton.IsEnabled = _editHistory.CanUndo;
         }
 
         if (RedoButton is not null)
         {
-            RedoButton.IsEnabled = _redoImages.Count > 0;
+            RedoButton.IsEnabled = _editHistory.CanRedo;
         }
 
         if (DeleteAnnotationButton is not null)

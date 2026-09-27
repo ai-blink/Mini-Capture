@@ -1708,3 +1708,30 @@ Allow users to exclude a window-selection target by choosing a running process o
 - NEEDS_USER_UI_CHECK: 마우스·키보드 조작 전체(모자이크 드래그, 클릭 선택, 8방향 크기 조절, V 이동, 텍스트 더블클릭, Esc 단계, 단축키).
 - 2차: 객체 작업 포함 Undo/Redo(동작 1회당 스냅샷 1개).
 - 사용자 결정 대기: Snagit·ShareX식 객체 위 누름 우선 이동으로 바꿀지.
+- 2026-09-27 후속: 사용자가 1차 조작을 실제 앱에서 확인(문제 없음)했고, 이동 방식은 현행(`객체 선택` V에서만 이동)을 유지하기로 결정했다.
+
+## 마크업 편집 UX 2차 — 객체 작업 Undo/Redo
+
+### Problem
+
+- 되돌리기가 비트맵 스냅샷만 쌓아 객체 추가·이동·크기·삭제·속성 변경은 `Ctrl+Z`로 돌아가지 않았다. 회전·자르기·잘라내기·붙여넣기는 "주석 합성"과 "작업"이 스냅샷 2개로 쌓여 되돌리기 2번이 필요했다.
+
+### Changes
+
+- `EditHistory<T>`(신규 `src/MiniCapture/EditHistory.cs`): 동작 직전 상태를 쌓는 Undo/Redo 스택, 용량 20, 새 동작이 redo 갈래를 버림. 기존 `Stack<BitmapSource>` 2개와 `TrimUndoStack`을 대체.
+- 스냅샷 = `EditSnapshot(이미지, 주석 복제 목록)`. 이미지는 frozen 참조를 공유(주석만 바뀐 동작은 비트맵 복사 없음), 주석은 `EditableAnnotation.Clone()`으로 화면 요소 없이 복제, 복원 때 다시 복제해 히스토리 스냅샷이 오염되지 않게 한다.
+- 기록 지점: 추가(`AddAnnotation`), 이동·크기 변경(드래그 시작 때 잡고 실제 변화가 있을 때만 `EndAnnotationDrag`에서 기록), 삭제, 모자이크 종류·크기, 텍스트 입력. 연속 입력은 병합 키로 한 동작: 텍스트 타이핑, 모자이크 크기 슬라이더, 텍스트 상자 생성 직후의 입력. 다른 객체를 선택하면 병합이 끊긴다.
+- 회전·자르기·잘라내기·붙여넣기: 주석이 살아 있는 직전 상태를 1개만 쌓고 합성+작업을 한 동작으로 되돌린다(되돌리면 편집 가능한 주석이 복원된다).
+- 드래그·텍스트 편집 중 되돌리기는 그 동작을 먼저 확정한 뒤 되돌린다. 텍스트 상자 안 `Ctrl+Z`는 TextBox 자체 되돌리기 유지.
+
+### Verification
+
+- `dotnet build`(앱·테스트): 경고 0개, 오류 0개. 회귀 테스트 33/33 통과(새 테스트: `EditHistory_UndoRedoWalksOneSnapshotPerAction`, `EditHistory_NewActionDropsRedoAndKeepsCapacity`, `EditableAnnotationClone_IsIndependentOfOriginal`).
+- 새 빌드를 파일 인자로 콜드 스타트: 뷰어가 바로 열림(이전 1회 관측 미재현).
+- 좌표 입력 자동화 시도는 무효: `SetForegroundWindow`는 성공했지만 화면 캡처상 다른 창(터미널·화상 키보드)이 뷰어를 덮어 입력이 뷰어에 닿지 않았다(모자이크 0개). 입력이 다른 창으로 샐 위험이 있어 중단했다.
+- 사용자 승인: 실제 앱 확인 체크리스트(그리기→이동→크기→삭제 후 Undo 4회·Redo 4회, 무변화 클릭 무기록, 텍스트 1회 되돌리기, 모자이크 슬라이더, 회전 후 주석 복원)를 전달한 뒤 사용자가 2차를 승인했다.
+
+### Follow-up
+
+- 모자이크 크기 슬라이더를 놓았다가 같은 객체에서 다시 끌면 두 조작이 한 단계로 묶인다(병합 키가 같은 객체·속성이면 유지). 문제가 되면 슬라이더 조작 종료 시 병합을 끊는다.
+- 흐림 모자이크 동기 재계산 성능은 여전히 미측정.

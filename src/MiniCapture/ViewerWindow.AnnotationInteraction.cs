@@ -74,6 +74,7 @@ public partial class ViewerWindow
         }
 
         _isMovingAnnotation = true;
+        _dragStartSnapshot = CaptureEditSnapshot();
         _annotationDragStartPoint = ClampToSurface(e.GetPosition(AnnotationOverlay));
         _annotationStartBounds = GetAnnotationBounds(annotation);
         _annotationStartPoints = annotation.PixelPoints.ToList();
@@ -111,8 +112,15 @@ public partial class ViewerWindow
         // 클릭만 하고 움직이지 않았으면 수정으로 치지 않는다(더블클릭 편집 진입 전 첫 클릭 포함).
         if (_selectedAnnotation is not null && GetAnnotationBounds(_selectedAnnotation) != _annotationStartBounds)
         {
+            if (_dragStartSnapshot is { } before)
+            {
+                RecordUndo(before);
+            }
+
             MarkAnnotationChanged("선택 항목을 수정했습니다.");
         }
+
+        _dragStartSnapshot = null;
     }
 
     private void OnResizeHandleMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -124,6 +132,7 @@ public partial class ViewerWindow
 
         _activeResizeEdges = edges;
         _isResizingAnnotation = true;
+        _dragStartSnapshot = CaptureEditSnapshot();
         _annotationDragStartPoint = ClampToSurface(e.GetPosition(AnnotationOverlay));
         _annotationStartBounds = GetAnnotationBounds(_selectedAnnotation);
         _annotationStartPoints = _selectedAnnotation.PixelPoints.ToList();
@@ -254,6 +263,7 @@ public partial class ViewerWindow
             AnnotationOverlay.Children.Remove(_selectedAnnotation.Element);
         }
 
+        PushUndoSnapshot();
         _annotations.Remove(_selectedAnnotation);
         SelectAnnotation(null);
         MarkAnnotationChanged("선택 항목을 삭제했습니다.");
@@ -274,16 +284,12 @@ public partial class ViewerWindow
         SetViewerStatus(status);
     }
 
-    private void CommitAnnotationsToBitmap(string status, bool pushUndo)
+    // 호출 측이 먼저 PushUndoSnapshot()으로 주석이 살아 있는 직전 상태를 남긴다(합성과 뒤 작업이 한 동작).
+    private void CommitAnnotationsToBitmap(string status)
     {
         if (_editableImage is null || _annotations.Count == 0)
         {
             return;
-        }
-
-        if (pushUndo)
-        {
-            PushUndoSnapshot();
         }
 
         SetEditableImage(ComposeImageForExport(), status);

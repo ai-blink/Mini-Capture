@@ -87,7 +87,10 @@ public partial class ViewerWindow : Window
         string? TargetPath,
         string TargetFolder);
 
-    private sealed class EditableAnnotation
+    // 편집 동작 직전 상태. 이미지는 frozen이라 참조를 공유하고, 주석은 화면 요소 없이 복제해 둔다.
+    private sealed record EditSnapshot(BitmapSource Image, IReadOnlyList<EditableAnnotation> Annotations);
+
+    internal sealed class EditableAnnotation
     {
         public ViewerAnnotationKind Kind { get; init; }
 
@@ -111,13 +114,35 @@ public partial class ViewerWindow : Window
         public object? MosaicPatchKey { get; set; }
 
         public FrameworkElement? Element { get; set; }
+
+        // 화면 요소(Element)는 복제하지 않는다. 복원할 때 다시 그린다. 모자이크 조각은 frozen이라 공유한다.
+        public EditableAnnotation Clone()
+        {
+            var clone = new EditableAnnotation
+            {
+                Kind = Kind,
+                Color = Color,
+                StrokeThickness = StrokeThickness,
+                PixelBounds = PixelBounds,
+                Text = Text,
+                MosaicType = MosaicType,
+                MosaicBlockSize = MosaicBlockSize,
+                MosaicPatch = MosaicPatch,
+                MosaicPatchKey = MosaicPatchKey
+            };
+            clone.PixelPoints.AddRange(PixelPoints);
+            return clone;
+        }
     }
 
     private readonly ObservableCollection<CaptureImageFile> _files = new();
     private readonly List<EditableAnnotation> _annotations = new();
     private readonly List<WpfPoint> _penPoints = new();
-    private readonly Stack<BitmapSource> _redoImages = new();
-    private readonly Stack<BitmapSource> _undoImages = new();
+    private readonly EditHistory<EditSnapshot> _editHistory = new(MaxUndoSnapshots);
+    // 연속 입력(텍스트 타이핑·모자이크 크기 슬라이더)을 한 동작으로 묶는 키. 같은 키가 이어지면 새 스냅샷을 쌓지 않는다.
+    private object? _undoCoalesceKey;
+    // 이동·크기 변경 드래그를 시작할 때 잡은 직전 상태. 실제로 바뀌었을 때만 히스토리에 넣는다.
+    private EditSnapshot? _dragStartSnapshot;
     private readonly DispatcherTimer _viewStateSaveTimer;
     private CancellationTokenSource? _imageLoadCancellation;
     private CancellationTokenSource? _loadCancellation;

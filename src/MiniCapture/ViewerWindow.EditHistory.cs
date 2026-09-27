@@ -30,75 +30,85 @@ namespace MiniCapture;
 
 public partial class ViewerWindow
 {
-    private void PushUndoSnapshot()
+    // 동작 1회 = 스냅샷 1개: 상태를 바꾸기 직전에 부른다. coalesceKey가 직전 기록과 같으면 같은 동작의 연속으로 보고 건너뛴다.
+    private void PushUndoSnapshot(object? coalesceKey = null)
     {
-        if (_editableImage is null)
+        if (coalesceKey is not null && Equals(coalesceKey, _undoCoalesceKey))
         {
             return;
         }
 
-        _undoImages.Push(CloneBitmap(_editableImage));
-        while (_undoImages.Count > MaxUndoSnapshots)
+        if (CaptureEditSnapshot() is { } snapshot)
         {
-            TrimUndoStack();
+            RecordUndo(snapshot, coalesceKey);
         }
+    }
 
-        _redoImages.Clear();
+    private void RecordUndo(EditSnapshot before, object? coalesceKey = null)
+    {
+        _editHistory.Push(before);
+        _undoCoalesceKey = coalesceKey;
         UpdateEditButtons();
     }
 
-    private void TrimUndoStack()
-    {
-        if (_undoImages.Count <= MaxUndoSnapshots)
-        {
-            return;
-        }
-
-        var snapshots = _undoImages.Take(MaxUndoSnapshots).Reverse().ToArray();
-        _undoImages.Clear();
-        foreach (var snapshot in snapshots)
-        {
-            _undoImages.Push(snapshot);
-        }
-    }
+    private EditSnapshot? CaptureEditSnapshot() =>
+        _editableImage is null
+            ? null
+            : new EditSnapshot(_editableImage, _annotations.Select(annotation => annotation.Clone()).ToArray());
 
     private void UndoEdit()
     {
-        if (_editableImage is null || _undoImages.Count == 0)
+        FinishAnnotationGesture();
+        if (CaptureEditSnapshot() is { } current && _editHistory.TryUndo(current, out var previous))
         {
-            return;
+            RestoreEditSnapshot(previous, "되돌렸습니다.");
         }
-
-        _redoImages.Push(CloneBitmap(_editableImage));
-        SetEditableImage(_undoImages.Pop(), "되돌렸습니다.", markDirty: true);
-        UpdateEditButtons();
     }
 
     private void RedoEdit()
     {
-        if (_editableImage is null || _redoImages.Count == 0)
+        FinishAnnotationGesture();
+        if (CaptureEditSnapshot() is { } current && _editHistory.TryRedo(current, out var next))
         {
-            return;
+            RestoreEditSnapshot(next, "다시 적용했습니다.");
+        }
+    }
+
+    // 진행 중인 이동·크기 변경·텍스트 입력은 먼저 한 동작으로 확정해, 되돌리기가 그 동작부터 되돌리게 한다.
+    private void FinishAnnotationGesture()
+    {
+        if (_isMovingAnnotation || _isResizingAnnotation)
+        {
+            EndAnnotationDrag();
         }
 
-        _undoImages.Push(CloneBitmap(_editableImage));
-        SetEditableImage(_redoImages.Pop(), "다시 적용했습니다.", markDirty: true);
-        UpdateEditButtons();
+        EndAnnotationTextEditing();
+    }
+
+    private void RestoreEditSnapshot(EditSnapshot snapshot, string status)
+    {
+        _undoCoalesceKey = null;
+        _pressedAnnotation = null;
+        _annotations.Clear();
+        // 스냅샷은 히스토리에 남아 다시 쓰이므로 복원본은 새로 복제한다.
+        _annotations.AddRange(snapshot.Annotations.Select(annotation => annotation.Clone()));
+        _selectedAnnotation = null;
+        if (!ReferenceEquals(snapshot.Image, _editableImage))
+        {
+            SetEditableImage(snapshot.Image, status);
+        }
+
+        RenderAnnotations();
+        SelectAnnotation(null);
+        MarkAnnotationChanged(status);
     }
 
     private void ClearEditHistory()
     {
-        _undoImages.Clear();
-        _redoImages.Clear();
+        _editHistory.Clear();
+        _undoCoalesceKey = null;
+        _dragStartSnapshot = null;
         UpdateEditButtons();
-    }
-
-    private static BitmapSource CloneBitmap(BitmapSource source)
-    {
-        var converted = ConvertToPbgra32(source);
-        var clone = new WriteableBitmap(converted);
-        clone.Freeze();
-        return clone;
     }
 
     private void RotateImage(double angle)
@@ -108,8 +118,8 @@ public partial class ViewerWindow
             return;
         }
 
-        CommitAnnotationsToBitmap("회전 전 주석을 이미지에 적용했습니다.", pushUndo: true);
         PushUndoSnapshot();
+        CommitAnnotationsToBitmap("회전 전 주석을 이미지에 적용했습니다.");
         var source = ConvertToPbgra32(_editableImage);
         var transformed = new TransformedBitmap(source, new RotateTransform(angle));
         transformed.Freeze();
@@ -247,13 +257,8 @@ public partial class ViewerWindow
             return;
         }
 
-        CommitAnnotationsToBitmap("자르기 전 주석을 이미지에 적용했습니다.", pushUndo: true);
-        if (_editableImage is null)
-        {
-            return;
-        }
-
         PushUndoSnapshot();
+        CommitAnnotationsToBitmap("자르기 전 주석을 이미지에 적용했습니다.");
         var cropped = new CroppedBitmap(ConvertToPbgra32(_editableImage), crop);
         cropped.Freeze();
         _pixelSelection = null;

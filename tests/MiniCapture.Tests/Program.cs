@@ -27,6 +27,9 @@ var tests = new (string Name, Action Run)[]
     ("ResizeBounds_MovesOnlyGrabbedEdgesAndKeepsMinimum", ResizeBounds_MovesOnlyGrabbedEdgesAndKeepsMinimum),
     ("ToolShortcuts_MapConventionalKeys", ToolShortcuts_MapConventionalKeys),
     ("IsClickGesture_SeparatesClickFromDrag", IsClickGesture_SeparatesClickFromDrag),
+    ("EditHistory_UndoRedoWalksOneSnapshotPerAction", EditHistory_UndoRedoWalksOneSnapshotPerAction),
+    ("EditHistory_NewActionDropsRedoAndKeepsCapacity", EditHistory_NewActionDropsRedoAndKeepsCapacity),
+    ("EditableAnnotationClone_IsIndependentOfOriginal", EditableAnnotationClone_IsIndependentOfOriginal),
     ("BuildGaussianKernel_NormalizesAndIsSymmetric", BuildGaussianKernel_NormalizesAndIsSymmetric),
     ("ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge", ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge),
     ("DecodeImageFile_AllowsBackgroundDecode", DecodeImageFile_AllowsBackgroundDecode),
@@ -510,6 +513,72 @@ static void IsClickGesture_SeparatesClickFromDrag()
     AssertTrue(ViewerWindow.IsClickGesture(new System.Windows.Rect(10, 10, 3, 2)), "hand jitter under 4px is a click");
     AssertTrue(!ViewerWindow.IsClickGesture(new System.Windows.Rect(10, 10, 4, 1)), "4px horizontal drag draws");
     AssertTrue(!ViewerWindow.IsClickGesture(new System.Windows.Rect(10, 10, 1, 30)), "a thin vertical drag still draws");
+}
+
+static void EditHistory_UndoRedoWalksOneSnapshotPerAction()
+{
+    // 상태 "a"에서 동작 두 번(→"b"→"c"). 각 동작 직전 상태를 쌓는다.
+    var history = new EditHistory<string>(20);
+    history.Push("a");
+    history.Push("b");
+    var current = "c";
+
+    AssertTrue(history.TryUndo(current, out current) && current == "b", "first undo returns the state before the last action");
+    AssertTrue(history.TryUndo(current, out current) && current == "a", "second undo returns the initial state");
+    AssertTrue(!history.TryUndo(current, out _), "nothing left to undo");
+    AssertTrue(history.TryRedo(current, out current) && current == "b", "redo re-applies the first action");
+    AssertTrue(history.TryRedo(current, out current) && current == "c", "redo re-applies the second action");
+    AssertTrue(!history.CanRedo && history.UndoCount == 2, "redo moves states back to the undo side");
+}
+
+static void EditHistory_NewActionDropsRedoAndKeepsCapacity()
+{
+    var history = new EditHistory<int>(3);
+    history.Push(1);
+    history.Push(2);
+    AssertTrue(history.TryUndo(3, out var current) && current == 2, "undo before a new action");
+    history.Push(current);
+    AssertTrue(!history.CanRedo, "a new action discards the redo branch");
+
+    for (var i = 10; i < 20; i++)
+    {
+        history.Push(i);
+    }
+
+    AssertIntEqual(3, history.UndoCount, "capacity trims the oldest snapshots");
+    AssertTrue(history.TryUndo(99, out var newest) && newest == 19, "the newest snapshot survives trimming");
+    history.Clear();
+    AssertTrue(!history.CanUndo && !history.CanRedo, "clear empties both sides");
+}
+
+static void EditableAnnotationClone_IsIndependentOfOriginal()
+{
+    var original = new ViewerWindow.EditableAnnotation
+    {
+        Kind = ViewerAnnotationKind.Pen,
+        Color = System.Windows.Media.Colors.Red,
+        StrokeThickness = 3,
+        PixelBounds = new System.Windows.Rect(1, 2, 30, 40),
+        Text = "before",
+        MosaicType = ViewerMosaicType.Blur,
+        MosaicBlockSize = 12
+    };
+    original.PixelPoints.Add(new System.Windows.Point(1, 2));
+    original.PixelPoints.Add(new System.Windows.Point(31, 42));
+
+    var clone = original.Clone();
+    original.PixelBounds = new System.Windows.Rect(100, 100, 5, 5);
+    original.PixelPoints[0] = new System.Windows.Point(100, 100);
+    original.PixelPoints.Add(new System.Windows.Point(7, 7));
+    original.Text = "after";
+    original.MosaicBlockSize = 30;
+
+    AssertTrue(clone.Kind == ViewerAnnotationKind.Pen && clone.Color == System.Windows.Media.Colors.Red && clone.StrokeThickness == 3, "clone keeps style");
+    AssertTrue(clone.PixelBounds == new System.Windows.Rect(1, 2, 30, 40), "clone bounds are not shared");
+    AssertIntEqual(2, clone.PixelPoints.Count, "clone point list is not shared");
+    AssertTrue(clone.PixelPoints[0] == new System.Windows.Point(1, 2), "clone points keep their values");
+    AssertTrue(clone.Text == "before" && clone.MosaicType == ViewerMosaicType.Blur && clone.MosaicBlockSize == 12, "clone keeps text and mosaic settings");
+    AssertTrue(clone.Element is null, "clone does not carry the on-screen element");
 }
 
 static void BuildGaussianKernel_NormalizesAndIsSymmetric()
