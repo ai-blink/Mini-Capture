@@ -30,7 +30,7 @@
   <data name="Settings_Section_ExtensionDefaults" xml:space="preserve"><value>File Associations</value></data>
   <data name="Settings_Section_CaptureSettings" xml:space="preserve"><value>Capture Settings</value></data>
   <data name="Settings_Section_WindowExclusions" xml:space="preserve"><value>Window Exclusions</value></data>
-  <data name="Settings_Section_Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Settings_Section_Language" xml:space="preserve"><value>Language &amp; Theme</value></data>
 
   <!-- Capture settings panel -->
   <data name="Settings_Capture_Subtitle" xml:space="preserve"><value>Saves hotkeys, timer, and transparent quick-button visibility.</value></data>
@@ -161,7 +161,7 @@ Due to Windows security policy, an app cannot silently change the existing defau
   <data name="FileAssoc_DetailWithCommand" xml:space="preserve"><value>UserChoice={0}, Default={1}, Command={2}</value></data>
 
   <!-- Language section -->
-  <data name="Settings_Language_Subtitle" xml:space="preserve"><value>Choose the language shown in the app. Changes apply after a restart.</value></data>
+  <data name="Settings_Language_Subtitle" xml:space="preserve"><value>Choose the language and theme used in the app. Changes apply after a restart.</value></data>
   <data name="Settings_Language_Label" xml:space="preserve"><value>Display Language</value></data>
   <data name="Settings_Language_ApplyButton" xml:space="preserve"><value>Apply and Restart</value></data>
   <data name="Settings_Language_RestartPromptTitle" xml:space="preserve"><value>Restart</value></data>
@@ -451,4 +451,9 @@ Due to Windows security policy, an app cannot silently change the existing defau
   <data name="Viewer_Status_LoadingImage" xml:space="preserve"><value>Loading the image.</value></data>
   <data name="Viewer_Status_ImageOpenFailed" xml:space="preserve"><value>Cannot open the image: {0}</value></data>
   <data name="Viewer_Status_ZoomInvalid" xml:space="preserve"><value>Enter a zoom value between 10% and 800%.</value></data>
+  <data name="Settings_Theme_Label" xml:space="preserve"><value>Theme</value></data>
+  <data name="Theme_Light" xml:space="preserve"><value>Light</value></data>
+  <data name="Theme_Dark" xml:space="preserve"><value>Dark</value></data>
+  <data name="Theme_System" xml:space="preserve"><value>Follow system</value></data>
+  <data name="Settings_Theme_RestartPromptBody" xml:space="preserve"><value>Mini Capture must restart to change the theme. Restart now?</value></data>
 </root>

@@ -8,26 +8,19 @@
         Height="837"
         MinWidth="710"
         MinHeight="756"
-        Background="#121414"
+        Background="{StaticResource SettingsBackgroundBrush}"
         FontFamily="Segoe UI"
         ShowInTaskbar="True"
         UseLayoutRounding="True"
         WindowStartupLocation="CenterOwner"
         Loaded="OnLoaded">
     <Window.Resources>
-        <SolidColorBrush x:Key="SettingsBackgroundBrush" Color="#121414" />
-        <SolidColorBrush x:Key="SettingsPanelBrush" Color="#181B1C" />
-        <SolidColorBrush x:Key="SettingsPanelAltBrush" Color="#1F2427" />
-        <SolidColorBrush x:Key="SettingsBorderBrush" Color="#31383E" />
-        <SolidColorBrush x:Key="SettingsAccentBrush" Color="#0078D4" />
-        <SolidColorBrush x:Key="SettingsTextBrush" Color="#E6E8EA" />
-        <SolidColorBrush x:Key="SettingsMutedTextBrush" Color="#A8B0B8" />
-
+        <!-- 색은 App 리소스의 Themes/Light.xaml·Dark.xaml에서 온다. -->
         <Style x:Key="SettingsButtonStyle" TargetType="Button">
             <Setter Property="MinHeight" Value="34" />
             <Setter Property="Padding" Value="12,7" />
-            <Setter Property="Background" Value="#25303A" />
-            <Setter Property="BorderBrush" Value="#425160" />
+            <Setter Property="Background" Value="{StaticResource SettingsButtonBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource SettingsButtonBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="{StaticResource SettingsTextBrush}" />
             <Setter Property="Cursor" Value="Hand" />
@@ -37,22 +30,22 @@
             <Setter Property="MinHeight" Value="32" />
             <Setter Property="MinWidth" Value="54" />
             <Setter Property="Padding" Value="8,4" />
-            <Setter Property="Background" Value="#F4F7FA" />
-            <Setter Property="BorderBrush" Value="#94A3B8" />
+            <Setter Property="Background" Value="{StaticResource SettingsInputBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource SettingsInputBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="#101820" />
+            <Setter Property="Foreground" Value="{StaticResource SettingsInputTextBrush}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
 
         <Style TargetType="ScrollBar">
-            <Setter Property="Background" Value="#111516" />
-            <Setter Property="Foreground" Value="#708090" />
+            <Setter Property="Background" Value="{StaticResource SettingsDeepBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource SettingsScrollForegroundBrush}" />
             <Setter Property="Width" Value="12" />
             <Setter Property="MinWidth" Value="12" />
         </Style>
 
         <Style TargetType="Thumb">
-            <Setter Property="Background" Value="#526170" />
+            <Setter Property="Background" Value="{StaticResource SettingsScrollThumbBrush}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Thumb">
@@ -72,7 +65,7 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#17324A" />
+                    <Setter Property="Background" Value="{StaticResource SettingsSelectedBrush}" />
                     <Setter Property="Foreground" Value="{StaticResource SettingsTextBrush}" />
                     <Setter Property="BorderBrush" Value="{StaticResource SettingsAccentBrush}" />
                 </Trigger>
@@ -89,7 +82,7 @@
 
         <Border Grid.Row="0"
                 Padding="18,0"
-                Background="#16191A"
+                Background="{StaticResource SettingsHeaderBrush}"
                 BorderBrush="{StaticResource SettingsBorderBrush}"
                 BorderThickness="0,0,0,1">
             <DockPanel LastChildFill="True">
@@ -476,10 +469,10 @@
                                               MinWidth="0"
                                               MinHeight="32"
                                              Padding="8,4"
-                                             Background="#F4F7FA"
-                                             BorderBrush="#94A3B8"
+                                             Background="{StaticResource SettingsInputBrush}"
+                                             BorderBrush="{StaticResource SettingsInputBorderBrush}"
                                              BorderThickness="1"
-                                             Foreground="#101820"
+                                             Foreground="{StaticResource SettingsInputTextBrush}"
                                              ToolTip="{x:Static res:Strings.Settings_WindowExclusion_PathTooltip}" />
                                     <Button Grid.Column="1"
                                             AutomationProperties.AutomationId="BrowseWindowExclusionPathButton"
@@ -545,7 +538,7 @@
                                           MinHeight="150"
                                          BorderBrush="{StaticResource SettingsBorderBrush}"
                                          BorderThickness="1"
-                                         Background="#111516"
+                                         Background="{StaticResource SettingsDeepBrush}"
                                          Foreground="{StaticResource SettingsTextBrush}">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
@@ -636,7 +629,7 @@
                                        AutomationProperties.AutomationId="AssociationSummaryText"
                                        VerticalAlignment="Center"
                                        FontSize="12"
-                                       Foreground="#5EEAD4"
+                                       Foreground="{StaticResource SettingsHighlightTextBrush}"
                                        Text="{x:Static res:Strings.Settings_Extension_StatusPending}" />
                         </Grid>
                     </Border>
@@ -677,7 +670,7 @@
                                                  MinHeight="34"
                                                  Padding="10,6"
                                                  VerticalContentAlignment="Center"
-                                                 Background="#121414"
+                                                 Background="{StaticResource SettingsBackgroundBrush}"
                                                  BorderBrush="{StaticResource SettingsBorderBrush}"
                                                  BorderThickness="1"
                                                  Foreground="{StaticResource SettingsTextBrush}"
@@ -793,7 +786,7 @@
                         <Border Grid.Row="2"
                                 Margin="0,8,0,0"
                                 Padding="12,9"
-                                Background="#101213"
+                                Background="{StaticResource SettingsDeepBrush}"
                                 BorderBrush="{StaticResource SettingsBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="4">
@@ -854,6 +847,34 @@
                                         Style="{StaticResource SettingsButtonStyle}" />
                             </StackPanel>
                         </Border>
+
+                        <Border Margin="0,12,0,0"
+                                Padding="14"
+                                Background="{StaticResource SettingsPanelBrush}"
+                                BorderBrush="{StaticResource SettingsBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <StackPanel>
+                                <TextBlock Margin="0,0,0,8"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource SettingsTextBrush}"
+                                           Text="{x:Static res:Strings.Settings_Theme_Label}" />
+                                <ComboBox x:Name="ThemeComboBox"
+                                          AutomationProperties.AutomationId="ThemeComboBox"
+                                          Width="240"
+                                          HorizontalAlignment="Left"
+                                          ItemsSource="{Binding ThemeOptions}"
+                                          DisplayMemberPath="DisplayName"
+                                          Style="{StaticResource SettingsComboBoxStyle}" />
+                                <Button AutomationProperties.AutomationId="ApplyThemeButton"
+                                        Click="OnApplyThemeClick"
+                                        Content="{x:Static res:Strings.Settings_Language_ApplyButton}"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,12,0,0"
+                                        MinWidth="152"
+                                        Style="{StaticResource SettingsButtonStyle}" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
@@ -861,7 +882,7 @@
 
         <Border Grid.Row="2"
                 Padding="18,0"
-                Background="#101213"
+                Background="{StaticResource SettingsDeepBrush}"
                 BorderBrush="{StaticResource SettingsBorderBrush}"
                 BorderThickness="0,1,0,0">
             <TextBlock VerticalAlignment="Center"

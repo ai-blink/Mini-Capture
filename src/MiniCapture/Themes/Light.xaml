@@ -1,0 +1,39 @@
+<!-- 라이트 테마 색. Dark.xaml과 키 목록이 같아야 한다(한쪽에만 있으면 그 테마에서 StaticResource가 실패). -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- 뷰어 -->
+    <SolidColorBrush x:Key="ViewerWindowBackgroundBrush" Color="#EEF1F1" />
+    <SolidColorBrush x:Key="ViewerToolbarBackgroundBrush" Color="#F1F4F4" />
+    <SolidColorBrush x:Key="ViewerPanelBackgroundBrush" Color="#FAFBFB" />
+    <SolidColorBrush x:Key="ViewerPanelRaisedBrush" Color="#F6F8F8" />
+    <SolidColorBrush x:Key="ViewerPanelTintBrush" Color="#EEF4F3" />
+    <SolidColorBrush x:Key="ViewerHoverBrush" Color="#E8EEEE" />
+    <SolidColorBrush x:Key="ViewerBorderBrush" Color="#CCD4D4" />
+    <SolidColorBrush x:Key="ViewerMutedBorderBrush" Color="#B9C4C5" />
+    <SolidColorBrush x:Key="ViewerAccentBrush" Color="#197F78" />
+    <SolidColorBrush x:Key="ViewerAccentMutedBrush" Color="#D8EEEB" />
+    <SolidColorBrush x:Key="ViewerOnAccentTextBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ViewerTextBrush" Color="#293638" />
+    <SolidColorBrush x:Key="ViewerMutedTextBrush" Color="#59686A" />
+    <SolidColorBrush x:Key="ViewerDimTextBrush" Color="#748184" />
+
+    <!-- 설정 창·키 감지 대화상자 -->
+    <SolidColorBrush x:Key="SettingsBackgroundBrush" Color="#EEF1F1" />
+    <SolidColorBrush x:Key="SettingsHeaderBrush" Color="#F1F4F4" />
+    <SolidColorBrush x:Key="SettingsDeepBrush" Color="#F6F8F8" />
+    <SolidColorBrush x:Key="SettingsPanelBrush" Color="#FAFBFB" />
+    <SolidColorBrush x:Key="SettingsPanelAltBrush" Color="#F1F4F4" />
+    <SolidColorBrush x:Key="SettingsBorderBrush" Color="#CCD4D4" />
+    <SolidColorBrush x:Key="SettingsAccentBrush" Color="#197F78" />
+    <SolidColorBrush x:Key="SettingsSelectedBrush" Color="#D8EEEB" />
+    <SolidColorBrush x:Key="SettingsTextBrush" Color="#293638" />
+    <SolidColorBrush x:Key="SettingsMutedTextBrush" Color="#59686A" />
+    <SolidColorBrush x:Key="SettingsHighlightTextBrush" Color="#197F78" />
+    <SolidColorBrush x:Key="SettingsButtonBrush" Color="#E8EEEE" />
+    <SolidColorBrush x:Key="SettingsButtonBorderBrush" Color="#B9C4C5" />
+    <SolidColorBrush x:Key="SettingsInputBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="SettingsInputBorderBrush" Color="#B9C4C5" />
+    <SolidColorBrush x:Key="SettingsInputTextBrush" Color="#293638" />
+    <SolidColorBrush x:Key="SettingsScrollForegroundBrush" Color="#748184" />
+    <SolidColorBrush x:Key="SettingsScrollThumbBrush" Color="#B9C4C5" />
+</ResourceDictionary>

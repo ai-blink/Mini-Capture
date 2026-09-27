@@ -432,4 +432,10 @@ public static class Strings
     public static string Viewer_Status_LoadingImage => Get(nameof(Viewer_Status_LoadingImage));
     public static string Viewer_Status_ImageOpenFailed => Get(nameof(Viewer_Status_ImageOpenFailed));
     public static string Viewer_Status_ZoomInvalid => Get(nameof(Viewer_Status_ZoomInvalid));
+
+    public static string Settings_Theme_Label => Get(nameof(Settings_Theme_Label));
+    public static string Theme_Light => Get(nameof(Theme_Light));
+    public static string Theme_Dark => Get(nameof(Theme_Dark));
+    public static string Theme_System => Get(nameof(Theme_System));
+    public static string Settings_Theme_RestartPromptBody => Get(nameof(Settings_Theme_RestartPromptBody));
 }

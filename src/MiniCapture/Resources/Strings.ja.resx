@@ -30,7 +30,7 @@
   <data name="Settings_Section_ExtensionDefaults" xml:space="preserve"><value>拡張子の関連付け</value></data>
   <data name="Settings_Section_CaptureSettings" xml:space="preserve"><value>キャプチャ設定</value></data>
   <data name="Settings_Section_WindowExclusions" xml:space="preserve"><value>ウィンドウ除外</value></data>
-  <data name="Settings_Section_Language" xml:space="preserve"><value>言語</value></data>
+  <data name="Settings_Section_Language" xml:space="preserve"><value>言語とテーマ</value></data>
 
   <!-- Capture settings panel -->
   <data name="Settings_Capture_Subtitle" xml:space="preserve"><value>ホットキー、タイマー、透明クイックアイコンの表示状態を保存します。</value></data>
@@ -161,7 +161,7 @@ Windows のセキュリティポリシーにより、アプリが既存の既定
   <data name="FileAssoc_DetailWithCommand" xml:space="preserve"><value>UserChoice={0}、既定={1}、コマンド={2}</value></data>
 
   <!-- Language section -->
-  <data name="Settings_Language_Subtitle" xml:space="preserve"><value>アプリに表示する言語を選択します。変更後は再起動すると適用されます。</value></data>
+  <data name="Settings_Language_Subtitle" xml:space="preserve"><value>アプリに表示する言語とテーマを選択します。変更後は再起動すると適用されます。</value></data>
   <data name="Settings_Language_Label" xml:space="preserve"><value>表示言語</value></data>
   <data name="Settings_Language_ApplyButton" xml:space="preserve"><value>適用して再起動</value></data>
   <data name="Settings_Language_RestartPromptTitle" xml:space="preserve"><value>再起動</value></data>
@@ -451,4 +451,9 @@ Windows のセキュリティポリシーにより、アプリが既存の既定
   <data name="Viewer_Status_LoadingImage" xml:space="preserve"><value>画像を読み込んでいます。</value></data>
   <data name="Viewer_Status_ImageOpenFailed" xml:space="preserve"><value>画像を開けません: {0}</value></data>
   <data name="Viewer_Status_ZoomInvalid" xml:space="preserve"><value>ズーム値は10%~800%の数値で入力してください。</value></data>
+  <data name="Settings_Theme_Label" xml:space="preserve"><value>テーマ</value></data>
+  <data name="Theme_Light" xml:space="preserve"><value>ライト</value></data>
+  <data name="Theme_Dark" xml:space="preserve"><value>ダーク</value></data>
+  <data name="Theme_System" xml:space="preserve"><value>システム設定に従う</value></data>
+  <data name="Settings_Theme_RestartPromptBody" xml:space="preserve"><value>テーマを変更するには Mini Capture を再起動する必要があります。今すぐ再起動しますか?</value></data>
 </root>

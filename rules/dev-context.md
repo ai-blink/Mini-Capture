@@ -9,6 +9,9 @@
 
 ## Immediate Next Step
 
+- NEEDS_USER_UI_CHECK (theme, D-020): Settings → 언어·테마 → 테마 Dark/System → restart; check the settings window, hotkey dialog, viewer, and the dark title bar (PrintWindow could not show it).
+- FOLLOW_UP: --settings on startup does not open the settings window (also on the pre-theme build).
+
 - NEEDS_USER_UI_CHECK: i18n slice 2 screens in EN/ZH/JA (floating button tooltip/menu, mode/timer, result panel, tray, capture overlay hints).
 - i18n code-complete (slices 3-4 on 2026-09-28: hotkey dialog/registration result, capture errors, folder tree, full `ViewerWindow`). NEEDS_USER_UI_CHECK in EN/ZH/JA — watch toolbar label width in the viewer; then re-check the README language promise end-to-end.
 - FOLLOW_UP (editing): re-dragging the mosaic-size slider on the same object merges into the previous undo step; blur recompute cost during drag is unmeasured.

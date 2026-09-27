@@ -9,7 +9,7 @@
         Height="760"
         MinWidth="980"
         MinHeight="580"
-        Background="#EEF1F1"
+        Background="{StaticResource ViewerWindowBackgroundBrush}"
         FontFamily="Segoe UI"
         ShowInTaskbar="True"
         UseLayoutRounding="True"
@@ -18,19 +18,10 @@
         PreviewKeyDown="OnKeyDown"
         KeyUp="OnKeyUp">
     <Window.Resources>
-        <SolidColorBrush x:Key="ViewerWindowBackgroundBrush" Color="#EEF1F1" />
-        <SolidColorBrush x:Key="ViewerToolbarBackgroundBrush" Color="#F1F4F4" />
+        <!-- 테마 색(Viewer*Brush)은 App 리소스의 Themes/Light.xaml·Dark.xaml에서 온다. -->
         <SolidColorBrush x:Key="ViewerToolbarGroupBrush" Color="Transparent" />
         <SolidColorBrush x:Key="ViewerToolbarGroupAltBrush" Color="Transparent" />
-        <SolidColorBrush x:Key="ViewerPanelBackgroundBrush" Color="#FAFBFB" />
-        <SolidColorBrush x:Key="ViewerPanelRaisedBrush" Color="#F6F8F8" />
-        <SolidColorBrush x:Key="ViewerBorderBrush" Color="#CCD4D4" />
-        <SolidColorBrush x:Key="ViewerMutedBorderBrush" Color="#B9C4C5" />
-        <SolidColorBrush x:Key="ViewerAccentBrush" Color="#197F78" />
-        <SolidColorBrush x:Key="ViewerAccentMutedBrush" Color="#D8EEEB" />
-        <SolidColorBrush x:Key="ViewerTextBrush" Color="#293638" />
-        <SolidColorBrush x:Key="ViewerMutedTextBrush" Color="#59686A" />
-        <SolidColorBrush x:Key="ViewerDimTextBrush" Color="#748184" />
+
 
         <DrawingBrush x:Key="ViewerCanvasDotBrush"
                       TileMode="Tile"
@@ -96,10 +87,30 @@
             <Setter Property="Foreground" Value="{StaticResource ViewerTextBrush}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="ToolTipService.InitialShowDelay" Value="250" />
+            <!-- 기본(Aero) 템플릿은 비활성일 때 밝은 회색 배경을 직접 칠해 다크 테마에서 튄다. 테마 색만 쓰는 템플릿으로 둔다. -->
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              RecognizesAccessKey="True" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FAFBFB" />
+                    <Setter Property="Background" Value="{StaticResource ViewerPanelBackgroundBrush}" />
                     <Setter Property="BorderBrush" Value="{StaticResource ViewerBorderBrush}" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ViewerAccentMutedBrush}" />
                 </Trigger>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter Property="Opacity" Value="0.45" />
@@ -118,8 +129,15 @@
 
         <Style x:Key="PrimaryRibbonButtonStyle" TargetType="Button" BasedOn="{StaticResource RibbonTextButtonStyle}">
             <Setter Property="Background" Value="{StaticResource ViewerAccentBrush}" />
-            <Setter Property="BorderBrush" Value="#197F78" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="{StaticResource ViewerAccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource ViewerOnAccentTextBrush}" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ViewerAccentBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource ViewerAccentBrush}" />
+                    <Setter Property="Opacity" Value="0.9" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="HeaderActionButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
@@ -134,8 +152,15 @@
 
         <Style x:Key="HeaderPrimaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource HeaderActionButtonStyle}">
             <Setter Property="Background" Value="{StaticResource ViewerAccentBrush}" />
-            <Setter Property="BorderBrush" Value="#197F78" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="{StaticResource ViewerAccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource ViewerOnAccentTextBrush}" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ViewerAccentBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource ViewerAccentBrush}" />
+                    <Setter Property="Opacity" Value="0.9" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <!-- 아이콘 버튼 아래 작은 글자 라벨. 라벨 문구는 버튼의 AutomationProperties.Name 하나로 관리한다. -->
@@ -278,7 +303,7 @@
                     <Setter Property="BorderBrush" Value="{StaticResource ViewerAccentBrush}" />
                 </Trigger>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#E8EEEE" />
+                    <Setter Property="Background" Value="{StaticResource ViewerHoverBrush}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -290,7 +315,7 @@
         </Style>
 
         <Style TargetType="{x:Type GridViewColumnHeader}">
-            <Setter Property="Background" Value="#F1F4F4" />
+            <Setter Property="Background" Value="{StaticResource ViewerToolbarBackgroundBrush}" />
             <Setter Property="Foreground" Value="{StaticResource ViewerMutedTextBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource ViewerBorderBrush}" />
             <Setter Property="BorderThickness" Value="0,0,1,1" />
@@ -315,7 +340,7 @@
                     Background="Transparent">
                 <StackPanel>
                     <Border Height="58"
-                            Background="#E8EEEE"
+                            Background="{StaticResource ViewerHoverBrush}"
                             BorderBrush="{StaticResource ViewerMutedBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="3">
@@ -339,7 +364,7 @@
                     Background="Transparent">
                 <StackPanel>
                     <Border Height="92"
-                            Background="#E8EEEE"
+                            Background="{StaticResource ViewerHoverBrush}"
                             BorderBrush="{StaticResource ViewerMutedBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="3">
@@ -363,7 +388,7 @@
                     Background="Transparent">
                 <StackPanel>
                     <Border Height="132"
-                            Background="#E8EEEE"
+                            Background="{StaticResource ViewerHoverBrush}"
                             BorderBrush="{StaticResource ViewerMutedBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="3">
@@ -412,7 +437,7 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                Background="#FAFBFB"
+                Background="{StaticResource ViewerPanelBackgroundBrush}"
                 BorderBrush="{StaticResource ViewerBorderBrush}"
                 BorderThickness="0,0,0,1">
             <Grid Margin="14,0,10,0">
@@ -562,7 +587,7 @@
                                      VerticalAlignment="Center"
                                      AutomationProperties.AutomationId="ViewerZoomInput"
                                      AutomationProperties.Name="{x:Static res:Strings.Viewer_ZoomPercent}"
-                                     Background="#FAFBFB"
+                                     Background="{StaticResource ViewerPanelBackgroundBrush}"
                                      BorderBrush="{StaticResource ViewerMutedBorderBrush}"
                                      Foreground="{StaticResource ViewerTextBrush}"
                                      GotKeyboardFocus="OnZoomTextGotKeyboardFocus"
@@ -752,7 +777,7 @@
                 Visibility="Collapsed"
                 AutomationProperties.AutomationId="ViewerContextToolbar"
                 AutomationProperties.Name="{x:Static res:Strings.Viewer_ToolSettings}"
-                Background="#FAFBFB"
+                Background="{StaticResource ViewerPanelBackgroundBrush}"
                 BorderBrush="{StaticResource ViewerBorderBrush}"
                 BorderThickness="0,0,0,1">
             <ScrollViewer HorizontalScrollBarVisibility="Auto"
@@ -878,7 +903,7 @@
                                      AutomationProperties.AutomationId="ViewerTextInput"
                                      AutomationProperties.Name="{x:Static res:Strings.Viewer_DefaultText}"
                                      ToolTip="{x:Static res:Strings.Viewer_DefaultTextTip}"
-                                     Background="#F1F4F4"
+                                     Background="{StaticResource ViewerToolbarBackgroundBrush}"
                                      BorderBrush="{StaticResource ViewerMutedBorderBrush}"
                                      Foreground="{StaticResource ViewerTextBrush}"
                                      Text="{x:Static res:Strings.Viewer_Tool_Text}"
@@ -970,10 +995,10 @@
                               Padding="7,0,7,10"
                               SelectedItemChanged="OnFolderTreeSelectedItemChanged">
                         <TreeView.Resources>
-                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#D8EEEB" />
-                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#D8EEEB" />
-                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#293638" />
-                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#293638" />
+                            <StaticResource x:Key="{x:Static SystemColors.HighlightBrushKey}" ResourceKey="ViewerAccentMutedBrush" />
+                            <StaticResource x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" ResourceKey="ViewerAccentMutedBrush" />
+                            <StaticResource x:Key="{x:Static SystemColors.HighlightTextBrushKey}" ResourceKey="ViewerTextBrush" />
+                            <StaticResource x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" ResourceKey="ViewerTextBrush" />
                         </TreeView.Resources>
                         <TreeView.ItemContainerStyle>
                             <Style TargetType="{x:Type TreeViewItem}">
@@ -984,7 +1009,7 @@
                                 <Setter Property="Padding" Value="4" />
                                 <Style.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#E8EEEE" />
+                                        <Setter Property="Background" Value="{StaticResource ViewerHoverBrush}" />
                                     </Trigger>
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter Property="Background" Value="{StaticResource ViewerAccentMutedBrush}" />
@@ -1012,7 +1037,7 @@
                     <Border Grid.Row="0"
                             Margin="10,10,10,4"
                             Padding="9,5"
-                            Background="#F1F4F4"
+                            Background="{StaticResource ViewerToolbarBackgroundBrush}"
                             BorderBrush="{StaticResource ViewerMutedBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="4">
@@ -1100,7 +1125,7 @@
                             Padding="10"
                             AutomationProperties.AutomationId="ViewerCropPanel"
                             AutomationProperties.Name="{x:Static res:Strings.Viewer_CropSettings}"
-                            Background="#EEF4F3"
+                            Background="{StaticResource ViewerPanelTintBrush}"
                             BorderBrush="{StaticResource ViewerBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="4"
@@ -1354,7 +1379,7 @@
         </Grid>
 
         <StatusBar Grid.Row="4"
-                   Background="#FAFBFB"
+                   Background="{StaticResource ViewerPanelBackgroundBrush}"
                    BorderBrush="{StaticResource ViewerBorderBrush}"
                    BorderThickness="0,1,0,0">
             <DockPanel Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=StatusBar}}">

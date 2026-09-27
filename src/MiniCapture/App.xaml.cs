@@ -33,6 +33,7 @@ public partial class App : System.Windows.Application
 
         EnsureWindowsDirectoryEnvironment();
         SettingsPathHelper.EnsureAppDataDirectory();
+        ThemeService.Apply(this, MiniCaptureSettingsStore.Load().Theme);
         TryRegisterDefaultAppCandidates();
         CreateTrayIcon();
 

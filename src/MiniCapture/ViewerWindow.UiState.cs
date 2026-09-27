@@ -211,9 +211,7 @@ public partial class ViewerWindow
             var selected = child.Tag is string colorText &&
                 System.Windows.Media.ColorConverter.ConvertFromString(colorText) is WpfColor color &&
                 color.Equals(_selectedColor);
-            child.BorderBrush = selected
-                ? new SolidColorBrush(WpfColor.FromRgb(25, 127, 120))
-                : new SolidColorBrush(WpfColor.FromRgb(185, 196, 197));
+            child.BorderBrush = ThemeBrush(selected ? "ViewerAccentBrush" : "ViewerMutedBorderBrush");
             child.BorderThickness = selected ? new Thickness(2) : new Thickness(1);
             child.Padding = selected ? new Thickness(1) : new Thickness(2);
         }
@@ -233,17 +231,15 @@ public partial class ViewerWindow
 
     private static void SetViewButtonState(System.Windows.Controls.Button button, bool selected)
     {
-        button.Background = selected
-            ? new SolidColorBrush(WpfColor.FromRgb(216, 238, 235))
-            : WpfBrushes.Transparent;
-        button.Foreground = selected
-            ? new SolidColorBrush(WpfColor.FromRgb(25, 127, 120))
-            : new SolidColorBrush(WpfColor.FromRgb(89, 104, 106));
-        button.BorderBrush = selected
-            ? new SolidColorBrush(WpfColor.FromRgb(25, 127, 120))
-            : WpfBrushes.Transparent;
+        button.Background = selected ? ThemeBrush("ViewerAccentMutedBrush") : WpfBrushes.Transparent;
+        button.Foreground = ThemeBrush(selected ? "ViewerAccentBrush" : "ViewerMutedTextBrush");
+        button.BorderBrush = selected ? ThemeBrush("ViewerAccentBrush") : WpfBrushes.Transparent;
         button.BorderThickness = selected ? new Thickness(1, 1, 1, 2) : new Thickness(1);
     }
+
+    // 현재 테마(Themes/*.xaml)의 색. 앱 리소스에 없으면(테스트 등) 투명으로 둔다.
+    private static System.Windows.Media.Brush ThemeBrush(string key) =>
+        System.Windows.Application.Current?.TryFindResource(key) as System.Windows.Media.Brush ?? WpfBrushes.Transparent;
 
     private void SelectFolderPath(string folderPath)
     {

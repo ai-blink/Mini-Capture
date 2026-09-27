@@ -39,6 +39,9 @@ public partial class SettingsWindow : Window
     public IReadOnlyList<LanguageOption> LanguageOptions { get; } =
         Enum.GetValues<AppLanguage>().Select(language => new LanguageOption(language)).ToList();
 
+    public IReadOnlyList<ThemeOption> ThemeOptions { get; } =
+        Enum.GetValues<AppTheme>().Select(theme => new ThemeOption(theme)).ToList();
+
     private IEnumerable<CaptureHotkeySettingItem> HotkeySettings =>
         HotkeyGroups.SelectMany(group => group.Slots);
 
@@ -245,7 +248,8 @@ public partial class SettingsWindow : Window
         {
             QuickButtonLeft = _captureSettings.QuickButtonLeft,
             QuickButtonTop = _captureSettings.QuickButtonTop,
-            Language = _captureSettings.Language
+            Language = _captureSettings.Language,
+            Theme = _captureSettings.Theme
         };
         MiniCaptureSettingsStore.Save(_captureSettings);
         LoadCaptureSettingsFields();
@@ -737,8 +741,9 @@ public partial class SettingsWindow : Window
 
     private void LoadLanguageFields()
     {
-        var currentLanguage = MiniCaptureSettingsStore.Load().Language;
-        LanguageComboBox.SelectedItem = LanguageOptions.FirstOrDefault(option => option.Language == currentLanguage);
+        var settings = MiniCaptureSettingsStore.Load();
+        LanguageComboBox.SelectedItem = LanguageOptions.FirstOrDefault(option => option.Language == settings.Language);
+        ThemeComboBox.SelectedItem = ThemeOptions.FirstOrDefault(option => option.Theme == settings.Theme);
     }
 
     private void OnApplyLanguageClick(object sender, RoutedEventArgs e)
@@ -752,10 +757,29 @@ public partial class SettingsWindow : Window
         settings.Language = option.Language;
         _captureSettings = settings;
         MiniCaptureSettingsStore.Save(settings);
+        PromptRestart(Strings.Settings_Language_RestartPromptBody);
+    }
 
+    private void OnApplyThemeClick(object sender, RoutedEventArgs e)
+    {
+        if (ThemeComboBox.SelectedItem is not ThemeOption option || option.Theme == _captureSettings.Theme)
+        {
+            return;
+        }
+
+        var settings = MiniCaptureSettingsStore.Load();
+        settings.Theme = option.Theme;
+        _captureSettings = settings;
+        MiniCaptureSettingsStore.Save(settings);
+        PromptRestart(Strings.Settings_Theme_RestartPromptBody);
+    }
+
+    // 언어·테마는 시작할 때 한 번 적용되므로 바꾼 뒤 재시작을 권한다. 새 프로세스는 이 PID가 끝날 때까지 기다린다.
+    private void PromptRestart(string message)
+    {
         var result = System.Windows.MessageBox.Show(
             this,
-            Strings.Settings_Language_RestartPromptBody,
+            message,
             Strings.Settings_Language_RestartPromptTitle,
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
@@ -814,6 +838,18 @@ public sealed class LanguageOption(AppLanguage language)
     public AppLanguage Language { get; } = language;
 
     public string DisplayName => LocalizationService.GetNativeName(Language);
+}
+
+public sealed class ThemeOption(AppTheme theme)
+{
+    public AppTheme Theme { get; } = theme;
+
+    public string DisplayName => Theme switch
+    {
+        AppTheme.Dark => Strings.Theme_Dark,
+        AppTheme.System => Strings.Theme_System,
+        _ => Strings.Theme_Light
+    };
 }
 
 public enum CaptureHotkeyKind

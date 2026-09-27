@@ -30,6 +30,9 @@ var tests = new (string Name, Action Run)[]
     ("EditHistory_UndoRedoWalksOneSnapshotPerAction", EditHistory_UndoRedoWalksOneSnapshotPerAction),
     ("EditHistory_NewActionDropsRedoAndKeepsCapacity", EditHistory_NewActionDropsRedoAndKeepsCapacity),
     ("EditableAnnotationClone_IsIndependentOfOriginal", EditableAnnotationClone_IsIndependentOfOriginal),
+    ("ThemeService_ResolvesSettingToLightOrDark", ThemeService_ResolvesSettingToLightOrDark),
+    ("ThemeDictionaries_DefineTheSameKeys", ThemeDictionaries_DefineTheSameKeys),
+    ("ThemedWindows_ReferenceOnlyDefinedThemeKeys", ThemedWindows_ReferenceOnlyDefinedThemeKeys),
     ("BuildGaussianKernel_NormalizesAndIsSymmetric", BuildGaussianKernel_NormalizesAndIsSymmetric),
     ("ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge", ApplyGaussianBlurRegion_PreservesUniformColorAndSoftensSharpEdge),
     ("DecodeImageFile_AllowsBackgroundDecode", DecodeImageFile_AllowsBackgroundDecode),
@@ -580,6 +583,53 @@ static void EditableAnnotationClone_IsIndependentOfOriginal()
     AssertTrue(clone.Text == "before" && clone.MosaicType == ViewerMosaicType.Blur && clone.MosaicBlockSize == 12, "clone keeps text and mosaic settings");
     AssertTrue(clone.Element is null, "clone does not carry the on-screen element");
 }
+
+static void ThemeService_ResolvesSettingToLightOrDark()
+{
+    AssertTrue(ThemeService.Resolve(AppTheme.Light, false) == AppTheme.Light, "explicit light ignores the system");
+    AssertTrue(ThemeService.Resolve(AppTheme.Dark, true) == AppTheme.Dark, "explicit dark ignores the system");
+    AssertTrue(ThemeService.Resolve(AppTheme.System, true) == AppTheme.Light, "system light mode");
+    AssertTrue(ThemeService.Resolve(AppTheme.System, false) == AppTheme.Dark, "system dark mode");
+    AssertTrue(ThemeService.Resolve(AppTheme.System, null) == AppTheme.Light, "unreadable system setting falls back to light");
+    AssertTrue(new MiniCaptureSettings { Theme = AppTheme.Dark }.Clone().Theme == AppTheme.Dark, "settings clone keeps the theme");
+}
+
+static void ThemeDictionaries_DefineTheSameKeys()
+{
+    // 한 테마에만 있는 키는 그 테마에서 StaticResource 예외로 창이 뜨지 않는다.
+    var themes = Path.Combine(RepoRoot(), "src", "MiniCapture", "Themes");
+    HashSet<string> Keys(string file) =>
+        System.Xml.Linq.XDocument.Load(Path.Combine(themes, file)).Root!.Elements()
+            .Select(element => (string?)element.Attribute(System.Xml.Linq.XName.Get("Key", "http://schemas.microsoft.com/winfx/2006/xaml")) ?? string.Empty)
+            .ToHashSet();
+    var light = Keys("Light.xaml");
+    var dark = Keys("Dark.xaml");
+    AssertTrue(light.Count > 20, $"light theme should define the palette, got {light.Count} keys");
+    AssertTrue(light.SetEquals(dark), $"theme keys differ: {string.Join(", ", light.Except(dark).Concat(dark.Except(light)))}");
+}
+
+static void ThemedWindows_ReferenceOnlyDefinedThemeKeys()
+{
+    // 창에서 참조하는 Viewer*/Settings* 색 이름은 테마 파일이나 그 창 자체 리소스에 있어야 한다(없으면 창을 여는 순간 예외).
+    var app = Path.Combine(RepoRoot(), "src", "MiniCapture");
+    var themeKeys = System.Text.RegularExpressions.Regex.Matches(File.ReadAllText(Path.Combine(app, "Themes", "Light.xaml")), "x:Key=\"(\\w+)\"")
+        .Select(match => match.Groups[1].Value)
+        .ToHashSet();
+    foreach (var file in new[] { "ViewerWindow.xaml", "SettingsWindow.xaml", "HotkeyDetectDialog.xaml" })
+    {
+        var xaml = File.ReadAllText(Path.Combine(app, file));
+        var localKeys = System.Text.RegularExpressions.Regex.Matches(xaml, "x:Key=\"(\\w+)\"").Select(match => match.Groups[1].Value).ToHashSet();
+        var missing = System.Text.RegularExpressions.Regex.Matches(xaml, "(?:StaticResource|ResourceKey=\")\\s*((?:Viewer|Settings)\\w*Brush)")
+            .Select(match => match.Groups[1].Value)
+            .Where(key => !themeKeys.Contains(key) && !localKeys.Contains(key))
+            .Distinct()
+            .ToList();
+        AssertTrue(missing.Count == 0, $"{file} references undefined theme keys: {string.Join(", ", missing)}");
+    }
+}
+
+static string RepoRoot([System.Runtime.CompilerServices.CallerFilePath] string testFile = "") =>
+    Path.GetFullPath(Path.Combine(Path.GetDirectoryName(testFile)!, "..", ".."));
 
 static void BuildGaussianKernel_NormalizesAndIsSymmetric()
 {

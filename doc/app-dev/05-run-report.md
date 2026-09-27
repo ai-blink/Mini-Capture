@@ -1771,3 +1771,11 @@ Allow users to exclude a window-selection target by choosing a running process o
 
 - 사용자 보고 "언어 설정 사라짐": 시작 메뉴 바로가기 대상 `C:\app\MiniCapture.exe`가 2026-09-12 빌드라 언어 설정(`222a279`, 09-27) 이전 버전이었다. 기능 회귀가 아니라 오래된 배포본.
 - `8dbd782` 기준 단일 파일 Release 게시(`--self-contained true -p:PublishSingleFile=true ...`, `artifacts/publish/MiniCapture-win-x64-portable-20260928`) → en/zh-CN/ja 위성 리소스 번들 포함 확인 → 옛 exe를 세션 scratchpad에 복구용 복사 → 교체·SHA-256 일치·재실행.
+
+## 라이트/다크 테마 설정 (2026-09-28)
+
+- 요청: 설정 창(다크)과 뷰어(라이트) 테마 불일치 → 사용자 선택 "테마를 설정할 수 있게 라이트·다크 모드".
+- 변경: `Themes/Light.xaml`·`Dark.xaml`(뷰어 14키 + 설정 18키, 같은 키 목록), `AppTheme`(Light 기본/Dark/System)·`ThemeService`(시작 시 병합, System은 `AppsUseLightTheme`, 다크면 DWM 다크 제목 표시줄), 설정 → 언어·테마 섹션에 테마 콤보·적용하고 재시작(공통 `PromptRestart`). 설정 창·키 감지 대화상자·뷰어의 하드코딩 색을 테마 키로 교체, 뷰어 선택 상태 코드 색(`UiState`)도 테마 키로.
+- 발견·수정: 다크에서 비활성 툴바 버튼에 Aero 기본 템플릿의 밝은 회색 배경 → 툴바 버튼 전용 템플릿(주 버튼은 hover에도 강조색 유지).
+- 검증: 빌드 0/0, 테스트 36/36(테마 해석, Light·Dark 키 동일, 세 창의 테마 키 참조 205개 모두 정의됨). Debug 빌드로 뷰어를 라이트·다크 각각 `PrintWindow` 캡처해 배경·패널·글자 전환 확인(설정값은 임시 변경 후 원복, 해시 일치). 설정 창은 자동으로 열지 못함(`--settings` 시작 인자는 테마 이전 빌드에서도 창을 열지 않음 → FOLLOW_UP, 우클릭 메뉴 자동화는 불안정해 중단). `C:\app` 배포본 교체(해시 일치).
+- NEEDS_USER_UI_CHECK: 다크·시스템 테마에서 설정 창, 키 감지 대화상자, 뷰어, 다크 제목 표시줄.

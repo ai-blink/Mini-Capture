@@ -17,6 +17,8 @@ public sealed class MiniCaptureSettings
 
     public AppLanguage Language { get; set; } = AppLanguage.Korean;
 
+    public AppTheme Theme { get; set; } = AppTheme.Light;
+
     public List<string> AdditionalImageExtensions { get; set; } = [];
 
     public List<WindowCaptureExclusionTarget> WindowCaptureExclusionTargets { get; set; } = [];
@@ -71,6 +73,7 @@ public sealed class MiniCaptureSettings
             QuickButtonVisible = QuickButtonVisible,
             CaptureUiExcludedFromCapture = CaptureUiExcludedFromCapture,
             Language = Language,
+            Theme = Theme,
             AdditionalImageExtensions = FileAssociationRegistrar.NormalizeAdditionalExtensions(AdditionalImageExtensions).ToList(),
             WindowCaptureExclusionTargets = NormalizeWindowCaptureExclusionTargets(
                     WindowCaptureExclusionTargets,

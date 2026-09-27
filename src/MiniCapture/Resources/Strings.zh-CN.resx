@@ -30,7 +30,7 @@
   <data name="Settings_Section_ExtensionDefaults" xml:space="preserve"><value>扩展名关联</value></data>
   <data name="Settings_Section_CaptureSettings" xml:space="preserve"><value>捕获设置</value></data>
   <data name="Settings_Section_WindowExclusions" xml:space="preserve"><value>窗口排除</value></data>
-  <data name="Settings_Section_Language" xml:space="preserve"><value>语言</value></data>
+  <data name="Settings_Section_Language" xml:space="preserve"><value>语言和主题</value></data>
 
   <!-- Capture settings panel -->
   <data name="Settings_Capture_Subtitle" xml:space="preserve"><value>保存快捷键、计时器和透明快速图标的显示状态。</value></data>
@@ -161,7 +161,7 @@
   <data name="FileAssoc_DetailWithCommand" xml:space="preserve"><value>UserChoice={0}，默认={1}，命令={2}</value></data>
 
   <!-- Language section -->
-  <data name="Settings_Language_Subtitle" xml:space="preserve"><value>选择应用中显示的语言。更改后需要重新启动才能生效。</value></data>
+  <data name="Settings_Language_Subtitle" xml:space="preserve"><value>选择应用中显示的语言和主题。更改后需要重新启动才能生效。</value></data>
   <data name="Settings_Language_Label" xml:space="preserve"><value>显示语言</value></data>
   <data name="Settings_Language_ApplyButton" xml:space="preserve"><value>应用并重启</value></data>
   <data name="Settings_Language_RestartPromptTitle" xml:space="preserve"><value>重新启动</value></data>
@@ -451,4 +451,9 @@
   <data name="Viewer_Status_LoadingImage" xml:space="preserve"><value>正在加载图片。</value></data>
   <data name="Viewer_Status_ImageOpenFailed" xml:space="preserve"><value>无法打开图片：{0}</value></data>
   <data name="Viewer_Status_ZoomInvalid" xml:space="preserve"><value>缩放值请输入 10%~800% 之间的数字。</value></data>
+  <data name="Settings_Theme_Label" xml:space="preserve"><value>主题</value></data>
+  <data name="Theme_Light" xml:space="preserve"><value>浅色</value></data>
+  <data name="Theme_Dark" xml:space="preserve"><value>深色</value></data>
+  <data name="Theme_System" xml:space="preserve"><value>跟随系统</value></data>
+  <data name="Settings_Theme_RestartPromptBody" xml:space="preserve"><value>更改主题需要重新启动 Mini Capture。是否立即重新启动？</value></data>
 </root>
