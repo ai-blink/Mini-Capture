@@ -148,3 +148,11 @@ V1 focuses on reliable screen capture, automatic saving, fast viewing, simple ma
 ## Version
 
 - Current portable public release: `v0.2.0`
+
+## License
+
+**Free for personal use only.** Individuals may use this software free of charge for personal, non-commercial purposes.
+
+Use by or on behalf of a company, organization or client, any commercial use, redistribution or sale, and modifying or publishing derivative works require the author's permission. Please email [ikseon@blinklabs.co.kr](mailto:ikseon@blinklabs.co.kr) to discuss. The source code is viewable for reference only.
+
+Copyright © 2026 Ikseon Jang (BlinkLabs). All rights reserved. See [LICENSE](LICENSE).

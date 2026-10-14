@@ -148,3 +148,11 @@ V1 专注于可靠的屏幕截图、自动保存、快速查看、简单标注�
 ## 版本
 
 - 当前公开的便携版：`v0.2.0`
+
+## 许可证
+
+**个人使用免费。** 个人出于非商业目的使用本软件免费。
+
+公司、组织或客户业务中的使用、任何商业用途、再分发或销售，以及修改或发布衍生作品，均需获得作者许可。请发送邮件至 [ikseon@blinklabs.co.kr](mailto:ikseon@blinklabs.co.kr) 协商。源代码仅供参考查看。
+
+Copyright © 2026 Ikseon Jang (BlinkLabs). All rights reserved. 详见 [LICENSE](LICENSE)(以英文原文为准)。
